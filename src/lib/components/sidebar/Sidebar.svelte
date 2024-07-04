@@ -1,8 +1,9 @@
+<!-- src/lib/components/sidebar/Sidebar.svelte -->
 <script>
   import { onMount } from "svelte";
-  import db from "../firebase";
+  import db from "../../../firebase"; // Adjust the path as necessary
   import { doc, getDoc } from "firebase/firestore";
-  // import AccordionItem from "./AccordionItem.svelte";
+  import SidebarItem from "./SidebarItem.svelte";
 
   let data = [];
 
@@ -14,6 +15,7 @@
         ...category,
         open: false, // Add open property to handle accordion state
       }));
+      console.log(data);
     } else {
       console.log("Document not found");
     }
@@ -21,9 +23,9 @@
 </script>
 
 <div>
+  <h1>Sidebar Menu</h1>
   {#each data as item}
-    <!-- <AccordionItem {item} /> -->
-    test
+    <SidebarItem {item} />
   {/each}
 </div>
 

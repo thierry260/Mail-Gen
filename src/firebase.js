@@ -2,6 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
+// MailGen DB
 // // Replace this with your Firebase project config
 // const firebaseConfig = {
 //     apiKey: "AIzaSyAZ-pizvGCoPpwMV_2C7WeYkA9P9WfD980",
@@ -12,6 +13,8 @@ import { getFirestore } from 'firebase/firestore';
 //     appId: "1:215018720728:web:4ef6bc526ca2daa12276ad"
 // };
 
+
+// Testing DB
 const firebaseConfig = {
     apiKey: "AIzaSyBaLYiiEg_WfGODl_XtHVy9rBiCSRxBEYU",
     authDomain: "testing-db9bc.firebaseapp.com",
