@@ -15,14 +15,19 @@
 <style>
   .layout {
     display: flex;
+    height: 100vh;
+    height: 100dvh;
   }
   .sidebar {
-    width: 250px;
+    width: 100%;
+    max-width: 350px;
     background-color: #f4f4f4;
     height: 100%;
+    padding: 30px;
   }
   main {
     flex: 1;
     padding: 20px;
+    overflow-y: auto;
   }
 </style>

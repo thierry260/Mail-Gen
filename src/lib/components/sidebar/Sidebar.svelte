@@ -23,17 +23,10 @@
 </script>
 
 <div>
-  <h1>Sidebar Menu</h1>
   {#each data as item}
     <SidebarItem {item} />
   {/each}
 </div>
 
 <style>
-  h1 {
-    font-family: sans-serif;
-  }
-  div {
-    font-family: Arial, sans-serif;
-  }
 </style>
