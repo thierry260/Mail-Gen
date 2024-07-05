@@ -8,7 +8,7 @@ const config = {
   },
   preprocess: preprocess({
     scss: {
-      prependData: `@import 'src/styles/global.scss';` // Optional: Prepend global styles
+    //   prependData: `@import 'src/styles/global.scss';` // Optional: Prepend global styles
     }
   })
 };

@@ -45,9 +45,6 @@
 <style lang="scss">
   .accordion-item {
     margin-left: 20px;
-    * {
-      color: red;
-    }
   }
   .accordion-header {
     cursor: pointer;
