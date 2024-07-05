@@ -1,8 +1,9 @@
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { doc, getDoc } from "firebase/firestore";
-  import db from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
+  import { fetchWorkspaceData } from "$lib/fetch/workspace";
+  import { fetchTemplateData } from "$lib/fetch/template";
+  import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
 
   let id;
   let templateData = {};
@@ -12,37 +13,17 @@
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
 
-  //Ale data voor component ophalen
-  const fetchWorkspaceAndTemplateData = async (id) => {
-    //Template data
-    const templateDocRef = doc(db, "workspaces", "wms", "templates", id);
-    const templateDocSnap = await getDoc(templateDocRef);
+  // Fetch all data for the component
+  const fetchWorkspaceAndTemplateData = async () => {
+    templateData = await fetchTemplateData(id);
+    workspaceVariables = await fetchWorkspaceData();
 
-    if (templateDocSnap.exists()) {
-      templateData = templateDocSnap.data();
-      console.log("Template Data:", templateData);
-    } else {
-      console.log("No such document!");
-      return;
-    }
-
-    //Alle variabelen uit de workspace, later localstorage
-    const workspaceDocRef = doc(db, "workspaces", "wms");
-    const workspaceDocSnap = await getDoc(workspaceDocRef);
-
-    if (workspaceDocSnap.exists()) {
-      workspaceVariables = workspaceDocSnap.data().variables;
-      console.log("Workspace Variables:", workspaceVariables);
-    } else {
-      console.log("No such workspace document!");
-    }
-
-    //Input fields met placeholders initialiseren
-    if (templateData.variables) {
+    // Initialize user input fields with placeholders
+    if (templateData.variables && workspaceVariables.variables) {
       templateData.variables.forEach((variableId) => {
-        if (workspaceVariables[variableId]) {
+        if (workspaceVariables.variables[variableId]) {
           userInput[variableId] =
-            workspaceVariables[variableId].placeholder || "";
+            workspaceVariables.variables[variableId].placeholder || "";
         }
       });
     }
@@ -51,40 +32,89 @@
   // Perform any necessary actions when the component mounts
   onMount(() => {
     console.log("Fetching template details for template ID:", id);
-    fetchWorkspaceAndTemplateData(id);
+    fetchWorkspaceAndTemplateData();
   });
 
-  //Variabelen na userinput aanpassen in content
+  // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
     return content.replace(/{{(.*?)}}/g, (match, p1) => {
-      return variables[p1] || match;
+      const value = variables[p1] || match;
+      return `<span class="variable" on:click={handleVariableClick.bind(null, p1)}>${value}</span>`;
     });
+  };
+
+  // Handle click on variable span
+  const handleVariableClick = (variableId) => {
+    console.log("Clicked variable:", variableId);
+    const inputElement = document.getElementById(variableId);
+    console.log("Input element:", inputElement);
+    if (inputElement) {
+      inputElement.focus();
+      inputElement.select();
+    }
   };
 </script>
 
-<h1>Template Details</h1>
-<p>Template ID: {id}</p>
+<Breadcrumbs {id} />
 {#if templateData.content}
-  <div>
-    <h2>Variabelen vullen:</h2>
-    {#each templateData.variables as variableId}
-      {#if workspaceVariables[variableId]}
-        <div>
-          <label for={variableId}
-            >{workspaceVariables[variableId].field_name}:</label
-          >
-          <input
-            type="text"
-            id={variableId}
-            bind:value={userInput[variableId]}
-            placeholder={workspaceVariables[variableId].placeholder}
-          />
-        </div>
-      {/if}
-    {/each}
-    <h2>Mailtemplate:</h2>
-    <div>
-      <pre>{replaceVariables(templateData.content, userInput)}</pre>
+  <div class="template">
+    <div class="variables">
+      {#each Object.keys(userInput) as variableId}
+        {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+          <div>
+            <label class="label" for={variableId}>
+              {workspaceVariables.variables[variableId].field_name}
+            </label>
+            <input
+              type="text"
+              id={variableId}
+              bind:value={userInput[variableId]}
+              placeholder={workspaceVariables.variables[variableId].placeholder}
+            />
+          </div>
+        {/if}
+      {/each}
+    </div>
+    <div class="preview">
+      <h2>{templateData.name}</h2>
+      <div class="preview-content">
+        {@html replaceVariables(templateData.content, userInput)}
+      </div>
     </div>
   </div>
 {/if}
+
+<style lang="scss">
+  .template {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    .variables {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      > * {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+    .preview {
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      padding: 30px;
+      h2 {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5em;
+      }
+      .preview-content {
+        line-height: 1.5;
+      }
+      .variable {
+        text-decoration: underline; /* Voor onderstreping */
+        cursor: pointer; /* Verander cursor naar pointer bij hover */
+        /* Of gebruik bijvoorbeeld background-color voor achtergrondmarkering */
+      }
+    }
+  }
+</style>

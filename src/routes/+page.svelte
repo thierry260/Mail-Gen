@@ -1,30 +1,36 @@
 <script>
   import { onMount } from "svelte";
-  import db from "$lib/firebase";
-  import { doc, getDoc } from "firebase/firestore";
-  // import AccordionItem from "./AccordionItem.svelte";
+  import { fetchWorkspaceData } from "$lib/fetch/workspace";
 
   let data = [];
 
   onMount(async () => {
-    const docRef = doc(db, "workspaces", "wms"); // Replace with your collection and document
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      data = docSnap.data().categories.map((category) => ({
+    data = await fetchWorkspaceData("categories");
+    if (data) {
+      data = data.map((category) => ({
         ...category,
         open: false, // Add open property to handle accordion state
       }));
+      console.log(data);
     } else {
-      console.log("Document not found");
+      console.log("Categories not found");
     }
   });
 </script>
 
 <div>
-  {#each data as item}
-    <!-- <AccordionItem {item} /> -->
-    test
-  {/each}
+  <h1>Waar ben je naar op zoek?</h1>
+  <input type="text" />
+  <div class="recently_viewed"></div>
+  <div class="recently_added"></div>
+  <div class="categories">
+    <h2>Categorieën</h2>
+    {#each data as item}
+      <div class="category">
+        {item.name}
+      </div>
+    {/each}
+  </div>
 </div>
 
 <style>

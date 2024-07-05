@@ -8,23 +8,41 @@
   const viewTemplate = (templateId) => {
     goto(`/template/${templateId}`); // Navigate to the template details page
   };
+  const viewCategory = (categoryId) => {
+    goto(`/category/${categoryId}`); // Navigate to the template details page
+  };
 </script>
 
-<div class="accordion-item">
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div
-    class="accordion-header"
-    on:click={() => (item.open = !item.open)}
+<div class="accordion_item">
+  <button
+    class="accordion_header"
+    on:click={() => {
+      item.open = !item.open;
+      if (item.open) {
+        viewCategory(item.id);
+      }
+    }}
     class:open={item.open}
   >
-    <CaretRight size={16} class="dropdown" />{item.name}<span class="actions"
-      ><DotsThreeVertical size={16} /><Plus size={16} /></span
+    <CaretRight size={12} class="dropdown" /><span class="name"
+      >{item.name}</span
+    ><span class="actions"
+      ><DotsThreeVertical size={18} data-action="options" /><Plus
+        size={16}
+        data-action="add"
+      /></span
     >
-  </div>
+  </button>
   {#if item.open}
+    {#if item.sub}
+      <div class="accordion_content">
+        {#each item.sub as subItem}
+          <svelte:self item={subItem} />
+        {/each}
+      </div>
+    {/if}
     {#if item.templates}
-      <div class="accordion-templates">
+      <div class="accordion_templates">
         {#each item.templates as template}
           <div class="template" on:click={() => viewTemplate(template.id)}>
             {template.name}
@@ -32,45 +50,75 @@
         {/each}
       </div>
     {/if}
-    {#if item.sub}
-      <div class="accordion-content">
-        {#each item.sub as subItem}
-          <svelte:self item={subItem} />
-        {/each}
-      </div>
-    {/if}
   {/if}
 </div>
 
 <style lang="scss">
-  .accordion-item {
-    margin-left: 20px;
-  }
-  .accordion-header {
-    cursor: pointer;
-    padding: 10px 5px;
-    background-color: #eee;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1.6rem;
-    width: 100%;
-    text-align: left;
-  }
-  .accordion-header .dropdown {
-    transition: transform 0.2s ease-out;
-  }
-  .accordion-header.open .dropdown {
-    transform: rotate(90deg);
-  }
+  .accordion_item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    .accordion_header,
+    .template {
+      cursor: pointer;
+      padding: 10px;
+      background-color: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-size: 1.5rem;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition:
+        border-color 0.1s ease-out,
+        background-color 0.1s ease-out;
+      color: var(--gray-600);
+      .name {
+        flex-grow: 1;
+      }
+      .actions {
+        display: flex;
+        align-content: center;
+        gap: 5px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease-out;
+        svg {
+          color: red;
+        }
+      }
+      &:hover {
+        .actions {
+          opacity: 1;
+        }
+      }
+      &.open {
+        background-color: var(--gray-200);
+      }
+      &:not(.open):hover {
+        border-color: var(--gray-300);
+      }
+    }
+    .accordion_header .dropdown {
+      transition: transform 0.2s ease-out;
+    }
+    .accordion_header.open .dropdown {
+      transform: rotate(90deg);
+    }
 
-  .template {
-    font-size: 1.6rem;
-    padding: 10px 0;
-  }
+    .template {
+    }
+    .accordion_templates {
+      margin-left: 15px;
+    }
 
-  .accordion-content {
-    margin-left: 10px;
-    border-left: 2px solid #ccc;
-    /* padding-left: 10px; */
+    .accordion_content {
+      margin-left: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
   }
 </style>

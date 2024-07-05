@@ -3,9 +3,7 @@
 </script>
 
 <div class="layout">
-  <aside class="sidebar">
-    <Sidebar />
-  </aside>
+  <Sidebar />
   <main>
     <slot />
   </main>
@@ -17,16 +15,9 @@
     height: 100vh;
     height: 100dvh;
   }
-  .sidebar {
-    width: 100%;
-    max-width: 350px;
-    background-color: #f4f4f4;
-    height: 100%;
-    padding: 20px;
-  }
   main {
     flex: 1;
-    padding: 20px;
+    padding: 50px;
     overflow-y: auto;
   }
 </style>

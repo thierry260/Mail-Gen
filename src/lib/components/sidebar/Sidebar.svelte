@@ -1,32 +1,40 @@
 <!-- src/lib/components/sidebar/Sidebar.svelte -->
 <script>
   import { onMount } from "svelte";
-  import db from "$lib/firebase";
-  import { doc, getDoc } from "firebase/firestore";
+  import { fetchWorkspaceData } from "$lib/fetch/workspace";
   import SidebarItem from "./SidebarItem.svelte";
 
   let data = [];
 
   onMount(async () => {
-    const docRef = doc(db, "workspaces", "wms"); // Replace with your collection and document
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      data = docSnap.data().categories.map((category) => ({
+    data = await fetchWorkspaceData("categories");
+    if (data) {
+      data = data.map((category) => ({
         ...category,
         open: false, // Add open property to handle accordion state
       }));
       console.log(data);
     } else {
-      console.log("Document not found");
+      console.log("Categories not found");
     }
   });
 </script>
 
-<div>
-  {#each data as item}
-    <SidebarItem {item} />
-  {/each}
-</div>
+<aside class="sidebar">
+  <div>
+    <span class="label">Templates</span>
+    {#each data as item}
+      <SidebarItem {item} />
+    {/each}
+  </div>
+</aside>
 
-<style>
+<style lang="scss">
+  .sidebar {
+    width: 100%;
+    max-width: 350px;
+    background-color: var(--gray-100);
+    height: 100%;
+    padding: 20px;
+  }
 </style>

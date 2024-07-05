@@ -1,0 +1,11 @@
+.dropdown {
+    transition: transform .1s ease-out;
+}
+.open > .dropdown {
+    transform: rotate(90deg);
+}
+.variable {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}

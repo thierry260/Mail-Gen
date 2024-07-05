@@ -1,0 +1,11 @@
+input:not([type="checkbox"]):not([type="radio"]), 
+select,
+textarea {
+    padding: 10px 20px;
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--border);
+
+    &::placeholder {
+        opacity: .5;
+    }
+}
