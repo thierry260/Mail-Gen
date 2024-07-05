@@ -3,7 +3,7 @@
 <script>
   export let item;
   import { goto } from "$app/navigation";
-  import { CaretRight } from "phosphor-svelte";
+  import { CaretRight, DotsThreeVertical, Plus } from "phosphor-svelte";
 
   const viewTemplate = (templateId) => {
     goto(`/template/${templateId}`); // Navigate to the template details page
@@ -11,12 +11,16 @@
 </script>
 
 <div class="accordion-item">
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="accordion-header"
     on:click={() => (item.open = !item.open)}
     class:open={item.open}
   >
-    <CaretRight size={16} class="dropdown" />{item.name}
+    <CaretRight size={16} class="dropdown" />{item.name}<span class="actions"
+      ><DotsThreeVertical size={16} /><Plus size={16} /></span
+    >
   </div>
   {#if item.open}
     {#if item.templates}
@@ -38,9 +42,12 @@
   {/if}
 </div>
 
-<style>
+<style lang="scss">
   .accordion-item {
     margin-left: 20px;
+    * {
+      color: red;
+    }
   }
   .accordion-header {
     cursor: pointer;

@@ -1,4 +1,3 @@
-<!-- src/routes/+layout.svelte -->
 <script>
   import Sidebar from "$lib/components/sidebar/Sidebar.svelte";
 </script>
@@ -23,7 +22,7 @@
     max-width: 350px;
     background-color: #f4f4f4;
     height: 100%;
-    padding: 30px;
+    padding: 20px;
   }
   main {
     flex: 1;

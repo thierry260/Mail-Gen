@@ -1,7 +1,7 @@
 <!-- src/lib/components/sidebar/Sidebar.svelte -->
 <script>
   import { onMount } from "svelte";
-  import db from "../../../firebase"; // Adjust the path as necessary
+  import db from "$lib/firebase";
   import { doc, getDoc } from "firebase/firestore";
   import SidebarItem from "./SidebarItem.svelte";
 
