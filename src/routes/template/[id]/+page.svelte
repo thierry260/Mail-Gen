@@ -53,6 +53,21 @@
       inputElement.select();
     }
   };
+
+  // Copy the generated content to clipboard
+  const copyToClipboard = async () => {
+    const content = document.querySelector(".preview-content").innerText;
+    try {
+      await navigator.clipboard.writeText(content);
+      console.log(`Copied to clipboard:\n\n${content}`);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  };
+
+  const nextPage = async () => {
+    console.log("volgende pagina");
+  };
 </script>
 
 <Breadcrumbs {id} />
@@ -81,6 +96,8 @@
         {@html replaceVariables(templateData.content, userInput)}
       </div>
     </div>
+    <button on:click={copyToClipboard}>Copy</button>
+    <button on:click={nextPage}>Next</button>
   </div>
 {/if}
 
