@@ -20,6 +20,43 @@
     --border-radius-small: 5px;
 }
 
+// Colors
+$blue : #2d1eed;
+$dark-blue : #0D2040;
+$orange : #ff623e;
+$black : #14223b;
+$gray : #89909d;
+$grayer : #bbc1ce;
+$white : #ffffff;
+$red : #ff4419;
+
+$border : #e4e3e3;
+$background : #F3F5F9;
+$placeholder : #e9e7e7;
+$online : #2ecc71;
+
+// Fonts
+$inter : 'Inter',
+'Arial',
+sans-serif;
+$poppins : 'Poppins',
+'Arial',
+sans-serif;
+$icon : 'Material Symbols Outlined';
+
+// Breakpoints
+$xl : 1400px;
+$xlm : 1200px;
+$lg : 992px;
+$md : 768px;
+$sm : 576px;
+$xs : 480px;
+
+$custom : 900px;
+
+// Animations
+$animation-speed: all 0.2s;
+
 @import "base";
 @import "forms";
 @import "type";

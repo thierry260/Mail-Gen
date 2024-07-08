@@ -16,13 +16,36 @@
       console.log("Categories not found");
     }
   });
+
+  // Function to retrieve recently viewed templates from localStorage
+  const getRecentlyViewed = () => {
+    return JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+  };
+
+  let recentlyViewed = getRecentlyViewed();
 </script>
 
-<div>
+<div class="home">
   <h1>Waar ben je naar op zoek?</h1>
-  <input type="text" />
-  <div class="recently_viewed"></div>
+  <input type="text" placeholder="Zoek op templates" />
+
+  <!-- Recently viewed templates section -->
+  <div class="recently_viewed">
+    <h2>Recent bekeken</h2>
+    {#if recentlyViewed.length === 0}
+      <p>Geen templates recent bekeken.</p>
+    {:else}
+      {#each recentlyViewed as template}
+        <div class="recent_template">
+          <h3>{template.name}</h3>
+          <!-- <p>{template.description}</p> -->
+        </div>
+      {/each}
+    {/if}
+  </div>
+
   <div class="recently_added"></div>
+
   <div class="categories">
     <h2>Categorieën</h2>
     {#each data as item}
@@ -34,10 +57,20 @@
 </div>
 
 <style>
-  h1 {
-    font-family: sans-serif;
+  .home {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
-  div {
-    font-family: Arial, sans-serif;
+
+  .recently_viewed {
+    margin-top: 20px;
+  }
+
+  .recent_template {
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
   }
 </style>
