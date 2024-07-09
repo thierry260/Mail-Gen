@@ -1,10 +1,12 @@
 <script>
   import Sidebar from "$lib/components/sidebar/Sidebar.svelte";
+  import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
 </script>
 
 <div class="layout">
   <Sidebar />
   <main>
+    <Breadcrumbs />
     <slot />
   </main>
 </div>
@@ -13,7 +15,6 @@
   .layout {
     display: flex;
     height: 100vh;
-    height: 100dvh;
   }
   main {
     flex: 1;

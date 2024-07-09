@@ -32,6 +32,9 @@
         }
       });
     }
+
+    // Save to localStorage as recently viewed template
+    saveRecentlyViewedTemplate(templateData);
   };
 
   // Perform any necessary actions when the component mounts
@@ -70,9 +73,25 @@
     }
   };
 
-  // Move to the previous stage
-  const prevPage = () => {
-    isNextStage = false;
+  // Function to save the recently viewed template to localStorage
+  const saveRecentlyViewedTemplate = (template) => {
+    let recentlyViewed =
+      JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+    // Check if the template is already in the recently viewed list
+    const index = recentlyViewed.findIndex((item) => item.id === template.id);
+    if (index !== -1) {
+      recentlyViewed.splice(index, 1); // Remove the template from the list to re-add it later
+    }
+    recentlyViewed.unshift(template); // Add the template at the beginning of the array
+    // Limit to storing only the last 4 viewed templates
+    if (recentlyViewed.length > 4) {
+      recentlyViewed = recentlyViewed.slice(0, 4);
+    }
+    localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
+  };
+
+  const nextPage = async () => {
+    console.log("volgende pagina");
   };
 
   // Move to the next stage
@@ -92,28 +111,29 @@
   };
 </script>
 
-<Breadcrumbs {id} />
-
-{#if !isNextStage}
-  {#if templateData.content}
-    <div class="template">
-      <div class="variables">
-        {#each Object.keys(userInput) as variableId}
-          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-            <div>
-              <label class="label" for={variableId}>
-                {workspaceVariables.variables[variableId].field_name}
-              </label>
-              <input
-                type="text"
-                id={variableId}
-                bind:value={userInput[variableId]}
-                placeholder={workspaceVariables.variables[variableId]
-                  .placeholder}
-              />
-            </div>
-          {/if}
-        {/each}
+{#if templateData.content}
+  <h1>{templateData.name}</h1>
+  <div class="template">
+    <div class="variables">
+      {#each Object.keys(userInput) as variableId}
+        {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+          <div>
+            <label class="label" for={variableId}>
+              {workspaceVariables.variables[variableId].field_name}
+            </label>
+            <input
+              type="text"
+              id={variableId}
+              bind:value={userInput[variableId]}
+              placeholder={workspaceVariables.variables[variableId].placeholder}
+            />
+          </div>
+        {/if}
+      {/each}
+    </div>
+    <div class="preview">
+      <div class="preview-content">
+        {@html replaceVariables(templateData.content, userInput)}
       </div>
       <div class="preview">
         <h2>{templateData.name}</h2>

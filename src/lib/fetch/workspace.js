@@ -1,18 +1,35 @@
 // src/lib/workspaceService.js
 import { doc, getDoc } from "firebase/firestore";
 import db from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
+import { browser } from '$app/environment';
 
-let cachedWorkspaceData = null;
+const CACHE_KEY = "cachedWorkspaceData";
+const CACHE_EXPIRATION_KEY = "cachedWorkspaceDataExpiration";
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function fetchWorkspaceData(fieldName = null) {
-  if (!cachedWorkspaceData) {
+  let cachedData = null;
+  let cacheExpiration = null;
+
+  if (browser) {
+    cachedData = JSON.parse(localStorage.getItem(CACHE_KEY));
+    cacheExpiration = localStorage.getItem(CACHE_EXPIRATION_KEY);
+  }
+
+  if (cachedData && cacheExpiration && Date.now() < parseInt(cacheExpiration)) {
+  } else {
+    console.log("Fetching fresh workspace data");
     try {
-      const docRef = doc(db, "workspaces", "wms"); // Pas aan naar jouw Firestore pad
+      const docRef = doc(db, "workspaces", "wms"); // Adjust to your Firestore path
       const docSnap = await getDoc(docRef);
       console.log("workspace - getDoc");
 
       if (docSnap.exists()) {
-        cachedWorkspaceData = docSnap.data();
+        cachedData = docSnap.data();
+        if (browser) {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
+          localStorage.setItem(CACHE_EXPIRATION_KEY, Date.now() + CACHE_DURATION_MS);
+        }
       } else {
         console.log("Document not found");
         return null;
@@ -24,12 +41,15 @@ export async function fetchWorkspaceData(fieldName = null) {
   }
 
   if (fieldName) {
-    return cachedWorkspaceData[fieldName] ?? null;
+    return cachedData[fieldName] ?? null;
   }
 
-  return cachedWorkspaceData;
+  return cachedData;
 }
 
 export function clearCache() {
-  cachedWorkspaceData = null;
+  if (browser) {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_EXPIRATION_KEY);
+  }
 }
