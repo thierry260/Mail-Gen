@@ -9,6 +9,11 @@
   let templateData = {};
   let workspaceVariables = {};
   let userInput = {};
+  let isNextStage = false; // Control the visibility of stages
+  let userName = "";
+  let userEmail = "";
+  let cc = "";
+  let bcc = "";
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
@@ -65,39 +70,99 @@
     }
   };
 
-  const nextPage = async () => {
-    console.log("volgende pagina");
+  // Move to the previous stage
+  const prevPage = () => {
+    isNextStage = false;
+  };
+
+  // Move to the next stage
+  const nextPage = () => {
+    isNextStage = true;
+  };
+
+  // Handle the send button click
+  const sendEmail = () => {
+    console.log({
+      name: userName,
+      email: userEmail,
+      cc: cc,
+      bcc: bcc,
+      content: document.querySelector(".preview-content").innerHTML,
+    });
   };
 </script>
 
 <Breadcrumbs {id} />
-{#if templateData.content}
-  <div class="template">
-    <div class="variables">
-      {#each Object.keys(userInput) as variableId}
-        {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-          <div>
-            <label class="label" for={variableId}>
-              {workspaceVariables.variables[variableId].field_name}
-            </label>
-            <input
-              type="text"
-              id={variableId}
-              bind:value={userInput[variableId]}
-              placeholder={workspaceVariables.variables[variableId].placeholder}
-            />
-          </div>
-        {/if}
-      {/each}
-    </div>
-    <div class="preview">
-      <h2>{templateData.name}</h2>
-      <div class="preview-content">
-        {@html replaceVariables(templateData.content, userInput)}
+
+{#if !isNextStage}
+  {#if templateData.content}
+    <div class="template">
+      <div class="variables">
+        {#each Object.keys(userInput) as variableId}
+          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+            <div>
+              <label class="label" for={variableId}>
+                {workspaceVariables.variables[variableId].field_name}
+              </label>
+              <input
+                type="text"
+                id={variableId}
+                bind:value={userInput[variableId]}
+                placeholder={workspaceVariables.variables[variableId]
+                  .placeholder}
+              />
+            </div>
+          {/if}
+        {/each}
       </div>
+      <div class="preview">
+        <h2>{templateData.name}</h2>
+        <div class="preview-content">
+          {@html replaceVariables(templateData.content, userInput)}
+        </div>
+      </div>
+      <button on:click={copyToClipboard}>Kopieer</button>
+      <button on:click={nextPage}>Volgende</button>
     </div>
-    <button on:click={copyToClipboard}>Copy</button>
-    <button on:click={nextPage}>Next</button>
+  {/if}
+{:else}
+  <h1>Send Email</h1>
+  <div class="email-details">
+    <div>
+      <label for="userName">Name</label>
+      <input
+        type="text"
+        id="userName"
+        bind:value={userName}
+        placeholder="Your Name"
+      />
+    </div>
+    <div>
+      <label for="userEmail">Email</label>
+      <input
+        type="email"
+        id="userEmail"
+        bind:value={userEmail}
+        placeholder="Your Email"
+      />
+    </div>
+    <div>
+      <label for="cc">CC</label>
+      <input type="email" id="cc" bind:value={cc} placeholder="CC" />
+    </div>
+    <div>
+      <label for="bcc">BCC</label>
+      <input type="email" id="bcc" bind:value={bcc} placeholder="BCC" />
+    </div>
+  </div>
+  <div class="preview">
+    <h2>Generated Email Content</h2>
+    <div class="preview-content">
+      {@html replaceVariables(templateData.content, userInput)}
+    </div>
+    <button on:click={prevPage}>Vorige</button>
+
+    <button on:click={sendEmail}>Send</button>
   </div>
 {/if}
 
@@ -132,6 +197,17 @@
         cursor: pointer; /* Verander cursor naar pointer bij hover */
         /* Of gebruik bijvoorbeeld background-color voor achtergrondmarkering */
       }
+    }
+  }
+  .email-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
   }
 </style>
