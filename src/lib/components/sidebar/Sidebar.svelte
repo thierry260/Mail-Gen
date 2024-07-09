@@ -10,7 +10,7 @@
   let currentType;
 
   $: {
-    currentId = $page.params.id;
+    currentId = $page.params.id || -1;
     currentType = $page.route.id.includes("template") ? "template" : "category";
   }
 

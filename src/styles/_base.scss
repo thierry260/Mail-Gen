@@ -292,3 +292,8 @@ legend {
     text-underline-offset: 2px;
     cursor: pointer;
 }
+
+
+main:has(.home) nav:first-child {
+    display: none;
+}

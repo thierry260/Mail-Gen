@@ -3,6 +3,7 @@
   import { fetchWorkspaceData } from "$lib/fetch/workspace";
 
   let data = [];
+  let recentlyViewed = [];
 
   onMount(async () => {
     data = await fetchWorkspaceData("categories");
@@ -15,14 +16,15 @@
     } else {
       console.log("Categories not found");
     }
+
+    // Function to retrieve recently viewed templates from localStorage
+    const getRecentlyViewed = () => {
+      return JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+    };
+
+    // Retrieve recently viewed templates
+    recentlyViewed = getRecentlyViewed();
   });
-
-  // Function to retrieve recently viewed templates from localStorage
-  const getRecentlyViewed = () => {
-    return JSON.parse(localStorage.getItem("recentlyViewed")) || [];
-  };
-
-  let recentlyViewed = getRecentlyViewed();
 </script>
 
 <div class="home">

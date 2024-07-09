@@ -1,10 +1,11 @@
 <script>
   import { onMount } from "svelte";
-  import { derived } from "svelte/store";
+  import { derived, get } from "svelte/store";
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/fetch/workspace";
 
   let breadcrumbs = [];
+  let fetchedData = [];
 
   // Function to generate breadcrumb URL based on type
   const breadcrumbUrl = (breadcrumb) => {
@@ -46,7 +47,7 @@
       if (item.sub) {
         for (const subItem of item.sub) {
           if (findPath(subItem)) {
-            path.unshift({ name: item.name, type: "category", id: item.id }); // Prepend parent category/template name
+            path.unshift({ name: item.name, type: "category", id: item.id });
             return true;
           }
         }
@@ -55,7 +56,6 @@
       return false;
     };
 
-    // Clear breadcrumbs array if 'Home' breadcrumb is clicked
     if (currentType === "home") {
       path.push({ name: "Home", type: "home", id: null });
       return path;
@@ -63,73 +63,58 @@
 
     data.forEach((category) => {
       if (findPath(category)) {
-        path.unshift({ name: "Home", type: "home", id: null }); // Add 'Home' as the root of breadcrumbs
+        path.unshift({ name: "Home", type: "home", id: null });
       }
     });
 
     return path;
   };
 
-  // Derive workspace data based on the page store
-  const data = derived(page, async ($page, set) => {
+  // Fetch workspace data and update fetchedData
+  const fetchData = async () => {
     try {
-      const fetchedData = await fetchWorkspaceData("categories");
-      set(fetchedData);
+      fetchedData = await fetchWorkspaceData("categories");
+      console.log("fetchedData", fetchedData);
     } catch (error) {
       console.error("Failed to fetch workspace data:", error);
+      fetchedData = [];
     }
-  });
+  };
 
-  onMount(() => {
-    let unsubscribe;
+  // Call fetchData initially
+  fetchData();
 
-    const loadBreadcrumbs = async () => {
-      const currentId = $page.params.id;
-      const currentType = $page.route.id.includes("template")
+  // Watch for changes in $page and update breadcrumbs accordingly
+  $: {
+    const currentId = $page.params?.id;
+    const currentType =
+      $page.route.id && $page.route.id.includes("template")
         ? "template"
         : "category";
 
-      if (currentId && currentType) {
-        const fetchedData = await fetchWorkspaceData("categories");
-        breadcrumbs = generateBreadcrumbs(currentId, currentType, fetchedData);
-      } else {
-        console.warn("Current ID or type not available.");
-      }
-    };
-
-    unsubscribe = data.subscribe(() => {
-      loadBreadcrumbs();
-    });
-
-    loadBreadcrumbs(); // Initial load
-
-    return () => {
-      unsubscribe();
-    };
-  });
-
-  // Subscribe to changes in the page store to update breadcrumbs
-  $: {
-    const currentId = $page.params.id;
-    const currentType = $page.route.id.includes("template")
-      ? "template"
-      : "category";
-
-    if (currentId && currentType) {
-      const fetchedData = $data; // Use derived data directly
+    if (currentId && currentType && fetchedData && fetchedData.length > 0) {
       breadcrumbs = generateBreadcrumbs(currentId, currentType, fetchedData);
+    } else {
+      console.warn("Current ID or type not available.", currentId, currentType);
     }
   }
+
+  onMount(() => {
+    // No initial load here; rely on reactive statement
+  });
 </script>
 
 <nav aria-label="Breadcrumb">
   <ol class="breadcrumbs">
-    {#each breadcrumbs as crumb, index (index)}
-      <li>
-        <a href={breadcrumbUrl(crumb)}>{crumb.name}</a>
-        {#if index !== breadcrumbs.length - 1}<span>&nbsp;&gt;&nbsp;</span>{/if}
-      </li>
-    {/each}
+    {#if breadcrumbs.length}
+      {#each breadcrumbs as crumb, index (index)}
+        <li>
+          <a href={breadcrumbUrl(crumb)}>{crumb.name}</a>
+          {#if index !== breadcrumbs.length - 1}<span>&nbsp;&gt;&nbsp;</span
+            >{/if}
+        </li>
+      {/each}
+    {/if}
   </ol>
 </nav>
 
