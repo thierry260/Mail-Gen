@@ -3,20 +3,20 @@
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/fetch/workspace";
   import SidebarItem from "./SidebarItem.svelte";
-  import { House } from "phosphor-svelte";
+  import { House, Gear } from "phosphor-svelte";
   import { get } from "svelte/store";
 
   let data = [];
   let currentId;
   let currentType;
-  let isActive = false;
+  let isHomeActive = false;
+  let isSettingsActive = false;
 
   $: {
     currentId = $page.params.id;
     currentType = $page.route.id.includes("template") ? "template" : "category";
-    isActive = !(
-      $page.route.id.includes("template") || $page.route.id.includes("category")
-    );
+    isHomeActive = $page.route.id === "/";
+    isSettingsActive = $page.route.id.includes("/settings");
   }
 
   const expandParents = (item, currentId, currentType) => {
@@ -64,11 +64,18 @@
 <aside class="sidebar">
   <div>
     <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
-    <a class="home" href="/" class:active={isActive}><House size={20} />Home</a>
+    <a class="home" href="/" class:active={isHomeActive}
+      ><House size={20} />Home</a
+    >
     <span class="label">Templates</span>
     {#each data as item}
       <SidebarItem {item} {currentId} {currentType} />
     {/each}
+  </div>
+  <div>
+    <a class="home" href="/settings" class:active={isSettingsActive}
+      ><Gear size={20} />Settings</a
+    >
   </div>
 </aside>
 
@@ -76,7 +83,7 @@
   .sidebar {
     width: 100%;
     max-width: 350px;
-    background: linear-gradient(160deg, var(--primary), var(--secondary));
+    background: linear-gradient(230deg, var(--primary), var(--secondary));
     height: 100%;
     padding: 20px;
     .logo {

@@ -273,15 +273,8 @@ legend {
     width: 100%;
 }
 
-.icon {
-    font-family: "Material Symbols Outlined";
-    font-weight: normal;
-    font-style: normal;
-    font-size: 1.6rem;
-    display: inline-block;
-}
-
-button, .button {
+button,
+.button {
     cursor: pointer;
     outline: 0;
     color: #fff;
@@ -295,11 +288,13 @@ button, .button {
     padding: 6px 12px;
     font-size: 16px;
     border-radius: .25rem;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+
     &:hover {
         color: #fff;
         background-color: var(--primary-darker);
     }
+
     &.outline {
         background-color: #fff;
         color: var(--text);
@@ -310,9 +305,11 @@ button, .button {
 .dropdown {
     transition: transform .1s ease-out;
 }
-.open > .dropdown {
+
+.open>.dropdown {
     transform: rotate(90deg);
 }
+
 .variable {
     text-decoration: underline;
     text-underline-offset: 2px;

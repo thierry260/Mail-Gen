@@ -6,6 +6,7 @@
   import { goto } from "$app/navigation";
   import { CaretRight, DotsThreeVertical, Plus } from "phosphor-svelte";
   import { onMount } from "svelte";
+  import Dropdown from "$lib/components/Dropdown.svelte";
 
   const viewTemplate = (templateId) => {
     goto(`/template/${templateId}`); // Navigate to the template details page
@@ -42,6 +43,35 @@
     return false;
   };
 
+  const addItems = [
+    { label: "Voeg template toe", class: "" },
+    { label: "Voeg categorie toe", class: "" },
+  ];
+
+  const optionsItems = [
+    { label: "Aanpassen", class: "" },
+    { label: "Separator", class: "separator" },
+    { label: "Verwijder", class: "remove" },
+  ];
+
+  function closeDropdown() {
+    const event = new CustomEvent("close-dropdown", {
+      bubbles: true,
+      composed: true,
+    });
+    window.dispatchEvent(event);
+  }
+
+  function triggerDropdown(id) {
+    console.log("Dispatching toggle-dropdown event with id:", id);
+    const event = new CustomEvent("toggle-dropdown", {
+      detail: id,
+      bubbles: true,
+      composed: true,
+    });
+    window.dispatchEvent(event);
+  }
+
   onMount(() => {
     expandParents(item, currentId, currentType);
   });
@@ -62,15 +92,33 @@
         viewCategory(item.id);
       }
     }}
+    on:mouseleave={() => {
+      closeDropdown();
+    }}
     class:open={item.open}
   >
     <CaretRight size={12} class="dropdown" /><span class="name"
       >{item.name}</span
     ><span class="actions"
-      ><DotsThreeVertical size={18} data-action="options" /><Plus
-        size={16}
-        data-action="add"
-      /></span
+      ><div
+        on:click={(event) => {
+          event.stopPropagation();
+          triggerDropdown(`options_{item.id}`);
+          // Add your logic here
+        }}
+      >
+        <DotsThreeVertical size={18} data-action="options" />
+        <Dropdown items={optionsItems} id={`options_{item.id}`} />
+      </div>
+      <div
+        on:click={(event) => {
+          event.stopPropagation();
+          triggerDropdown(`add_{item.id}`);
+        }}
+      >
+        <Plus size={16} data-action="add" />
+        <Dropdown items={addItems} id={`add_{item.id}`} />
+      </div></span
     >
   </button>
   {#if item.open}
@@ -135,10 +183,15 @@
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.2s ease-out;
+        position: relative;
+        > div {
+          position: relative;
+        }
       }
       &:hover {
         .actions {
           opacity: 1;
+          pointer-events: auto;
         }
       }
       &.active {
