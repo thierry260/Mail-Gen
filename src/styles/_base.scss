@@ -1,38 +1,38 @@
 html {
-    margin: 0;
-    padding: 0;
-    font-size: 62.5%;
-    scroll-behavior: smooth;
+  margin: 0;
+  padding: 0;
+  font-size: 62.5%;
+  scroll-behavior: smooth;
 
-    .grecaptcha-badge {
-        visibility: hidden;
-        opacity: 0;
-        pointer-events: none;
-    }
+  .grecaptcha-badge {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: hidden;
-    font-size: 1.8rem;
-    font-family: $inter;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'liga';
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  font-size: 1.8rem;
+  font-family: $inter;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "liga";
 
-    &.no_scroll {
-        overflow: hidden;
-    }
+  &.no_scroll {
+    overflow: hidden;
+  }
 }
 
 *,
 *::before {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 /* ----- Headings ----- */
@@ -44,9 +44,9 @@ h4,
 .h2,
 .h3,
 .h4 {
-    font-family: $poppins;
-    color: $black;
-    margin: 0 0 20px 0;
+  font-family: $poppins;
+  color: $black;
+  margin: 0 0 20px 0;
 }
 
 h1,
@@ -55,120 +55,120 @@ h3,
 .h1,
 .h2,
 .h3 {
-    font-weight: 600;
-    line-height: 1.3em;
+  font-weight: 600;
+  line-height: 1.3em;
 }
 
 h4,
 .h4 {
-    font-weight: 500;
-    line-height: 1.4em;
+  font-weight: 500;
+  line-height: 1.4em;
 }
 
 h1,
 .h1 {
-    font-size: (55 / 16) * 1rem;
+  font-size: (55 / 16) * 1rem;
 
-    @media screen and (max-width: $lg) {
-        font-size: (45 / 16) * 1rem;
-    }
+  @media screen and (max-width: $lg) {
+    font-size: (45 / 16) * 1rem;
+  }
 
-    @media screen and (max-width: $md) {
-        font-size: (40 / 16) * 1rem;
-    }
+  @media screen and (max-width: $md) {
+    font-size: (40 / 16) * 1rem;
+  }
 
-    @media screen and (max-width: $sm) {
-        font-size: (35 / 16) * 1rem;
-    }
+  @media screen and (max-width: $sm) {
+    font-size: (35 / 16) * 1rem;
+  }
 }
 
 h2,
 .h2 {
-    font-size: (40 / 16) * 1rem;
+  font-size: (40 / 16) * 1rem;
 
-    @media screen and (max-width: $lg) {
-        font-size: (35 / 16) * 1rem;
-    }
+  @media screen and (max-width: $lg) {
+    font-size: (35 / 16) * 1rem;
+  }
 
-    @media screen and (max-width: $sm) {
-        font-size: (28 / 16) * 1rem;
-    }
+  @media screen and (max-width: $sm) {
+    font-size: (28 / 16) * 1rem;
+  }
 }
 
 h3,
 .h3 {
-    font-size: (30 / 16) * 1rem;
+  font-size: (30 / 16) * 1rem;
 
-    @media screen and (max-width: $md) {
-        font-size: (25 / 16) * 1rem;
-    }
+  @media screen and (max-width: $md) {
+    font-size: (25 / 16) * 1rem;
+  }
 }
 
 h4,
 .h4 {
-    font-size: (18 / 16) * 1rem;
+  font-size: (18 / 16) * 1rem;
 }
 
 p {
-    font-family: $inter;
-    font-weight: 400;
-    font-size: (18 / 16) * 1rem;
-    line-height: 1.7em;
-    color: $black;
+  font-family: $inter;
+  font-weight: 400;
+  font-size: (18 / 16) * 1rem;
+  line-height: 1.7em;
+  color: $black;
 
-    @media screen and (max-width: $sm) {
-        font-size: (16 / 16) * 1rem;
-    }
+  @media screen and (max-width: $sm) {
+    font-size: (16 / 16) * 1rem;
+  }
 }
 
 /* ----- Buttons ----- */
 .button {
-    border: none;
-    cursor: pointer;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    overflow: auto;
-    flex-shrink: 0;
-    justify-content: center;
-    font-family: $poppins;
-    font-weight: 600;
-    font-size: 1.6rem;
-    // line-height: ; // button moet 50px hoog zijn in totaal
-    white-space: nowrap;
-    text-decoration: none;
-    color: $white;
-    background: $blue;
-    border-radius: 5px;
-    padding: 17px 20px;
-    transition: all ease-out .2s;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  overflow: auto;
+  flex-shrink: 0;
+  justify-content: center;
+  font-family: $poppins;
+  font-weight: 600;
+  font-size: 1.6rem;
+  // line-height: ; // button moet 50px hoog zijn in totaal
+  white-space: nowrap;
+  text-decoration: none;
+  color: $white;
+  background: $blue;
+  border-radius: 5px;
+  padding: 17px 20px;
+  transition: all ease-out 0.2s;
 
-    &.outline {
-        background: $white;
-        color: $black;
-        font-weight: 500;
-        box-shadow: inset 0 0 0 2px $border;
+  &.outline {
+    background: $white;
+    color: $black;
+    font-weight: 500;
+    box-shadow: inset 0 0 0 2px $border;
 
-        &:hover {
-            background: $background;
-        }
+    &:hover {
+      background: $background;
     }
+  }
 
-    &.arrow {
-        padding: 17px 45px 17px 20px;
+  &.arrow {
+    padding: 17px 45px 17px 20px;
 
-        &::after {
-            content: '\e5c8';
-            font-family: $icon;
-            color: inherit;
-            position: absolute;
-            display: block;
-            right: 20px;
-            font-size: (20 / 16) * 1em;
-            top: calc(50% - 10px);
-        }
+    &::after {
+      content: "\e5c8";
+      font-family: $icon;
+      color: inherit;
+      position: absolute;
+      display: block;
+      right: 20px;
+      font-size: (20 / 16) * 1em;
+      top: calc(50% - 10px);
     }
+  }
 }
 
 /* ----- Containers ----- */
@@ -177,43 +177,43 @@ p {
 .container,
 .container_small,
 .container_smaller {
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .container_wide,
 .container,
 .container_small,
 .container_smaller {
-    padding: 0 15px;
-    margin: 0 auto;
+  padding: 0 15px;
+  margin: 0 auto;
 
-    @media screen and (max-width: $xl) {
-        max-width: 100%;
-        padding: 0 25px;
-    }
+  @media screen and (max-width: $xl) {
+    max-width: 100%;
+    padding: 0 25px;
+  }
 }
 
 .container_full {
-    max-width: 100%;
-    padding: 0;
+  max-width: 100%;
+  padding: 0;
 }
 
 .container_wide {
-    max-width: 1400px;
+  max-width: 1400px;
 }
 
 .container {
-    max-width: 1170px;
+  max-width: 1170px;
 }
 
 .container_small {
-    max-width: 970px;
+  max-width: 970px;
 }
 
 .container_smaller {
-    max-width: 800px;
+  max-width: 800px;
 }
 
 input[type="text"],
@@ -222,104 +222,100 @@ input[type="tel"],
 input[type="email"],
 textarea,
 select {
-    font-size: 1.6rem;
-    font-family: $inter;
-    color: $black;
-    position: relative;
-    // background-color: $background;
-    border: none;
-    border-radius: 5px;
-    padding: 15px 20px;
-    width: 100%;
-    outline-style: solid;
-    outline-offset: -1px;
-    outline-width: 2px;
-    transition: outline-color ease-out .2s, margin-bottom ease-out .6s;
+  font-size: 1.6rem;
+  font-family: $inter;
+  color: $black;
+  position: relative;
+  // background-color: $background;
+  border: none;
+  border-radius: 5px;
+  padding: 15px 20px;
+  width: 100%;
+  outline-style: solid;
+  outline-offset: -1px;
+  outline-width: 2px;
+  transition: outline-color ease-out 0.2s, margin-bottom ease-out 0.6s;
 
-    &:not(:focus),
-    &:not(:focus-within),
-    &:not(:focus-visible) {
-        outline-color: transparent;
-    }
+  &:not(:focus),
+  &:not(:focus-within),
+  &:not(:focus-visible) {
+    outline-color: transparent;
+  }
 
-    &.wpcf7-not-valid {
-        animation: hint .8s 1;
-        animation-delay: .2s;
-        outline-color: rgba(var(--response-color), .8);
-    }
+  &.wpcf7-not-valid {
+    animation: hint 0.8s 1;
+    animation-delay: 0.2s;
+    outline-color: rgba(var(--response-color), 0.8);
+  }
 
-    @media screen and (max-width: $md) {
-        height: 40px;
-        border: 1px solid $border;
-    }
+  @media screen and (max-width: $md) {
+    height: 40px;
+    border: 1px solid $border;
+  }
 }
 
 select {
-    padding: 0 30px;
-    width: 100%;
+  padding: 0 30px;
+  width: 100%;
 }
 
 textarea {
-    height: unset;
-    resize: none;
-    padding: 12px 20px;
+  height: unset;
+  resize: none;
+  padding: 12px 20px;
 }
 
 legend {
-    font-family: $poppins;
-    padding-bottom: 1.25em;
-    border-bottom: 1px solid $border;
-    margin-bottom: 1.5em;
-    width: 100%;
-}
-
-.icon {
-    font-family: "Material Symbols Outlined";
-    font-weight: normal;
-    font-style: normal;
-    font-size: 1.6rem;
-    display: inline-block;
+  font-family: $poppins;
+  padding-bottom: 1.25em;
+  border-bottom: 1px solid $border;
+  margin-bottom: 1.5em;
+  width: 100%;
 }
 
 .button {
-    cursor: pointer;
-    outline: 0;
+  cursor: pointer;
+  outline: 0;
+  color: #fff;
+  background-color: var(--primary);
+  border-color: transparent;
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  font-size: 16px;
+  border-radius: 0.25rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+  &:hover {
     color: #fff;
-    background-color: var(--primary);
-    border-color: transparent;
-    display: inline-block;
-    font-weight: 400;
-    line-height: 1.5;
-    text-align: center;
-    border: 1px solid transparent;
-    padding: 6px 12px;
-    font-size: 16px;
-    border-radius: .25rem;
-    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-    &:hover {
-        color: #fff;
-        background-color: var(--primary-darker);
-    }
-    &.outline {
-        background-color: #fff;
-        color: var(--text);
-        border-color: var(--border);
-    }
+    background-color: var(--primary-darker);
+  }
+
+  &.outline {
+    background-color: #fff;
+    color: var(--text);
+    border-color: var(--border);
+  }
 }
 
 .dropdown {
-    transition: transform .1s ease-out;
-}
-.open > .dropdown {
-    transform: rotate(90deg);
-}
-.variable {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
+  transition: transform 0.1s ease-out;
 }
 
+.open > .dropdown {
+  transform: rotate(90deg);
+}
+
+.variable {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
 
 main:has(.home) nav:first-child {
-    display: none;
+  display: none;
 }
