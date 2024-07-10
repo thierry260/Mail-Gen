@@ -4,6 +4,7 @@
   import { fetchWorkspaceData } from "$lib/fetch/workspace";
   import { fetchTemplateData } from "$lib/fetch/template";
   import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
+  import { get } from "svelte/store";
 
   let id;
   let templateData = {};
@@ -14,9 +15,16 @@
   let userEmail = "";
   let cc = "";
   let bcc = "";
+  let isActive = false;
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
+
+  // Subscribe to the page store to get the current URL
+  $: {
+    const { path } = get(page).url;
+    isActive = path === "/";
+  }
 
   // Fetch all data for the component
   const fetchWorkspaceAndTemplateData = async () => {
@@ -45,6 +53,8 @@
 
   // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
+    if (!content) return ""; // Check if content is defined
+
     return content.replace(/{{(.*?)}}/g, (match, p1) => {
       const value = variables[p1] || match;
       return `<span class="variable" on:click={handleVariableClick.bind(null, p1)}>${value}</span>`;
@@ -90,8 +100,9 @@
     localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
   };
 
-  const nextPage = async () => {
-    console.log("volgende pagina");
+  // Move to the prev stage
+  const prevPage = () => {
+    isNextStage = false;
   };
 
   // Move to the next stage
@@ -112,78 +123,74 @@
 </script>
 
 {#if templateData.content}
-  <h1>{templateData.name}</h1>
-  <div class="template">
-    <div class="variables">
-      {#each Object.keys(userInput) as variableId}
-        {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-          <div>
-            <label class="label" for={variableId}>
-              {workspaceVariables.variables[variableId].field_name}
-            </label>
-            <input
-              type="text"
-              id={variableId}
-              bind:value={userInput[variableId]}
-              placeholder={workspaceVariables.variables[variableId].placeholder}
-            />
-          </div>
-        {/if}
-      {/each}
-    </div>
-    <div class="preview">
-      <div class="preview-content">
-        {@html replaceVariables(templateData.content, userInput)}
+  {#if !isNextStage}
+    <h1>{templateData.name}</h1>
+    <div class="template">
+      <div class="variables">
+        {#each Object.keys(userInput) as variableId}
+          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+            <div>
+              <label class="label" for={variableId}>
+                {workspaceVariables.variables[variableId].field_name}
+              </label>
+              <input
+                type="text"
+                id={variableId}
+                bind:value={userInput[variableId]}
+                placeholder={workspaceVariables.variables[variableId]
+                  .placeholder}
+              />
+            </div>
+          {/if}
+        {/each}
       </div>
       <div class="preview">
-        <h2>{templateData.name}</h2>
         <div class="preview-content">
           {@html replaceVariables(templateData.content, userInput)}
         </div>
+        <button on:click={copyToClipboard}>Kopieer</button>
+        <button on:click={nextPage}>Volgende</button>
       </div>
-      <button on:click={copyToClipboard}>Kopieer</button>
-      <button on:click={nextPage}>Volgende</button>
+    </div>
+  {:else}
+    <h1>Send Email</h1>
+    <div class="email-details">
+      <div>
+        <label for="userName">Name</label>
+        <input
+          type="text"
+          id="userName"
+          bind:value={userName}
+          placeholder="Your Name"
+        />
+      </div>
+      <div>
+        <label for="userEmail">Email</label>
+        <input
+          type="email"
+          id="userEmail"
+          bind:value={userEmail}
+          placeholder="Your Email"
+        />
+      </div>
+      <div>
+        <label for="cc">CC</label>
+        <input type="email" id="cc" bind:value={cc} placeholder="CC" />
+      </div>
+      <div>
+        <label for="bcc">BCC</label>
+        <input type="email" id="bcc" bind:value={bcc} placeholder="BCC" />
+      </div>
+    </div>
+    <div class="preview">
+      <h2>Generated Email Content</h2>
+      <div class="preview-content">
+        {@html replaceVariables(templateData.content, userInput)}
+      </div>
+      <button on:click={prevPage}>Vorige</button>
+      <button on:click={sendEmail}>Send</button>
     </div>
   {/if}
-{:else}
-  <h1>Send Email</h1>
-  <div class="email-details">
-    <div>
-      <label for="userName">Name</label>
-      <input
-        type="text"
-        id="userName"
-        bind:value={userName}
-        placeholder="Your Name"
-      />
-    </div>
-    <div>
-      <label for="userEmail">Email</label>
-      <input
-        type="email"
-        id="userEmail"
-        bind:value={userEmail}
-        placeholder="Your Email"
-      />
-    </div>
-    <div>
-      <label for="cc">CC</label>
-      <input type="email" id="cc" bind:value={cc} placeholder="CC" />
-    </div>
-    <div>
-      <label for="bcc">BCC</label>
-      <input type="email" id="bcc" bind:value={bcc} placeholder="BCC" />
-    </div>
-  </div>
-  <div class="preview">
-    <h2>Generated Email Content</h2>
-    <div class="preview-content">
-      {@html replaceVariables(templateData.content, userInput)}
-    </div>
-    <button on:click={prevPage}>Vorige</button>
-
-    <button on:click={sendEmail}>Send</button>
-  </div>
 {/if}
 
 <style lang="scss">
