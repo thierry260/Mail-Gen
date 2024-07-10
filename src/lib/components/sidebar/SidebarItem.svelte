@@ -124,7 +124,7 @@
       transition:
         border-color 0.1s ease-out,
         background-color 0.1s ease-out;
-      color: var(--gray-600);
+      color: #fff;
       .name {
         flex-grow: 1;
       }
@@ -142,10 +142,10 @@
         }
       }
       &.active {
-        background-color: var(--gray-200);
+        background-color: rgba(0, 0, 0, 0.2);
       }
       &:not(.active):hover {
-        border-color: var(--gray-300);
+        border-color: rgba(255, 255, 255, 0.6);
       }
     }
     .accordion_header .dropdown {

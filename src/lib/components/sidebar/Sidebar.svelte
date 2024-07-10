@@ -63,6 +63,7 @@
 
 <aside class="sidebar">
   <div>
+    <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
     <a class="home" href="/" class:active={isActive}><House size={20} />Home</a>
     <span class="label">Templates</span>
     {#each data as item}
@@ -75,9 +76,19 @@
   .sidebar {
     width: 100%;
     max-width: 350px;
-    background-color: var(--gray-100);
+    background: linear-gradient(160deg, var(--primary), var(--secondary));
     height: 100%;
     padding: 20px;
+    .logo {
+      max-width: 200px;
+      margin-inline: auto;
+      width: 100%;
+      display: block;
+      padding-block: 30px;
+    }
+    .label {
+      color: #fff;
+    }
     .home {
       cursor: pointer;
       padding: 10px;
@@ -93,15 +104,20 @@
       transition:
         border-color 0.1s ease-out,
         background-color 0.1s ease-out;
-      color: var(--gray-600);
+      color: #fff;
       text-decoration: none;
       margin-bottom: 20px;
 
       &.active {
-        background-color: var(--gray-200); /* svelte-ignore unused-selector */
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.2
+        ); /* svelte-ignore unused-selector */
       }
       &:not(.active):hover {
-        border-color: var(--gray-300);
+        border-color: rgba(255, 255, 255, 0.6);
       }
     }
   }
