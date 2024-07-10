@@ -1,6 +1,6 @@
 // src/lib/workspaceService.js
 import { doc, getDoc } from "firebase/firestore";
-import db from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
+import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
 
 let cachedTemplateData = {};
 

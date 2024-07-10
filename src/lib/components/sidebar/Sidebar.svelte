@@ -5,6 +5,8 @@
   import SidebarItem from "./SidebarItem.svelte";
   import { House } from "phosphor-svelte";
   import { get } from "svelte/store";
+  import { getAuth, signOut } from "firebase/auth";
+  import { goto } from "$app/navigation";
 
   let data = [];
   let currentId;
@@ -59,6 +61,17 @@
       console.log("Categories not found");
     }
   });
+
+  // Logout function
+  const logout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      goto("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 </script>
 
 <aside class="sidebar">
@@ -70,6 +83,7 @@
       <SidebarItem {item} {currentId} {currentType} />
     {/each}
   </div>
+  <button class="logout-button" on:click={logout}>Logout</button>
 </aside>
 
 <style lang="scss">
@@ -79,6 +93,10 @@
     background: linear-gradient(160deg, var(--primary), var(--secondary));
     height: 100%;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
     .logo {
       max-width: 200px;
       margin-inline: auto;
@@ -118,6 +136,21 @@
       }
       &:not(.active):hover {
         border-color: rgba(255, 255, 255, 0.6);
+      }
+    }
+    .logout-button {
+      margin-top: auto;
+      padding: 10px;
+      background-color: transparent;
+      border: 1px solid #fff;
+      border-radius: 10px;
+      font-size: 1rem;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.1s ease-out;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.2);
       }
     }
   }
