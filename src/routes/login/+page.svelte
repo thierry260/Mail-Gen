@@ -19,24 +19,38 @@
   }
 </script>
 
-<main>
+<form on:submit|preventDefault={login}>
   <h1>Login</h1>
-  <form on:submit|preventDefault={login}>
-    <div>
-      <label for="email">Email:</label>
-      <input type="email" id="email" bind:value={email} required />
-    </div>
-    <div>
-      <label for="password">Password:</label>
-      <input type="password" id="password" bind:value={password} required />
-    </div>
-    <button type="submit">Login</button>
-    {#if $errorMessage}
-      <p style="color: red">{$errorMessage}</p>
-    {/if}
-  </form>
-</main>
+  <div class="input_wrapper">
+    <label class="label" for="email">Email</label>
+    <input type="email" id="email" bind:value={email} required />
+  </div>
+  <div class="input_wrapper">
+    <label class="label" for="password">Password</label>
+    <input type="password" id="password" bind:value={password} required />
+  </div>
+  <button class="button" type="submit">Login</button>
+  {#if $errorMessage}
+    <p style="color: red">{$errorMessage}</p>
+  {/if}
+</form>
 
-<style>
-  /* Add your styles here */
+<style lang="scss">
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 540px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .input_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: stretch;
+    .label {
+      margin-bottom: 0;
+    }
+  }
 </style>

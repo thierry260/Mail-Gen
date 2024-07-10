@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { doc, getDoc, updateDoc } from "firebase/firestore";
-  import db from "$lib/firebase"; // Adjust the import path if necessary
+  import { db } from "$lib/firebase"; // Adjust the import path if necessary
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };

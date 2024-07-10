@@ -17,7 +17,10 @@
   $: {
     currentId = $page.params.id;
     currentType = $page.route.id.includes("template") ? "template" : "category";
-    isHomeActive = $page.route.id === "/";
+    isHomeActive =
+      $page.route.id === "" ||
+      $page.route.id === "/" ||
+      $page.route.id === "/(app)";
     isSettingsActive = $page.route.id.includes("/settings");
   }
 
@@ -75,23 +78,21 @@
 </script>
 
 <aside class="sidebar">
-  <div>
-    <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
-    <a class="home" href="/" class:active={isHomeActive}
-      ><House size={20} />Home</a
-    >
+  <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
+  <a class="menu_item" href="/" class:active={isHomeActive}
+    ><House size={20} />Home</a
+  >
+  <div class="templates">
     <span class="label">Templates</span>
     {#each data as item}
       <SidebarItem {item} {currentId} {currentType} />
     {/each}
   </div>
 
-  <div>
-    <a class="home" href="/settings" class:active={isSettingsActive}
-      ><Gear size={20} />Settings</a
-    >
-  </div>
-  <button class="logout-button" on:click={logout}>Logout</button>
+  <a class="menu_item" href="/settings" class:active={isSettingsActive}
+    ><Gear size={20} />Instellingen</a
+  >
+  <button class="logout-button" on:click={logout}>Uitloggen</button>
 </aside>
 
 <style lang="scss">
@@ -115,7 +116,11 @@
     .label {
       color: #fff;
     }
-    .home {
+
+    .templates {
+      flex-grow: 1;
+    }
+    .menu_item {
       cursor: pointer;
       padding: 10px;
       background-color: transparent;
@@ -150,9 +155,9 @@
       margin-top: auto;
       padding: 10px;
       background-color: transparent;
-      border: 1px solid #fff;
+      border: 1px solid #ffffff77;
       border-radius: 10px;
-      font-size: 1rem;
+      font-size: 1.6rem;
       color: #fff;
       cursor: pointer;
       transition: background-color 0.1s ease-out;
