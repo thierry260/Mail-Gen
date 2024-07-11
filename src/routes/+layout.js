@@ -7,9 +7,13 @@ export async function load({ url }) {
   const auth = getAuth();
   const user = auth.currentUser;
 
-  if (!user && !url.pathname.startsWith("/login")) {
+  if (
+    !user &&
+    !url.pathname.startsWith("/login") &&
+    !url.pathname.startsWith("/get-mailgen")
+  ) {
     console.log(auth, auth.currentUser);
-    // throw redirect(302, '/login');
+    // throw redirect(302, "/login");
   }
 
   return { user };

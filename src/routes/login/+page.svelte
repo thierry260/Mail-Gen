@@ -46,6 +46,7 @@
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
+        localStorage.setItem("workspace", workspace);
         goto("/");
       } else {
         errorMessage.set("Je account is geen onderdeel van deze workspace.");

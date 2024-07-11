@@ -1,6 +1,5 @@
-// src/lib/workspaceService.js
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
+import { db } from "$lib/firebase";
 import { browser } from "$app/environment";
 
 const CACHE_KEY = "cachedWorkspaceData";
@@ -17,10 +16,22 @@ export async function fetchWorkspaceData(fieldName = null) {
   }
 
   if (cachedData && cacheExpiration && Date.now() < parseInt(cacheExpiration)) {
+    console.log("Using cached workspace data");
   } else {
     console.log("Fetching fresh workspace data");
     try {
-      const docRef = doc(db, "workspaces", "wms"); // Adjust to your Firestore path
+      if (!browser) {
+        console.error("Not in a browser environment");
+        return null;
+      }
+
+      const workspaceId = localStorage.getItem("workspace");
+      if (!workspaceId) {
+        console.error("Workspace ID not found in localStorage");
+        return null;
+      }
+
+      const docRef = doc(db, "workspaces", workspaceId);
       const docSnap = await getDoc(docRef);
       console.log("workspace - getDoc");
 
@@ -58,17 +69,29 @@ export function clearCache() {
 }
 
 let cachedTemplateData = {};
+
 export async function fetchTemplateData(templateId) {
   if (cachedTemplateData[templateId]) {
     return cachedTemplateData[templateId];
   }
 
   try {
+    if (!browser) {
+      console.error("Not in a browser environment");
+      return null;
+    }
+
+    const workspaceId = localStorage.getItem("workspace");
+    if (!workspaceId) {
+      console.error("Workspace ID not found in localStorage");
+      return null;
+    }
+
     console.log(templateId);
     const templateDocRef = doc(
       db,
       "workspaces",
-      "wms",
+      workspaceId,
       "templates",
       templateId
     );

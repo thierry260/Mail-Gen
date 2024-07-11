@@ -2,13 +2,22 @@
   import { onMount } from "svelte";
   import { doc, getDoc, updateDoc } from "firebase/firestore";
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
+  import { browser } from "$app/environment";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
-    const docRef = doc(db, "workspaces", "wms");
+    if (!browser) return;
+
+    const workspaceId = localStorage.getItem("workspace");
+    if (!workspaceId) {
+      console.error("Workspace ID not found in localStorage");
+      return;
+    }
+
+    const docRef = doc(db, "workspaces", workspaceId);
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -20,7 +29,15 @@
   };
 
   const saveVariables = async () => {
-    const docRef = doc(db, "workspaces", "wms");
+    if (!browser) return;
+
+    const workspaceId = localStorage.getItem("workspace");
+    if (!workspaceId) {
+      console.error("Workspace ID not found in localStorage");
+      return;
+    }
+
+    const docRef = doc(db, "workspaces", workspaceId);
     await updateDoc(docRef, { variables: workspaceVariables });
     console.log("Variables saved successfully");
   };

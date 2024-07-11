@@ -23,7 +23,7 @@
 
   // Fetch existing variables from the workspace
   const fetchVariables = async () => {
-    const docRef = doc(db, "workspaces", "wms");
+    const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -45,7 +45,7 @@
   };
 
   const addTemplateToCategory = async (templateId) => {
-    const docRef = doc(db, "workspaces", "wms");
+    const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
@@ -84,8 +84,13 @@
         variables: usedVariables,
       };
       const docRef = await addDoc(
-        collection(db, "workspaces", "wms", "templates"),
-        newTemplate,
+        collection(
+          db,
+          "workspaces",
+          localStorage.getItem("workspace"),
+          "templates"
+        ),
+        newTemplate
       );
       console.log("Template added with ID: ", docRef.id);
 
@@ -107,7 +112,7 @@
       workspaceVariables = { ...workspaceVariables, [id]: newVariable };
 
       // Update the Firestore document with the new variable
-      const docRef = doc(db, "workspaces", "wms");
+      const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
       await updateDoc(docRef, {
         [`variables.${id}`]: newVariable,
       });

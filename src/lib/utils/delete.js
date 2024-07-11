@@ -2,10 +2,13 @@
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
 import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
+import { browser } from "$app/environment";
 
 export const deleteCategory = async (categoryId) => {
   try {
-    const workspaceId = "wms"; // Adjust according to your setup
+    if (!browser) return;
+
+    const workspaceId = localStorage.getItem("workspace"); // Adjust according to your setup
     const docRef = doc(db, "workspaces", workspaceId);
     const docSnap = await getDoc(docRef);
 

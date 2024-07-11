@@ -78,6 +78,7 @@
     const auth = getAuth();
     try {
       await signOut(auth);
+      localStorage.removeItem("workspace");
       goto("/login");
     } catch (error) {
       console.error("Logout failed", error);
