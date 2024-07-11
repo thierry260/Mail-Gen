@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { derived, get } from "svelte/store";
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/fetch/workspace";
+  import { fetchWorkspaceData } from "$lib/utils/get";
 
   let breadcrumbs = [];
   let fetchedData = [];

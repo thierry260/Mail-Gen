@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { fetchWorkspaceData } from "$lib/fetch/workspace";
+  import { fetchWorkspaceData } from "$lib/utils/get";
 
   let data = [];
   let recentlyViewed = [];
