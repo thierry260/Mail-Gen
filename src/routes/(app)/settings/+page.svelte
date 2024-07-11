@@ -62,7 +62,7 @@
 <h1>Variables</h1>
 
 <!-- Add New Variable Form -->
-<div>
+<div class="settings">
   <h2>New variable</h2>
   <input
     type="text"
