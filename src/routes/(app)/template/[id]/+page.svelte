@@ -1,9 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/utils/get";
-  import { fetchTemplateData } from "$lib/utils/get";
-  import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
+  import { fetchWorkspaceData, fetchTemplateData } from "$lib/utils/get";
   import { get } from "svelte/store";
 
   let id;
@@ -20,12 +18,6 @@
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
 
-  // Subscribe to the page store to get the current URL
-  $: {
-    const { path } = get(page).url;
-    isActive = path === "/";
-  }
-
   // Fetch all data for the component
   const fetchWorkspaceAndTemplateData = async () => {
     templateData = await fetchTemplateData(id);
@@ -33,6 +25,7 @@
 
     // Initialize user input fields with placeholders
     if (templateData.variables && workspaceVariables.variables) {
+      userInput = {}; // Reset userInput to avoid carrying over data from previous templates
       templateData.variables.forEach((variableId) => {
         if (workspaceVariables.variables[variableId]) {
           userInput[variableId] =
@@ -45,11 +38,13 @@
     saveRecentlyViewedTemplate(templateData);
   };
 
-  // Perform any necessary actions when the component mounts
-  onMount(() => {
-    console.log("Fetching template details for template ID:", id);
-    fetchWorkspaceAndTemplateData();
-  });
+  // Perform any necessary actions when the component mounts or ID changes
+  $: {
+    if (id) {
+      console.log("Fetching template details for template ID:", id);
+      fetchWorkspaceAndTemplateData();
+    }
+  }
 
   // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
