@@ -132,7 +132,7 @@
     {#if item.templates}
       <div class="accordion_templates">
         {#each item.templates as template}
-          <div
+          <button
             class="template {currentType === 'template' &&
             template.id === currentId
               ? 'active'
@@ -144,7 +144,7 @@
             class:open={template.open}
           >
             {template.name}
-          </div>
+          </button>
         {/each}
       </div>
     {/if}

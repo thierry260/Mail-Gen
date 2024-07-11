@@ -150,8 +150,10 @@
         </div>
       </div>
       <div class="buttons">
-        <button class="outline" on:click={copyToClipboard}>Kopieer</button>
-        <button on:click={nextPage}>Volgende</button>
+        <button class="button outline" on:click={copyToClipboard}
+          >Kopieer</button
+        >
+        <button class="button" on:click={nextPage}>Volgende</button>
       </div>
     </div>
   {:else}
@@ -189,8 +191,8 @@
       <div class="preview-content">
         {@html replaceVariables(templateData.content, userInput)}
       </div>
-      <button class="outline" on:click={prevPage}>Vorige</button>
-      <button on:click={sendEmail}>Versturen</button>
+      <button class="button outline" on:click={prevPage}>Vorige</button>
+      <button class="button" on:click={sendEmail}>Versturen</button>
     </div>
   {/if}
 {/if}

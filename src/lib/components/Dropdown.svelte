@@ -15,10 +15,10 @@
   // Listen for custom events to toggle the dropdown
   function handleToggle(event) {
     if (event.detail === id) {
-      console.log(
-        "Dropdown received toggle-dropdown event with detail:",
-        event.detail,
-      );
+      // console.log(
+      //   "Dropdown received toggle-dropdown event with detail:",
+      //   event.detail,
+      // );
       toggleDropdown();
     }
   }
