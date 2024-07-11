@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/fetch/workspace";
+  import { fetchWorkspaceData } from "$lib/utils/get";
   import SidebarItem from "./SidebarItem.svelte";
   import { House, Gear } from "phosphor-svelte";
   import { get } from "svelte/store";

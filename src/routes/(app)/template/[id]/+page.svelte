@@ -1,8 +1,8 @@
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/fetch/workspace";
-  import { fetchTemplateData } from "$lib/fetch/template";
+  import { fetchWorkspaceData } from "$lib/utils/get";
+  import { fetchTemplateData } from "$lib/utils/get";
   import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
   import { get } from "svelte/store";
 

@@ -2,7 +2,7 @@
 <script>
   import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/fetch/workspace";
+  import { fetchWorkspaceData } from "$lib/utils/get";
   import { onDestroy } from "svelte";
 
   let id;
