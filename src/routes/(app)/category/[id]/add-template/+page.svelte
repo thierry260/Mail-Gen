@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { page } from "$app/stores";
   import {
     db,
     collection,
@@ -14,6 +15,11 @@
   let newVariable = { field_name: "", placeholder: "" };
   let templateName = "";
   let templateContent = "";
+  let categoryId = "";
+
+  $: {
+    categoryId = $page.params.id;
+  }
 
   // Fetch existing variables from the workspace
   const fetchVariables = async () => {
@@ -38,6 +44,37 @@
     return matches;
   };
 
+  const addTemplateToCategory = async (templateId) => {
+    const docRef = doc(db, "workspaces", "wms");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      let categories = docSnap.data().categories || [];
+
+      const findAndAddTemplate = (categories) => {
+        for (let category of categories) {
+          if (category.id === categoryId) {
+            category.templates = category.templates || [];
+            category.templates.push({ id: templateId, name: templateName });
+            return true;
+          }
+          if (category.sub) {
+            if (findAndAddTemplate(category.sub)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      findAndAddTemplate(categories);
+
+      await updateDoc(docRef, {
+        categories: categories,
+      });
+    }
+  };
+
   const addTemplate = async () => {
     try {
       const usedVariables = extractVariablesFromContent(templateContent);
@@ -51,6 +88,10 @@
         newTemplate,
       );
       console.log("Template added with ID: ", docRef.id);
+
+      // Add template ID to the category
+      await addTemplateToCategory(docRef.id);
+
       // Optionally, redirect to another page or show success message
     } catch (e) {
       console.error("Error adding document: ", e);
