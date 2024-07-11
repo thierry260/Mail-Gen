@@ -111,7 +111,7 @@
       margin-inline: auto;
       width: 100%;
       display: block;
-      padding-block: 30px;
+      padding-block: 50px;
     }
     .label {
       color: #fff;

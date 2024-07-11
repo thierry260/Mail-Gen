@@ -316,6 +316,7 @@ legend {
   cursor: pointer;
 }
 
+main:has(.settings) nav:first-child,
 main:has(.home) nav:first-child {
   display: none;
 }

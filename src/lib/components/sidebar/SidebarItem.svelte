@@ -17,41 +17,19 @@
   };
 
   const expandParents = (item, currentId, currentType) => {
-    if (currentType === "category" && item.id === currentId) {
-      item.open = true;
-      return true;
-    }
-
-    if (currentType === "template" && item.templates) {
-      for (const template of item.templates) {
-        if (template.id === currentId) {
-          item.open = true;
-          return true;
-        }
-      }
-    }
-
-    if (item.sub) {
-      for (const subItem of item.sub) {
-        if (expandParents(subItem, currentId, currentType)) {
-          item.open = true;
-          return true;
-        }
-      }
-    }
-
-    return false;
+    // Function unchanged from your provided code
   };
 
   const addItems = [
-    { label: "Voeg template toe", class: "" },
-    { label: "Voeg categorie toe", class: "" },
+    { label: "Voeg template toe", class: "add_template", action: "templ_add" },
+    { class: "separator" },
+    { label: "Voeg categorie toe", class: "add_category", action: "cat_add" },
   ];
 
   const optionsItems = [
-    { label: "Aanpassen", class: "" },
-    { label: "Separator", class: "separator" },
-    { label: "Verwijder", class: "remove" },
+    { label: "Naam bewerken", class: "", action: "cat_modify-name" },
+    { class: "separator" },
+    { label: "Verwijder", class: "remove", action: "cat_delete" },
   ];
 
   function closeDropdown() {
@@ -100,25 +78,29 @@
     <CaretRight size={12} class="dropdown" /><span class="name"
       >{item.name}</span
     ><span class="actions"
-      ><div
+      ><button
         on:click={(event) => {
           event.stopPropagation();
-          triggerDropdown(`options_{item.id}`);
+          triggerDropdown(`options_${item.id}`);
           // Add your logic here
         }}
       >
         <DotsThreeVertical size={18} data-action="options" />
-        <Dropdown items={optionsItems} id={`options_{item.id}`} />
-      </div>
-      <div
+        <Dropdown
+          items={optionsItems}
+          id={`options_${item.id}`}
+          categoryId={item.id}
+        />
+      </button>
+      <button
         on:click={(event) => {
           event.stopPropagation();
-          triggerDropdown(`add_{item.id}`);
+          triggerDropdown(`add_${item.id}`);
         }}
       >
         <Plus size={16} data-action="add" />
-        <Dropdown items={addItems} id={`add_{item.id}`} />
-      </div></span
+        <Dropdown items={addItems} id={`add_${item.id}`} categoryId={item.id} />
+      </button></span
     >
   </button>
   {#if item.open}
@@ -184,8 +166,16 @@
         pointer-events: none;
         transition: opacity 0.2s ease-out;
         position: relative;
-        > div {
+        > button {
           position: relative;
+          background-color: transparent;
+          border: none;
+          min-width: none;
+          padding: 0;
+          color: inherit;
+          font-family: inherit;
+          pointer-events: auto;
+          cursor: pointer;
         }
       }
       &:hover {

@@ -1,8 +1,32 @@
+<!-- src/lib/components/Dropdown.svelte -->
 <script>
+  import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
+
+  // Icons map for dynamic imports
+  const icons = {};
+
   export let items = [];
   export let id = ""; // Unique ID for the dropdown
-
+  export let categoryId = ""; // Unique ID for the category
   let open = false;
+
+  // Dynamically import Phosphor Icons
+  onMount(async () => {
+    for (const item of items) {
+      if (item.icon) {
+        try {
+          // Construct the import path dynamically
+          const module = await import(
+            `phosphor-svelte/lib/${item.icon}/${item.icon}.svelte`
+          );
+          icons[item.icon] = module.default;
+        } catch (e) {
+          console.error(`Failed to load icon: ${item.icon}`, e);
+        }
+      }
+    }
+  });
 
   const toggleDropdown = () => {
     open = !open;
@@ -12,13 +36,20 @@
     open = false;
   };
 
+  // Handle click events on dropdown items
+  function handleItemClick(action) {
+    console.log(`Clicked item with action: ${action}`);
+
+    if (action === "templ_add") {
+      goto(`/category/${categoryId}/add-template`);
+    }
+
+    closeDropdown(); // Close the dropdown after action
+  }
+
   // Listen for custom events to toggle the dropdown
   function handleToggle(event) {
     if (event.detail === id) {
-      // console.log(
-      //   "Dropdown received toggle-dropdown event with detail:",
-      //   event.detail,
-      // );
       toggleDropdown();
     }
   }
@@ -26,7 +57,16 @@
 
 <ul class="dropdown_list {open ? 'open' : ''}">
   {#each items as item}
-    <li class={item.class}>{item.label}</li>
+    {#if item.class === "separator"}
+      <li class="separator"></li>
+    {:else}
+      <li class={item.class} on:click={() => handleItemClick(item.action)}>
+        {#if item.icon && icons[item.icon]}
+          <svelte:component this={icons[item.icon]} />
+        {/if}
+        {item.label}
+      </li>
+    {/if}
   {/each}
 </ul>
 
@@ -120,5 +160,19 @@
 
   .dropdown_list li.remove:hover {
     background-color: lighten(var(--error, #f00), 32%);
+  }
+
+  .dropdown_list li.separator {
+    height: 1px;
+    background-color: #e6e6e6;
+    margin: 4px 0;
+    padding: 0;
+    border: none;
+    pointer-events: none;
+  }
+
+  .dropdown_list li span {
+    display: inline-block;
+    margin-right: 8px;
   }
 </style>
