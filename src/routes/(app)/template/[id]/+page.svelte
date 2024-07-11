@@ -3,6 +3,7 @@
   import { page } from "$app/stores";
   import { fetchWorkspaceData, fetchTemplateData } from "$lib/utils/get";
   import { get } from "svelte/store";
+  import { browser } from "$app/environment";
 
   let id;
   let templateData = {};
@@ -33,6 +34,8 @@
         }
       });
     }
+
+    templateData.id = id;
 
     // Save to localStorage as recently viewed template
     saveRecentlyViewedTemplate(templateData);
@@ -80,19 +83,23 @@
 
   // Function to save the recently viewed template to localStorage
   const saveRecentlyViewedTemplate = (template) => {
-    let recentlyViewed =
-      JSON.parse(localStorage.getItem("recentlyViewed")) || [];
-    // Check if the template is already in the recently viewed list
-    const index = recentlyViewed.findIndex((item) => item.id === template.id);
-    if (index !== -1) {
-      recentlyViewed.splice(index, 1); // Remove the template from the list to re-add it later
+    if (browser) {
+      let recentlyViewed =
+        JSON.parse(localStorage.getItem("recentlyViewed")) || [];
+      // Check if the template is already in the recently viewed list
+      const index = recentlyViewed.findIndex((item) => item.id === template.id);
+      if (index !== -1) {
+        recentlyViewed.splice(index, 1); // Remove the template from the list to re-add it later
+      }
+      recentlyViewed.unshift(template); // Add the template at the beginning of the array
+      // Limit to storing only the last 4 viewed templates
+      if (recentlyViewed.length > 4) {
+        recentlyViewed = recentlyViewed.slice(0, 4);
+      }
+      localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
+    } else {
+      console.warn("localStorage is not available in this environment.");
     }
-    recentlyViewed.unshift(template); // Add the template at the beginning of the array
-    // Limit to storing only the last 4 viewed templates
-    if (recentlyViewed.length > 4) {
-      recentlyViewed = recentlyViewed.slice(0, 4);
-    }
-    localStorage.setItem("recentlyViewed", JSON.stringify(recentlyViewed));
   };
 
   // Move to the prev stage

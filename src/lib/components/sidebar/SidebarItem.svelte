@@ -21,15 +21,35 @@
   };
 
   const addItems = [
-    { label: "Voeg template toe", class: "add_template", action: "templ_add" },
+    {
+      label: "Voeg template toe",
+      class: "add_template",
+      action: "templ_add",
+      icon: "add",
+    },
     { class: "separator" },
-    { label: "Voeg categorie toe", class: "add_category", action: "cat_add" },
+    {
+      label: "Voeg categorie toe",
+      class: "add_category",
+      action: "cat_add",
+      icon: "add",
+    },
   ];
 
   const optionsItems = [
-    { label: "Naam bewerken", class: "", action: "cat_modify-name" },
+    {
+      label: "Naam bewerken",
+      class: "",
+      action: "cat_modify-name",
+      icon: "edit",
+    },
     { class: "separator" },
-    { label: "Verwijder", class: "remove", action: "cat_delete" },
+    {
+      label: "Verwijder",
+      class: "remove",
+      action: "cat_delete",
+      icon: "delete",
+    },
   ];
 
   function closeDropdown() {
@@ -198,10 +218,11 @@
       transform: rotate(90deg);
     }
 
-    .template {
-    }
     .accordion_templates {
       margin-left: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: inherit;
     }
 
     .accordion_content {

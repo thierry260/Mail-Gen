@@ -2,31 +2,20 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import { deleteCategory } from "$lib/utils/delete"; // Adjust import path as per your setup
+  import { Plus, TrashSimple, PencilSimple } from "phosphor-svelte";
 
-  // Icons map for dynamic imports
-  const icons = {};
+  // Icons map for dynamic rendering
+  const icons = {
+    add: Plus, // Assuming 'plus' corresponds to House icon
+    delete: TrashSimple, // Assuming 'delete' corresponds to Gear icon
+    edit: PencilSimple, // Placeholder for 'edit' icon if needed
+  };
 
   export let items = [];
   export let id = ""; // Unique ID for the dropdown
   export let categoryId = ""; // Unique ID for the category
   let open = false;
-
-  // Dynamically import Phosphor Icons
-  onMount(async () => {
-    for (const item of items) {
-      if (item.icon) {
-        try {
-          // Construct the import path dynamically
-          const module = await import(
-            `phosphor-svelte/lib/${item.icon}/${item.icon}.svelte`
-          );
-          icons[item.icon] = module.default;
-        } catch (e) {
-          console.error(`Failed to load icon: ${item.icon}`, e);
-        }
-      }
-    }
-  });
 
   const toggleDropdown = () => {
     open = !open;
@@ -42,6 +31,16 @@
 
     if (action === "templ_add") {
       goto(`/category/${categoryId}/add-template`);
+    } else if (confirm("Are you sure you want to delete this category?")) {
+      deleteCategory(categoryId).then(() => {
+        const deleteEvent = new CustomEvent("category-deleted", {
+          detail: categoryId,
+          bubbles: true,
+          composed: true,
+        });
+        window.dispatchEvent(deleteEvent); // Dispatch event on window object
+        console.log("deleteEvent dispatched", deleteEvent);
+      });
     }
 
     closeDropdown(); // Close the dropdown after action

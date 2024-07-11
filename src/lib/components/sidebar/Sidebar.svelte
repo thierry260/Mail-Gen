@@ -1,7 +1,9 @@
+<!-- src/lib/components/Sidebar/Sidebar.svelte -->
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
+  import { removeCategoryFromData } from "$lib/utils/delete";
   import SidebarItem from "./SidebarItem.svelte";
   import { House, Gear } from "phosphor-svelte";
   import { get } from "svelte/store";
@@ -65,6 +67,12 @@
     }
   });
 
+  // Handle category deletion event
+  const handleCategoryDeleted = (event) => {
+    console.log("handleCategoryDeleted triggered");
+    const deletedCategoryId = event.detail;
+    data = removeCategoryFromData(data, deletedCategoryId); // Update data array
+  };
   // Logout function
   const logout = async () => {
     const auth = getAuth();
@@ -82,7 +90,7 @@
   <a class="menu_item" href="/" class:active={isHomeActive}
     ><House size={20} />Home</a
   >
-  <div class="templates">
+  <div class="templates" on:category-deleted={handleCategoryDeleted}>
     <span class="label">Templates</span>
     {#each data as item}
       <SidebarItem {item} {currentId} {currentType} />
