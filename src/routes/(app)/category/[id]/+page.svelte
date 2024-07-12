@@ -1,13 +1,13 @@
-<!-- src/routes/category/[id]/+page.svelte -->
 <script>
-  import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
-  import { onDestroy } from "svelte";
+  import { CaretRight } from "phosphor-svelte";
 
   let id;
   let name;
   let categories = [];
+  let subcategories = [];
+  let templates = [];
 
   $: id = $page.params.id;
 
@@ -23,6 +23,18 @@
     return null;
   };
 
+  const extractTemplates = (category, templates = []) => {
+    if (category.templates) {
+      templates = templates.concat(category.templates);
+    }
+    if (category.sub) {
+      category.sub.forEach((subcategory) => {
+        templates = extractTemplates(subcategory, templates);
+      });
+    }
+    return templates;
+  };
+
   const loadCategoryData = async () => {
     const data = await fetchWorkspaceData("categories");
     if (data) {
@@ -34,6 +46,8 @@
       const category = findCategoryById(categories, id);
       if (category) {
         name = category.name;
+        subcategories = category.sub || [];
+        templates = extractTemplates(category);
       } else {
         console.log("Category not found");
       }
@@ -55,4 +69,110 @@
 
 <div class="category">
   <h1>{name}</h1>
+
+  {#if subcategories.length > 0}
+    <div class="categories">
+      <h2>Categorieën</h2>
+      <div class="categories_grid">
+        {#each subcategories as subcategory}
+          <a href={`/category/${subcategory.id}`} class="category">
+            <h3>{subcategory.name}</h3>
+            <CaretRight size={18} />
+          </a>
+        {/each}
+      </div>
+    </div>
+  {/if}
+
+  {#if templates.length > 0}
+    <div class="templates">
+      <h2>Templates</h2>
+      <div class="templates_list">
+        {#each templates as template}
+          <a href={`/template/${template.id}`} class="template">
+            <h3>{template.name}</h3>
+            <CaretRight size={14} />
+          </a>
+        {/each}
+      </div>
+    </div>
+  {/if}
 </div>
+
+<style lang="scss">
+  .category {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .categories_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    .category {
+      background-color: #fff;
+      padding: 30px;
+      gap: 20px;
+      margin-bottom: 10px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out;
+      &:hover {
+        border-color: var(--gray-400);
+      }
+      &:active {
+        color: inherit;
+      }
+      h3 {
+        font-size: 1.8rem;
+        flex-grow: 1;
+      }
+    }
+  }
+
+  .templates {
+    margin-top: 20px;
+  }
+
+  .templates_list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    .template {
+      padding: 15px;
+      border-radius: var(--border-radius-small, 5px);
+      border: 1px solid var(--border);
+      background-color: #fff;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out;
+      &:hover {
+        border-color: var(--gray-400);
+      }
+      &:active {
+        color: inherit;
+      }
+      h3 {
+        font-size: 1.6rem;
+        flex-grow: 1;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  h2 {
+    font-size: 2.6rem;
+  }
+</style>

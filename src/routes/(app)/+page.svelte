@@ -107,25 +107,6 @@
     </div>
   </div>
 
-  <!-- Recently viewed templates section -->
-  <div class="recently_viewed">
-    <h2>Recent bekeken</h2>
-    {#if recentlyViewed.length === 0}
-      <p>Geen templates recent bekeken.</p>
-    {:else}
-      <div class="recent_templates">
-        {#each recentlyViewed as template}
-          <a href="/template/{template.id}" class="recent_template">
-            <h3>{template.name}</h3>
-            <CaretRight size={18} />
-          </a>
-        {/each}
-      </div>
-    {/if}
-  </div>
-
-  <div class="recently_added"></div>
-
   <div class="categories">
     <h2>Categorieën</h2>
     <div class="categories_grid">
@@ -137,13 +118,28 @@
       {/each}
     </div>
   </div>
+  <div class="recently_viewed">
+    <h2>Recent bekeken</h2>
+    {#if recentlyViewed.length === 0}
+      <p>Geen templates recent bekeken.</p>
+    {:else}
+      <div class="recent_templates">
+        {#each recentlyViewed as template}
+          <a href="/template/{template.id}" class="recent_template">
+            <h3>{template.name}</h3>
+            <CaretRight size={14} />
+          </a>
+        {/each}
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style lang="scss">
   .home {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 40px;
   }
 
   .search {
@@ -190,44 +186,9 @@
     }
   }
 
-  .recently_viewed {
-    margin-top: 20px;
-  }
-
-  .recent_templates {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    .recent_template {
-      padding: 30px;
-      margin-bottom: 10px;
-      border-radius: var(--border-radius);
-      border: 1px solid var(--border);
-      background-color: #fff;
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-      text-decoration: none;
-      transition:
-        background-color 0.2s ease-out,
-        border-color 0.2s ease-out;
-      &:hover {
-        // background-color: var(--gray-100);
-        border-color: var(--gray-400);
-      }
-      &:active {
-        color: inherit;
-      }
-      h3 {
-        font-size: 1.8rem;
-        flex-grow: 1;
-      }
-    }
-  }
-
   .categories_grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     .category {
       background-color: #fff;
@@ -255,6 +216,40 @@
       }
     }
   }
+
+  .recent_templates {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    .recent_template {
+      padding: 15px;
+      border-radius: var(--border-radius-small, 5px);
+      border: 1px solid var(--border);
+      background-color: #fff;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out;
+      &:hover {
+        // background-color: var(--gray-100);
+        border-color: var(--gray-400);
+      }
+      &:active {
+        color: inherit;
+      }
+      h3 {
+        font-size: 1.6rem;
+        flex-grow: 1;
+        margin-bottom: 0;
+      }
+    }
+  }
+
   h2 {
     font-size: 2.6rem;
   }
