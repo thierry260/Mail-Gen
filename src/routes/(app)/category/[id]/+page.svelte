@@ -133,6 +133,7 @@
       h3 {
         font-size: 1.8rem;
         flex-grow: 1;
+        margin-bottom: 0;
       }
     }
   }

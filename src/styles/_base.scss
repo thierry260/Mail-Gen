@@ -140,9 +140,9 @@ p {
   white-space: nowrap;
   text-decoration: none;
   color: $white;
-  background: var(--primary);
-  border-radius: 5px;
-  padding: 10px 20px;
+  background: var(--gradient, --primary);
+  border-radius: 8px;
+  padding: 12px 20px;
   transition: all ease-out 0.2s;
 
   &.outline {
@@ -312,9 +312,12 @@ legend {
 }
 
 .variable {
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background-color: var(--gray-100);
+  margin-inline: 2px;
+  display: inline-block;
 }
 
 main:has(.settings) nav:first-child,

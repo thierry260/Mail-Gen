@@ -16,6 +16,10 @@
   let templateName = "";
   let templateContent = "";
   let categoryId = "";
+  let inputRef; // Reference to the input element
+  let showVariablePopup = false; // State to control the popup visibility
+  let variableSearchQuery = ""; // Query for variable search
+  let showPlaceholderField = false; // State to control placeholder field visibility
 
   $: {
     categoryId = $page.params.id;
@@ -122,50 +126,98 @@
     }
   };
 
-  const insertVariable = () => {
-    if (selectedVariable) {
-      templateContent += ` {{${selectedVariable}}} `;
+  const insertVariable = (variable) => {
+    templateContent += ` {{${variable}}} `;
+    showVariablePopup = false;
+    variableSearchQuery = "";
+    showPlaceholderField = false;
+  };
+
+  const handleVariableSearch = (e) => {
+    variableSearchQuery = e.target.value;
+    const existingVariable = Object.entries(workspaceVariables).find(
+      ([id, data]) =>
+        data.field_name.toLowerCase() === variableSearchQuery.toLowerCase()
+    );
+
+    if (existingVariable) {
+      // If existing variable is found
+      selectedVariable = existingVariable[0];
+      showPlaceholderField = false;
+    } else if (variableSearchQuery) {
+      // If no existing variable is found, allow adding new variable
       selectedVariable = "";
+      newVariable.field_name = variableSearchQuery;
+      showPlaceholderField = true;
+    } else {
+      showPlaceholderField = false;
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      if (selectedVariable) {
+        insertVariable(selectedVariable);
+      } else if (newVariable.field_name && newVariable.placeholder) {
+        addNewVariable();
+        insertVariable(newVariable.field_name);
+      }
     }
   };
 
   onMount(() => {
     fetchVariables();
+    inputRef.focus(); // Focus the input element when the component mounts
   });
 </script>
 
 <h1>Template toevoegen</h1>
+<input
+  type="text"
+  placeholder="Template naam"
+  bind:value={templateName}
+  bind:this={inputRef}
+/>
 
-<!-- Existing Variables Selection -->
 <div>
-  <h2>1: Variabele selecteren</h2>
-  <select bind:value={selectedVariable}>
-    <option value="" disabled>Selecteer</option>
-    {#each Object.entries(workspaceVariables) as [variableId, variableData]}
-      <option value={variableId}>{variableData.field_name}</option>
-    {/each}
-  </select>
-  <button on:click={insertVariable}>Voeg toe</button>
-</div>
-
-<!-- New Template Form -->
-<div>
-  <h2>2: Template details</h2>
-  <input type="text" placeholder="Template naam" bind:value={templateName} />
+  <h2>Template details</h2>
   <textarea placeholder="Email inhoud" bind:value={templateContent}></textarea>
 </div>
 
-<!-- Add New Variable -->
-<div>
-  <h2>Variabelen toevoegen</h2>
-  <input type="text" placeholder="Naam" bind:value={newVariable.field_name} />
-  <input
-    type="text"
-    placeholder="Placeholder"
-    bind:value={newVariable.placeholder}
-  />
-  <button on:click={addNewVariable}>Voeg toe</button>
-</div>
+<button on:click={() => (showVariablePopup = true)}>Voeg Variabele Toe</button>
+
+{#if showVariablePopup}
+  <div class="popup">
+    <h2>Voeg een variabele toe</h2>
+    <input
+      type="text"
+      placeholder="Variabele naam"
+      bind:value={variableSearchQuery}
+      on:input={handleVariableSearch}
+      on:keypress={handleKeyPress}
+    />
+    {#if variableSearchQuery && !showPlaceholderField}
+      <ul>
+        {#each Object.entries(workspaceVariables).filter( ([id, data]) => data.field_name
+              .toLowerCase()
+              .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+          <li on:click={() => insertVariable(data.field_name)}>
+            {data.field_name}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if showPlaceholderField}
+      <input
+        type="text"
+        placeholder="Placeholder"
+        bind:value={newVariable.placeholder}
+        on:keypress={handleKeyPress}
+      />
+    {/if}
+    <button on:click={() => (showVariablePopup = false)}>Sluiten</button>
+  </div>
+{/if}
 
 <!-- Save Template Button -->
 <button on:click={addTemplate}>Save</button>
@@ -192,5 +244,41 @@
 
   h2 {
     margin-top: 20px;
+  }
+
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  .popup input {
+    margin-bottom: 10px;
+  }
+
+  .popup button {
+    margin-right: 10px;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+
+  li {
+    padding: 10px;
+    background: #f0f0f0;
+    margin-bottom: 5px;
+    cursor: pointer;
+  }
+
+  li:hover {
+    background: #e0e0e0;
   }
 </style>
