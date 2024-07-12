@@ -3,12 +3,14 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
+  import { browser } from "$app/environment";
   import { removeCategoryFromData } from "$lib/utils/delete";
   import SidebarItem from "./SidebarItem.svelte";
   import { House, Gear } from "phosphor-svelte";
   import { get } from "svelte/store";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
+  import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
 
   let data = [];
   let currentId;
@@ -67,12 +69,6 @@
     }
   });
 
-  // Handle category deletion event
-  const handleCategoryDeleted = (event) => {
-    console.log("handleCategoryDeleted triggered");
-    const deletedCategoryId = event.detail;
-    data = removeCategoryFromData(data, deletedCategoryId); // Update data array
-  };
   // Logout function
   const logout = async () => {
     const auth = getAuth();
@@ -84,6 +80,29 @@
       console.error("Logout failed", error);
     }
   };
+
+  if (browser) {
+    // Listen for category modification and deletion events
+    window.addEventListener("category-modified", (event) => {
+      clearCache();
+      const { categoryId, newName } = event.detail;
+      data = data.map((item) => {
+        if (item.id === categoryId) {
+          return {
+            ...item,
+            name: newName,
+          };
+        }
+        return item;
+      });
+    });
+
+    window.addEventListener("category-deleted", (event) => {
+      clearCache();
+      const deletedCategoryId = event.detail;
+      data = removeCategoryFromData(data, deletedCategoryId);
+    });
+  }
 </script>
 
 <aside class="sidebar">
@@ -91,7 +110,7 @@
   <a class="menu_item" href="/" class:active={isHomeActive}
     ><House size={20} />Home</a
   >
-  <div class="templates" on:category-deleted={handleCategoryDeleted}>
+  <div class="templates">
     <span class="label">Templates</span>
     {#each data as item}
       <SidebarItem {item} {currentId} {currentType} />

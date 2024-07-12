@@ -1,15 +1,16 @@
 <!-- src/lib/components/Dropdown.svelte -->
 <script>
-  import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { deleteCategory } from "$lib/utils/delete"; // Adjust import path as per your setup
+  import { deleteCategory } from "$lib/utils/delete";
+  import { updateCategoryName } from "$lib/utils/set";
+  import { createCategory } from "$lib/utils/create";
   import { Plus, TrashSimple, PencilSimple } from "phosphor-svelte";
 
   // Icons map for dynamic rendering
   const icons = {
-    add: Plus, // Assuming 'plus' corresponds to House icon
-    delete: TrashSimple, // Assuming 'delete' corresponds to Gear icon
-    edit: PencilSimple, // Placeholder for 'edit' icon if needed
+    add: Plus,
+    delete: TrashSimple,
+    edit: PencilSimple,
   };
 
   export let items = [];
@@ -31,19 +32,52 @@
 
     if (action === "templ_add") {
       goto(`/category/${categoryId}/add-template`);
-    } else if (confirm("Are you sure you want to delete this category?")) {
-      deleteCategory(categoryId).then(() => {
-        const deleteEvent = new CustomEvent("category-deleted", {
-          detail: categoryId,
-          bubbles: true,
-          composed: true,
+      closeDropdown();
+    } else if (action === "cat_delete") {
+      if (
+        confirm(
+          "Weet je zeker dat je deze categorie wilt verwijderen? Alle onderliggende categorieën en templates zullen tevens worden verwijderd."
+        )
+      ) {
+        deleteCategory(categoryId).then(() => {
+          const deleteEvent = new CustomEvent("category-deleted", {
+            detail: categoryId,
+            bubbles: true,
+            composed: true,
+          });
+          window.dispatchEvent(deleteEvent);
+          closeDropdown();
         });
-        window.dispatchEvent(deleteEvent); // Dispatch event on window object
-        console.log("deleteEvent dispatched", deleteEvent);
-      });
+      }
+    } else if (action === "cat_modify-name") {
+      const newName = prompt("Geef een nieuwe naam voor de categorie:");
+      if (newName) {
+        updateCategoryName(categoryId, newName).then(() => {
+          const modifyEvent = new CustomEvent("category-modified", {
+            detail: { categoryId, newName },
+            bubbles: true,
+            composed: true,
+          });
+          window.dispatchEvent(modifyEvent);
+          closeDropdown();
+        });
+      }
+    } else if (action === "cat_add") {
+      const newCategoryName = prompt(
+        "Geef een naam in voor de nieuwe categorie:"
+      );
+      if (newCategoryName) {
+        createCategory(categoryId, newCategoryName).then((newCategory) => {
+          const addEvent = new CustomEvent("category-added", {
+            detail: { parentCategoryId: categoryId, newCategory },
+            bubbles: true,
+            composed: true,
+          });
+          window.dispatchEvent(addEvent);
+          closeDropdown();
+        });
+      }
     }
-
-    closeDropdown(); // Close the dropdown after action
   }
 
   // Listen for custom events to toggle the dropdown
