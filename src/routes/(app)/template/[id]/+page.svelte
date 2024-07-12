@@ -150,7 +150,7 @@
         name: templateData.name,
         variables: templateData.variables,
       });
-      isEditMode = false; // Exit edit mode
+      toggleEditMode();
       fetchWorkspaceAndTemplateData(); // Refresh the data
     } catch (e) {
       console.error("Error updating document: ", e);
