@@ -4,10 +4,12 @@
   import { fetchWorkspaceData, fetchTemplateData } from "$lib/utils/get";
   import { get } from "svelte/store";
   import { browser } from "$app/environment";
+  import { updateDoc, doc } from "firebase/firestore"; // Import Firestore update function
+  import { db } from "$lib/firebase"; // Adjust the import path if necessary
 
   let id;
   let templateData = {};
-  let workspaceVariables = {};
+  let workspaceVariables = { variables: {} }; // Ensure workspaceVariables is initialized with a default structure
   let userInput = {};
   let isNextStage = false; // Control the visibility of stages
   let userName = "";
@@ -15,30 +17,41 @@
   let cc = "";
   let bcc = "";
   let isActive = false;
+  let isEditMode = false; // Toggle for edit mode
+  let selectedVariable = ""; // Track the selected variable for insertion
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
 
   // Fetch all data for the component
   const fetchWorkspaceAndTemplateData = async () => {
-    templateData = await fetchTemplateData(id);
-    workspaceVariables = await fetchWorkspaceData();
+    try {
+      templateData = await fetchTemplateData(id);
+      workspaceVariables = (await fetchWorkspaceData()) || { variables: {} }; // Ensure workspaceVariables is not null
 
-    // Initialize user input fields with placeholders
-    if (templateData.variables && workspaceVariables.variables) {
-      userInput = {}; // Reset userInput to avoid carrying over data from previous templates
-      templateData.variables.forEach((variableId) => {
-        if (workspaceVariables.variables[variableId]) {
-          userInput[variableId] =
-            workspaceVariables.variables[variableId].placeholder || "";
-        }
-      });
+      // Ensure workspaceVariables has a variables property
+      if (!workspaceVariables.variables) {
+        workspaceVariables.variables = {};
+      }
+
+      // Initialize user input fields with placeholders
+      if (templateData.variables) {
+        userInput = {}; // Reset userInput to avoid carrying over data from previous templates
+        templateData.variables.forEach((variableId) => {
+          if (workspaceVariables.variables[variableId]) {
+            userInput[variableId] =
+              workspaceVariables.variables[variableId].placeholder || "";
+          }
+        });
+      }
+
+      templateData.id = id;
+
+      // Save to localStorage as recently viewed template
+      saveRecentlyViewedTemplate(templateData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-
-    templateData.id = id;
-
-    // Save to localStorage as recently viewed template
-    saveRecentlyViewedTemplate(templateData);
   };
 
   // Perform any necessary actions when the component mounts or ID changes
@@ -122,42 +135,98 @@
       content: document.querySelector(".preview-content").innerHTML,
     });
   };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    isEditMode = !isEditMode;
+  };
+
+  // Handle save button click
+  const saveTemplate = async () => {
+    try {
+      // Update the template data with the current content, name, and variables
+      await updateDoc(doc(db, "workspaces/wms/templates", id), {
+        content: templateData.content,
+        name: templateData.name,
+        variables: templateData.variables,
+      });
+      isEditMode = false; // Exit edit mode
+      fetchWorkspaceAndTemplateData(); // Refresh the data
+    } catch (e) {
+      console.error("Error updating document: ", e);
+    }
+  };
+
+  // Insert a variable into the template content
+  const insertVariable = () => {
+    if (selectedVariable) {
+      templateData.content += ` {{${selectedVariable}}} `;
+      selectedVariable = "";
+    }
+  };
 </script>
 
 {#if templateData.content}
   {#if !isNextStage}
-    <h1>{templateData.name}</h1>
-    <div class="template">
-      <div class="variables">
-        {#each Object.keys(userInput) as variableId}
-          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-            <div>
-              <label class="label" for={variableId}>
-                {workspaceVariables.variables[variableId].field_name}
-              </label>
-              <input
-                type="text"
-                id={variableId}
-                bind:value={userInput[variableId]}
-                placeholder={workspaceVariables.variables[variableId]
-                  .placeholder}
-              />
-            </div>
-          {/if}
-        {/each}
+    <h1>
+      {templateData.name}
+      <button on:click={toggleEditMode}>{isEditMode ? "Cancel" : "Edit"}</button
+      >
+    </h1>
+    {#if isEditMode}
+      <div class="edit-template">
+        <input
+          type="text"
+          bind:value={templateData.name}
+          placeholder="Template naam"
+        />
+        <textarea bind:value={templateData.content} placeholder="Email inhoud"
+        ></textarea>
+        <div>
+          <h2>1: Variabele selecteren</h2>
+          <select bind:value={selectedVariable}>
+            <option value="" disabled>Selecteer</option>
+            {#each Object.entries(workspaceVariables.variables) as [variableId, variableData]}
+              <option value={variableId}>{variableData.field_name}</option>
+            {/each}
+          </select>
+          <button on:click={insertVariable}>Voeg toe</button>
+        </div>
+        <button on:click={saveTemplate}>Save</button>
       </div>
-      <div class="preview">
-        <div class="preview-content">
-          {@html replaceVariables(templateData.content, userInput)}
+    {:else}
+      <div class="template">
+        <div class="variables">
+          {#each Object.keys(userInput) as variableId}
+            {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+              <div>
+                <label class="label" for={variableId}>
+                  {workspaceVariables.variables[variableId].field_name}
+                </label>
+                <input
+                  type="text"
+                  id={variableId}
+                  bind:value={userInput[variableId]}
+                  placeholder={workspaceVariables.variables[variableId]
+                    .placeholder}
+                />
+              </div>
+            {/if}
+          {/each}
+        </div>
+        <div class="preview">
+          <div class="preview-content">
+            {@html replaceVariables(templateData.content, userInput)}
+          </div>
+        </div>
+        <div class="buttons">
+          <button class="button outline" on:click={copyToClipboard}
+            >Kopieer</button
+          >
+          <button class="button" on:click={nextPage}>Volgende</button>
         </div>
       </div>
-      <div class="buttons">
-        <button class="button outline" on:click={copyToClipboard}
-          >Kopieer</button
-        >
-        <button class="button" on:click={nextPage}>Volgende</button>
-      </div>
-    </div>
+    {/if}
   {:else}
     <h1>Send Email</h1>
     <div class="email-details">
