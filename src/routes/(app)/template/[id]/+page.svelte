@@ -169,8 +169,10 @@
 {#if templateData.content}
   {#if !isNextStage}
     <h1>
+      Template:
       {templateData.name}
-      <button on:click={toggleEditMode}>{isEditMode ? "Cancel" : "Edit"}</button
+      <button on:click={toggleEditMode}
+        >{isEditMode ? "Cancel" : "Aanpassen"}</button
       >
     </h1>
     {#if isEditMode}
@@ -183,7 +185,7 @@
         <textarea bind:value={templateData.content} placeholder="Email inhoud"
         ></textarea>
         <div>
-          <h2>1: Variabele selecteren</h2>
+          <h2>Variabele selecteren</h2>
           <select bind:value={selectedVariable}>
             <option value="" disabled>Selecteer</option>
             {#each Object.entries(workspaceVariables.variables) as [variableId, variableData]}
@@ -192,7 +194,7 @@
           </select>
           <button on:click={insertVariable}>Voeg toe</button>
         </div>
-        <button on:click={saveTemplate}>Save</button>
+        <button on:click={saveTemplate}>Opslaan</button>
       </div>
     {:else}
       <div class="template">

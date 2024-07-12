@@ -76,22 +76,18 @@
   });
 </script>
 
-<h1>Variables</h1>
+<h1>Instellingen</h1>
 
 <!-- Add New Variable Form -->
 <div class="settings">
-  <h2>New variable</h2>
-  <input
-    type="text"
-    placeholder="Field Name"
-    bind:value={newVariable.field_name}
-  />
+  <h2>Variabelen managen</h2>
+  <input type="text" placeholder="Naam" bind:value={newVariable.field_name} />
   <input
     type="text"
     placeholder="Placeholder"
     bind:value={newVariable.placeholder}
   />
-  <button on:click={addVariable}>Add Variable</button>
+  <button on:click={addVariable}>Voeg toe</button>
 </div>
 
 <!-- Existing Variables Table -->
@@ -99,10 +95,10 @@
   <table>
     <thead>
       <tr>
-        <th>Variable ID</th>
-        <th>Field Name</th>
+        <th>ID</th>
+        <th>Naam</th>
         <th>Placeholder</th>
-        <th>Actions</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -126,7 +122,9 @@
             />
           </td>
           <td>
-            <button on:click={() => removeVariable(variableId)}>Remove</button>
+            <button on:click={() => removeVariable(variableId)}
+              >Verwijder</button
+            >
           </td>
         </tr>
       {/each}
