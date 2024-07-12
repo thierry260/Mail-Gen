@@ -9,11 +9,11 @@
   import Dropdown from "$lib/components/Dropdown.svelte";
 
   const viewTemplate = (templateId) => {
-    goto(`/template/${templateId}`); // Navigate to the template details page
+    goto(`/template/${templateId}`);
   };
 
   const viewCategory = (categoryId) => {
-    goto(`/category/${categoryId}`); // Navigate to the category details page
+    goto(`/category/${categoryId}`);
   };
 
   const expandParents = (item, currentId, currentType) => {
@@ -70,8 +70,47 @@
     window.dispatchEvent(event);
   }
 
+  function handleCategoryAdded(event) {
+    const { parentCategoryId, newCategory } = event.detail;
+    if (item.id === parentCategoryId) {
+      item = {
+        ...item,
+        sub: [...item.sub, newCategory],
+      };
+    }
+    item = { ...item }; // Trigger reactivity
+  }
+
+  function handleCategoryModified(event) {
+    const { categoryId, newName } = event.detail;
+    if (item.id === categoryId) {
+      console.log("handleCategoryModified");
+      item = {
+        ...item,
+        name: newName,
+      };
+    }
+    item = { ...item }; // Trigger reactivity
+  }
+
+  function handleCategoryDeleted(event) {
+    const { categoryId } = event.detail;
+    if (item.sub) {
+      item.sub = item.sub.filter((subItem) => subItem.id !== categoryId);
+    }
+    item = { ...item }; // Trigger reactivity
+  }
+
   onMount(() => {
     expandParents(item, currentId, currentType);
+    window.addEventListener("category-added", handleCategoryAdded);
+    window.addEventListener("category-modified", handleCategoryModified);
+    window.addEventListener("category-deleted", handleCategoryDeleted);
+    return () => {
+      window.removeEventListener("category-added", handleCategoryAdded);
+      window.removeEventListener("category-modified", handleCategoryModified);
+      window.removeEventListener("category-deleted", handleCategoryDeleted);
+    };
   });
 
   $: isActiveCategory = currentType === "category" && item.id === currentId;
@@ -81,12 +120,12 @@
     item.templates.some((template) => template.id === currentId);
 </script>
 
-<div class="accordion_item">
+<div class="accordion_item" id={`accordion_item_${item.id}`}>
   <button
     class="accordion_header {isActiveCategory ? 'active' : ''}"
     on:click={() => {
       item.open = !item.open;
-      if (item.open) {
+      if (item.open || 1 == 1) {
         viewCategory(item.id);
       }
     }}
@@ -102,7 +141,6 @@
         on:click={(event) => {
           event.stopPropagation();
           triggerDropdown(`options_${item.id}`);
-          // Add your logic here
         }}
       >
         <DotsThreeVertical size={18} data-action="options" />
@@ -223,6 +261,10 @@
       display: flex;
       flex-direction: column;
       gap: inherit;
+
+      &:empty {
+        display: none;
+      }
     }
 
     .accordion_content {
@@ -230,6 +272,10 @@
       display: flex;
       flex-direction: column;
       gap: 5px;
+
+      &:empty {
+        display: none;
+      }
     }
   }
 </style>
