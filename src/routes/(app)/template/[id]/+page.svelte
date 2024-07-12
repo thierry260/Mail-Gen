@@ -215,6 +215,7 @@
       }
     }
     .preview {
+      background-color: #fff;
       border: 1px solid var(--border);
       border-radius: var(--border-radius);
       padding: 30px;

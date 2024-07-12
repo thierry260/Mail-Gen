@@ -1,9 +1,13 @@
 <script>
   import { onMount } from "svelte";
   import { fetchWorkspaceData } from "$lib/utils/get";
+  import { CaretRight } from "phosphor-svelte";
+  import { goto } from "$app/navigation";
 
   let data = [];
   let recentlyViewed = [];
+  let searchInput = "";
+  let searchResults = [];
 
   onMount(async () => {
     data = await fetchWorkspaceData("categories");
@@ -25,11 +29,83 @@
     // Retrieve recently viewed templates
     recentlyViewed = getRecentlyViewed();
   });
+
+  // Function to handle search input change
+  const handleSearchInputChange = (event) => {
+    searchInput = event.target.value.trim();
+    if (searchInput) {
+      searchResults = searchItems(data, searchInput);
+    } else {
+      searchResults = [];
+    }
+  };
+
+  // Recursive function to search through categories and templates
+  const searchItems = (items, query) => {
+    let results = [];
+    items.forEach((item) => {
+      // Check if the item matches the query
+      if (item.name.toLowerCase().includes(query.toLowerCase())) {
+        results.push({
+          type: "category",
+          id: item.id,
+          name: item.name,
+        });
+      }
+
+      // Check subcategories recursively
+      if (item.sub) {
+        results = results.concat(searchItems(item.sub, query));
+      }
+
+      // Check templates
+      if (item.templates) {
+        item.templates.forEach((template) => {
+          if (template.name.toLowerCase().includes(query.toLowerCase())) {
+            results.push({
+              type: "template",
+              id: template.id,
+              name: template.name,
+            });
+          }
+        });
+      }
+    });
+    return results.slice(0, 6); // Limit to maximum 6 results
+  };
+
+  // Function to navigate based on suggestion type
+  const navigateTo = (type, id) => {
+    if (type === "template") {
+      goto(`/template/${id}`);
+    } else if (type === "category") {
+      goto(`/category/${id}`);
+    }
+  };
 </script>
 
 <div class="home">
-  <h1>Waar ben je naar op zoek?</h1>
-  <input type="text" placeholder="Zoek op templates" />
+  <div class="search">
+    <h1>Waar ben je naar op zoek?</h1>
+    <input
+      type="text"
+      placeholder="Zoek op templates"
+      on:input={handleSearchInputChange}
+    />
+    <!-- Display search results -->
+    <div class="search_results" hidden={searchResults.length === 0}>
+      {#each searchResults as result}
+        <a
+          href="#"
+          class="search_result"
+          on:click={() => navigateTo(result.type, result.id)}
+        >
+          <h3>{result.name}</h3>
+          <CaretRight size={18} />
+        </a>
+      {/each}
+    </div>
+  </div>
 
   <!-- Recently viewed templates section -->
   <div class="recently_viewed">
@@ -37,12 +113,14 @@
     {#if recentlyViewed.length === 0}
       <p>Geen templates recent bekeken.</p>
     {:else}
-      {#each recentlyViewed as template}
-        <div class="recent_template">
-          <h3>{template.name}</h3>
-          <!-- <p>{template.description}</p> -->
-        </div>
-      {/each}
+      <div class="recent_templates">
+        {#each recentlyViewed as template}
+          <a href="/template/{template.id}" class="recent_template">
+            <h3>{template.name}</h3>
+            <CaretRight size={18} />
+          </a>
+        {/each}
+      </div>
     {/if}
   </div>
 
@@ -50,29 +128,134 @@
 
   <div class="categories">
     <h2>Categorieën</h2>
-    {#each data as item}
-      <div class="category">
-        {item.name}
-      </div>
-    {/each}
+    <div class="categories_grid">
+      {#each data as item}
+        <a href="/category/{item.id}" class="category">
+          <h3>{item.name}</h3>
+          <CaretRight size={18} />
+        </a>
+      {/each}
+    </div>
   </div>
 </div>
 
-<style>
+<style lang="scss">
   .home {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
+  }
+
+  .search {
+    position: relative;
+    .search_results {
+      position: absolute;
+      background-color: #fff;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius-small, 5px);
+      transform: translateY(10px);
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
+      .search_result {
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        transition:
+          background-color,
+          0.2s ease-out;
+        h3 {
+          font-size: 1.6rem;
+          font-weight: 500;
+          margin-bottom: 0;
+        }
+
+        &:hover {
+          background-color: var(--gray-100);
+        }
+        &:not(:last-child) {
+          border-bottom: 1px solid var(--border);
+        }
+
+        &:first-child {
+          border-top-left-radius: inherit;
+          border-top-right-radius: inherit;
+        }
+        &:last-child {
+          border-bottom-left-radius: inherit;
+          border-bottom-right-radius: inherit;
+        }
+      }
+    }
   }
 
   .recently_viewed {
     margin-top: 20px;
   }
 
-  .recent_template {
-    background-color: #f0f0f0;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
+  .recent_templates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    .recent_template {
+      padding: 30px;
+      margin-bottom: 10px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out;
+      &:hover {
+        // background-color: var(--gray-100);
+        border-color: var(--gray-400);
+      }
+      &:active {
+        color: inherit;
+      }
+      h3 {
+        font-size: 1.8rem;
+        flex-grow: 1;
+      }
+    }
+  }
+
+  .categories_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    .category {
+      background-color: #fff;
+      padding: 30px;
+      margin-bottom: 10px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      text-decoration: none;
+      transition:
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out;
+      &:hover {
+        // background-color: var(--gray-100);
+        border-color: var(--gray-400);
+      }
+      &:active {
+        color: inherit;
+      }
+      h3 {
+        font-size: 1.8rem;
+        flex-grow: 1;
+      }
+    }
+  }
+  h2 {
+    font-size: 2.6rem;
   }
 </style>

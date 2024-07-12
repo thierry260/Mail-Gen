@@ -24,6 +24,7 @@ body {
   text-rendering: optimizeLegibility;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "liga";
+  background-color: #f8f8f8;
 
   &.no_scroll {
     overflow: hidden;
@@ -67,7 +68,7 @@ h4,
 
 h1,
 .h1 {
-  font-size: (55 / 16) * 1rem;
+  font-size: (50 / 16) * 1rem;
 
   @media screen and (max-width: $lg) {
     font-size: (45 / 16) * 1rem;

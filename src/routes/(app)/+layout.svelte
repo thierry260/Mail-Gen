@@ -33,7 +33,7 @@
   }
   main {
     flex: 1;
-    padding: 50px;
+    padding: 80px;
     overflow-y: auto;
   }
 </style>
