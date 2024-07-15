@@ -1,11 +1,29 @@
 <script>
   import { onMount } from "svelte";
   import { doc, getDoc, updateDoc } from "firebase/firestore";
-  import { db } from "$lib/firebase"; // Adjust the import path if necessary
+  import { db, auth } from "$lib/firebase";
   import { browser } from "$app/environment";
+  import { writable } from "svelte/store";
+  import {
+    reauthenticateWithCredential,
+    EmailAuthProvider,
+    updatePassword,
+  } from "firebase/auth";
+  import { page } from "$app/stores";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
+  let currentPassword = "";
+  let newPassword = "";
+  let passwordError = writable("");
+  let passwordSuccess = writable("");
+  let inviteEmail = "";
+  let inviteLink = writable("");
+  let inviteError = writable("");
+  let inviteSuccess = writable("");
+  let workspaceName = "";
+  let workspaceNameError = writable("");
+  let workspaceNameSuccess = writable("");
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -21,7 +39,9 @@
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      workspaceVariables = docSnap.data().variables || {};
+      const workspaceData = docSnap.data();
+      workspaceVariables = workspaceData.variables || {};
+      workspaceName = workspaceData.name || "";
       console.log("Workspace Variables:", workspaceVariables);
     } else {
       console.log("No such document!");
@@ -69,6 +89,70 @@
   const removeVariable = (id) => {
     delete workspaceVariables[id];
     saveVariables();
+  };
+
+  // Function to handle password change
+  const handleChangePassword = async () => {
+    passwordError.set("");
+    passwordSuccess.set("");
+
+    try {
+      const user = auth.currentUser;
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+
+      await reauthenticateWithCredential(user, credential);
+
+      await updatePassword(user, newPassword);
+      passwordSuccess.set("Wachtwoord aangepast.");
+    } catch (error) {
+      if (error.code === "auth/wrong-password") {
+        passwordError.set("Huidig wachtwoord onjuist");
+      } else {
+        passwordError.set(error.message);
+      }
+    }
+  };
+
+  // Function to handle workspace name change
+  const handleChangeWorkspaceName = async () => {
+    workspaceNameError.set("");
+    workspaceNameSuccess.set("");
+
+    try {
+      const workspaceId = localStorage.getItem("workspace");
+      if (!workspaceId) {
+        throw new Error("Workspace ID not found in localStorage");
+      }
+
+      const docRef = doc(db, "workspaces", workspaceId);
+      await updateDoc(docRef, { name: workspaceName });
+      workspaceNameSuccess.set("Workspacenaam aangepast.");
+    } catch (error) {
+      workspaceNameError.set(error.message);
+    }
+  };
+
+  // Function to generate invite link
+  const generateInviteLink = async () => {
+    inviteError.set("");
+    inviteSuccess.set("");
+
+    try {
+      const workspaceId = localStorage.getItem("workspace");
+      if (!workspaceId) {
+        throw new Error("Workspace ID not found in localStorage");
+      }
+
+      const inviteId = btoa(`${workspaceId},${inviteEmail}`);
+      const link = `${window.location.origin}/register?id=${inviteId}`;
+      inviteLink.set(link);
+      inviteSuccess.set("Uitnodigingslink gegenereerd.");
+    } catch (error) {
+      inviteError.set(error.message);
+    }
   };
 
   onMount(() => {
@@ -134,6 +218,63 @@
   <p>Loading variables...</p>
 {/if}
 
+<!-- Change Workspace Name Section -->
+<div class="change-workspace-name">
+  <h2>Workspacenaam wijzigen</h2>
+  <input
+    type="text"
+    placeholder="Nieuwe workspacenaam"
+    bind:value={workspaceName}
+  />
+  <button on:click={handleChangeWorkspaceName}>Workspacenaam wijzigen</button>
+  {#if $workspaceNameError}
+    <p style="color: red">{$workspaceNameError}</p>
+  {/if}
+  {#if $workspaceNameSuccess}
+    <p style="color: green">{$workspaceNameSuccess}</p>
+  {/if}
+</div>
+
+<!-- Change Password Section -->
+<div class="change-password">
+  <h2>Wachtwoord wijzigen</h2>
+  <input
+    type="password"
+    placeholder="Huidig wachtwoord"
+    bind:value={currentPassword}
+  />
+  <input
+    type="password"
+    placeholder="Nieuw wachtwoord"
+    bind:value={newPassword}
+  />
+  <button on:click={handleChangePassword}>Wachtwoord wijzigen</button>
+  {#if $passwordError}
+    <p style="color: red">{$passwordError}</p>
+  {/if}
+  {#if $passwordSuccess}
+    <p style="color: green">{$passwordSuccess}</p>
+  {/if}
+</div>
+
+<!-- Invite to Workspace Section -->
+<div class="invite-to-workspace">
+  <h2>Uitnodigen voor Workspace</h2>
+  <input type="email" placeholder="E-mailadres" bind:value={inviteEmail} />
+  <button on:click={generateInviteLink}>Genereer uitnodigingslink</button>
+  {#if $inviteError}
+    <p style="color: red">{$inviteError}</p>
+  {/if}
+  {#if $inviteSuccess}
+    <p style="color: green">{$inviteSuccess}</p>
+  {/if}
+  {#if $inviteLink}
+    <p>
+      Uitnodigingslink: <a href={$inviteLink} target="_blank">{$inviteLink}</a>
+    </p>
+  {/if}
+</div>
+
 <style>
   table {
     width: 100%;
@@ -169,7 +310,9 @@
     margin-top: 20px;
   }
 
-  input[type="text"] {
+  input[type="text"],
+  input[type="password"],
+  input[type="email"] {
     width: 100%;
     padding: 8px;
     margin: 5px 0;
@@ -183,5 +326,9 @@
 
   div {
     margin-bottom: 20px;
+  }
+
+  .invite-to-workspace p {
+    margin-top: 10px;
   }
 </style>

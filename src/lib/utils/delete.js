@@ -2,6 +2,7 @@ import { doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
 import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
 import { browser } from "$app/environment";
+import categories from "$lib/store/categories"; // Adjust import path as per your setup
 
 export const deleteCategory = async (categoryId) => {
   try {
@@ -30,85 +31,6 @@ export const deleteCategory = async (categoryId) => {
   }
 };
 
-// export const deleteCategory = async (categoryId) => {
-//   try {
-//     if (!browser) return;
-
-//     const workspaceId = localStorage.getItem("workspace"); // Adjust according to your setup
-//     const docRef = doc(db, "workspaces", workspaceId);
-//     const docSnap = await getDoc(docRef);
-
-//     if (docSnap.exists()) {
-//       const workspaceData = docSnap.data();
-//       const { updatedCategories, templateIdsToDelete } =
-//         removeCategoryAndCollectTemplates(workspaceData.categories, categoryId);
-
-//       await updateDoc(docRef, {
-//         categories: updatedCategories,
-//       });
-
-//       // Delete all template documents
-//       const deleteTemplatePromises = templateIdsToDelete.map((templateId) => {
-//         const templateDocRef = doc(
-//           db,
-//           "workspaces",
-//           workspaceId,
-//           "templates",
-//           templateId
-//         );
-//         return deleteDoc(templateDocRef);
-//       });
-//       await Promise.all(deleteTemplatePromises);
-
-//       console.log(
-//         `Category with ID ${categoryId} and its templates deleted successfully`
-//       );
-//       clearCache();
-//     } else {
-//       console.log("Workspace document not found");
-//     }
-//   } catch (error) {
-//     console.error("Error deleting category:", error);
-//     throw error;
-//   }
-// };
-
-// Function to recursively remove category from data array and collect template IDs
-export const removeCategoryAndCollectTemplates = (
-  dataArray,
-  categoryIdToDelete
-) => {
-  let templateIdsToDelete = [];
-
-  const updatedDataArray = dataArray
-    .map((category) => {
-      if (category.id === categoryIdToDelete) {
-        // Collect template IDs from this category
-        if (category.templates) {
-          templateIdsToDelete = templateIdsToDelete.concat(
-            category.templates.map((t) => t.id)
-          );
-        }
-        // Category found at this level, remove it
-        return null;
-      } else if (category.sub && category.sub.length > 0) {
-        // Category might be in sub-categories, recursively check
-        const { updatedSub, subTemplateIds } =
-          removeCategoryAndCollectTemplates(category.sub, categoryIdToDelete);
-        templateIdsToDelete = templateIdsToDelete.concat(subTemplateIds);
-        return {
-          ...category,
-          sub: updatedSub.filter(Boolean), // Remove null entries
-        };
-      } else {
-        return category; // No changes needed
-      }
-    })
-    .filter(Boolean); // Remove null entries from top level
-
-  return { updatedCategories: updatedDataArray, templateIdsToDelete };
-};
-
 export const removeCategoryFromData = (dataArray, categoryIdToDelete) => {
   return dataArray
     .map((category) => {
@@ -130,4 +52,69 @@ export const removeCategoryFromData = (dataArray, categoryIdToDelete) => {
       }
     })
     .filter(Boolean); // Remove null entries
+};
+
+// Function to delete a document from Firestore
+export const deleteDocument = async (collectionPath, documentId) => {
+  try {
+    const docRef = doc(db, collectionPath, documentId);
+    await deleteDoc(docRef);
+    clearCache();
+    console.log(`Document with ID ${documentId} deleted successfully from ${collectionPath}`);
+  } catch (error) {
+    console.error(`Error deleting document from ${collectionPath}:`, error);
+    throw error;
+  }
+};
+
+export const deleteTemplate = async (templateId) => {
+  try {
+    const workspaceId = "wms"; // Adjust according to your setup
+    const docRef = doc(db, "workspaces", workspaceId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const workspaceData = docSnap.data();
+
+      // Delete the template document
+      await deleteDoc(doc(db, "templates", templateId));
+      console.log(`Template with ID ${templateId} deleted successfully`);
+
+      // Remove template ID from workspace categories
+      const updatedCategories = removeTemplateFromCategories(
+        workspaceData.categories,
+        templateId
+      );
+
+      // Update workspace document with updated categories
+      await updateDoc(docRef, {
+        categories: updatedCategories,
+      });
+
+      // Update categories store
+      categories.set(updatedCategories);
+
+      // Clear cache or perform any additional actions if needed
+      clearCache();
+    } else {
+      console.log("Workspace document not found");
+    }
+  } catch (error) {
+    console.error("Error deleting template:", error);
+    throw error;
+  }
+};
+
+const removeTemplateFromCategories = (categoriesArray, templateIdToDelete) => {
+  return categoriesArray.map((category) => {
+    if (category.templates && category.templates.length > 0) {
+      category.templates = category.templates.filter(
+        (template) => template.id !== templateIdToDelete
+      );
+    }
+    if (category.sub && category.sub.length > 0) {
+      category.sub = removeTemplateFromCategories(category.sub, templateIdToDelete);
+    }
+    return category;
+  });
 };

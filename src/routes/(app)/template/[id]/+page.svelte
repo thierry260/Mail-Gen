@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { fetchWorkspaceData, fetchTemplateData } from "$lib/utils/get";
+  import { deleteTemplate } from "$lib/utils/delete";
   import { get } from "svelte/store";
   import { browser } from "$app/environment";
   import { updateDoc, doc } from "firebase/firestore"; // Import Firestore update function
@@ -141,6 +142,23 @@
     isEditMode = !isEditMode;
   };
 
+  const confirmAndDelete = () => {
+    const confirmDelete = window.confirm(
+      "Weet je zeker dat je deze template wilt verwijderen?",
+    );
+    if (confirmDelete) {
+      deleteTemplate(templateData.id)
+        .then(() => {
+          // Handle success, e.g., show success message or redirect
+          console.log("Template deleted successfully");
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          console.error("Error deleting template:", error);
+        });
+    }
+  };
+
   // Handle save button click
   const saveTemplate = async () => {
     try {
@@ -171,9 +189,12 @@
     <h1>
       Template:
       {templateData.name}
-      <button on:click={toggleEditMode}
+      <button class="button" on:click={toggleEditMode}
         >{isEditMode ? "Cancel" : "Aanpassen"}</button
       >
+      {#if !isEditMode}
+        <button on:click={confirmAndDelete}>Verwijderen</button>
+      {/if}
     </h1>
     {#if isEditMode}
       <div class="edit-template">

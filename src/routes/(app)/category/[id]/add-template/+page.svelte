@@ -1,6 +1,9 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { page } from "$app/stores";
+  import Placeholder from "@tiptap/extension-placeholder";
+  import { Editor } from "@tiptap/core";
+  import StarterKit from "@tiptap/starter-kit";
   import {
     db,
     collection,
@@ -9,6 +12,60 @@
     getDoc,
     updateDoc,
   } from "$lib/firebase"; // Correct import path
+
+  // Custom NodeView for the variable node
+  import { Node, mergeAttributes } from "@tiptap/core";
+
+  const Variable = Node.create({
+    name: "variable",
+    group: "inline",
+    inline: true,
+    atom: true,
+
+    addAttributes() {
+      return {
+        variable: {
+          default: null,
+        },
+      };
+    },
+
+    parseHTML() {
+      return [
+        {
+          tag: "code[data-variable]",
+        },
+      ];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+      return [
+        "code",
+        mergeAttributes(HTMLAttributes, {
+          "data-variable": this.attrs.variable,
+        }),
+        `{{${this.attrs.variable}}}`,
+      ];
+    },
+
+    addNodeView() {
+      return ({ node, getPos, view }) => {
+        const dom = document.createElement("code");
+        dom.classList.add("variable");
+        dom.setAttribute("data-variable", node.attrs.variable);
+        dom.textContent = `{{${node.attrs.variable}}}`;
+
+        dom.addEventListener("click", () => {
+          // Your custom behavior here
+          alert(`Variable: ${node.attrs.variable}`);
+        });
+
+        return {
+          dom,
+        };
+      };
+    },
+  });
 
   let workspaceVariables = {};
   let selectedVariable = "";
@@ -83,7 +140,7 @@
     try {
       const usedVariables = extractVariablesFromContent(templateContent);
       const newTemplate = {
-        content: templateContent,
+        content: editor.getHTML(),
         name: templateName,
         variables: usedVariables,
       };
@@ -92,9 +149,9 @@
           db,
           "workspaces",
           localStorage.getItem("workspace"),
-          "templates"
+          "templates",
         ),
-        newTemplate
+        newTemplate,
       );
       console.log("Template added with ID: ", docRef.id);
 
@@ -127,7 +184,8 @@
   };
 
   const insertVariable = (variable) => {
-    templateContent += ` <span class="variable">{{${variable}}}</span> `;
+    const html = `<code data-variable="${variable}">{{${variable}}}</code>`;
+    editor.chain().focus().insertContent(html).run();
     showVariablePopup = false;
     variableSearchQuery = "";
     showPlaceholderField = false;
@@ -139,10 +197,10 @@
       ([id, data]) =>
         data.field_name
           .toLowerCase()
-          .includes(variableSearchQuery.toLowerCase())
+          .includes(variableSearchQuery.toLowerCase()),
     );
 
-    if (existingVariable) {
+    if (existingVariable.length > 0) {
       // If existing variable is found
       selectedVariable = existingVariable[0];
       showPlaceholderField = false;
@@ -159,7 +217,7 @@
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       if (selectedVariable) {
-        insertVariable(selectedVariable);
+        insertVariable(selectedVariable[1].field_name);
       } else if (newVariable.field_name && newVariable.placeholder) {
         addNewVariable();
         insertVariable(newVariable.field_name);
@@ -167,9 +225,38 @@
     }
   };
 
+  let editorElement;
+  let editor;
+
   onMount(() => {
+    editor = new Editor({
+      element: editorElement,
+      extensions: [
+        StarterKit.configure({
+          history: false,
+          heading: {
+            levels: [1, 2, 3],
+          },
+        }),
+        Placeholder.configure({
+          placeholder: "Write something …",
+        }),
+        Variable,
+      ],
+      onTransaction: () => {
+        // force re-render so `editor.isActive` works as expected
+        editor = editor;
+      },
+    });
+
     fetchVariables();
     inputRef.focus(); // Focus the input element when the component mounts
+  });
+
+  onDestroy(() => {
+    if (editor) {
+      editor.destroy();
+    }
   });
 </script>
 
@@ -183,8 +270,49 @@
 
 <div>
   <h2>Inhoud</h2>
-  <textarea placeholder="Email inhoud" bind:value={templateContent}></textarea>
-  <!-- <div contenteditable="true" bind:innerHTML={templateContent}></div> -->
+  <div class="editor_outer">
+    {#if editor}
+      <div class="editor_buttons">
+        <button
+          on:click={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          class:active={editor.isActive("heading", { level: 1 })}
+        >
+          H1
+        </button>
+        <button
+          on:click={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          class:active={editor.isActive("heading", { level: 2 })}
+        >
+          H2
+        </button>
+        <button
+          on:click={() => editor.chain().focus().setParagraph().run()}
+          class:active={editor.isActive("paragraph")}
+        >
+          P
+        </button>
+        <!-- <div className="control-group">
+          <div className="button-group">
+            <button
+              onClick={() => editor.chain().focus().undo().run()}
+              disabled={!editor.can().undo()}
+            >
+              Undo
+            </button>
+            <button
+              onClick={() => editor.chain().focus().redo().run()}
+              disabled={!editor.can().redo()}
+            >
+              Redo
+            </button>
+          </div>
+        </div> -->
+      </div>
+    {/if}
+    <div class="editor" bind:this={editorElement} />
+  </div>
 </div>
 
 <button class="button outline" on:click={() => (showVariablePopup = true)}
@@ -205,7 +333,7 @@
       <ul>
         {#each Object.entries(workspaceVariables).filter( ([id, data]) => data.field_name
               .toLowerCase()
-              .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+              .includes(variableSearchQuery.toLowerCase()), ) as [id, data]}
           <li on:click={() => insertVariable(data.field_name)}>
             {data.field_name}
           </li>
@@ -227,8 +355,9 @@
 <!-- Save Template Button -->
 <button class="button" on:click={addTemplate}>Opslaan</button>
 
-<style>
+<style lang="scss">
   input,
+  .textarea,
   textarea,
   select {
     display: block;
@@ -237,8 +366,43 @@
     padding: 8px;
   }
 
+  .textarea,
   textarea {
     height: 200px;
+    background-color: #fff;
+    border: 1px solid var(--border);
+  }
+
+  .editor_outer {
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    .editor_buttons {
+      border-bottom: 1px solid var(--border);
+      background-color: var(--gray-100);
+      border-top-left-radius: inherit;
+      border-top-right-radius: inherit;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+      button {
+        background-color: transparent;
+        border: 1px solid transparent;
+        margin: 0;
+        padding: 8px;
+        border-radius: var(--border-radius);
+        transition: background-color 0.2s ease-out;
+        &:hover {
+          background-color: var(--gray-200);
+        }
+      }
+    }
+
+    .editor {
+      border-bottom-left-radius: inherit;
+      border-bottom-right-radius: inherit;
+    }
   }
 
   button {

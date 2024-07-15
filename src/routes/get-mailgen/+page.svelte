@@ -1,10 +1,6 @@
 <script>
   import { auth, db } from "$lib/firebase";
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    updateProfile,
-  } from "firebase/auth";
+  import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
   import {
     doc,
     getDoc,
@@ -29,8 +25,19 @@
   $: if ($page.url.searchParams.has("id")) {
     const workspaceReferral = atob($page.url.searchParams.get("id")).split(",");
     workspaceId = workspaceReferral[0];
-    workspaceName = workspaceReferral[1];
+    email = workspaceReferral[1]; // Correctly assigning email
     isInvited = true;
+
+    // Fetch the workspace name based on the workspaceId
+    (async () => {
+      const workspaceRef = doc(db, "workspaces", workspaceId);
+      const workspaceDoc = await getDoc(workspaceRef);
+      if (workspaceDoc.exists()) {
+        workspaceName = workspaceDoc.data().name;
+      } else {
+        workspaceName = "Unknown Workspace";
+      }
+    })();
   }
 
   async function register() {
@@ -50,7 +57,7 @@
 
           if (usersCount >= parseInt(workspaceDoc.data().usersNo, 10)) {
             errorMessage.set(
-              "Maximum number of users reached for this workspace."
+              "Maximum number of users reached for this workspace.",
             );
             return;
           }
@@ -58,7 +65,7 @@
           await createAndRegisterUser(workspaceRef);
         } else {
           errorMessage.set(
-            "Workspace does not exist. Please check the invite link."
+            "Workspace does not exist. Please check the invite link.",
           );
         }
       } else {
@@ -85,7 +92,7 @@
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const userUID = user.uid;
 
@@ -98,7 +105,7 @@
 
       await setDoc(
         doc(db, "workspaces", workspaceId, "users", userUID),
-        userData
+        userData,
       );
 
       const userCommonData = {
@@ -149,13 +156,19 @@
   </div>
   <div class="input_wrapper">
     <label for="email">E-mailadres</label>
-    <input type="email" id="email" bind:value={email} required />
+    {#if isInvited}
+      <input type="email" id="email" bind:value={email} required readonly />
+    {:else}
+      <input type="email" id="email" bind:value={email} required />
+    {/if}
   </div>
   <div class="input_wrapper">
     <label for="password">Wachtwoord</label>
     <input type="password" id="password" bind:value={password} required />
   </div>
-  <button class="button" type="submit">Workspace aanmaken</button>
+  <button class="button" type="submit">
+    {isInvited ? `Join ${workspaceName}` : "Workspace aanmaken"}
+  </button>
   {#if $errorMessage}
     <p style="color: red">{$errorMessage}</p>
   {/if}

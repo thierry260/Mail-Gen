@@ -307,7 +307,7 @@ legend {
   transition: transform 0.1s ease-out;
 }
 
-.open > .dropdown {
+.open>.dropdown {
   transform: rotate(90deg);
 }
 
@@ -323,4 +323,23 @@ legend {
 main:has(.settings) nav:first-child,
 main:has(.home) nav:first-child {
   display: none;
+}
+
+.tiptap[contenteditable="true"] {
+  background-color: #fff;
+  //   border: 1px solid var(--border);
+  min-height: 300px;
+  padding: 30px;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+
+  code {
+    padding: 2px 6px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background-color: var(--gray-100);
+    margin-inline: 2px;
+    display: inline-block;
+
+  }
 }

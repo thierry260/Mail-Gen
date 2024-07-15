@@ -1,23 +1,18 @@
-<!-- src/lib/components/Sidebar/Sidebar.svelte -->
 <script>
   import { onMount } from "svelte";
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/utils/get";
-  import { browser } from "$app/environment";
-  import { removeCategoryFromData } from "$lib/utils/delete";
   import SidebarItem from "./SidebarItem.svelte";
   import { House, Gear } from "phosphor-svelte";
   import { get } from "svelte/store";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
-  import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
+  import categories from "$lib/store/categories"; // Adjust import path as per your setup
 
   let data = [];
-  let currentId;
+  let currentId = "";
   let currentType;
   let isHomeActive = false;
   let isSettingsActive = false;
-
   $: {
     currentId = $page.params.id;
     currentType = $page.route.id.includes("template") ? "template" : "category";
@@ -27,13 +22,11 @@
       $page.route.id === "/(app)";
     isSettingsActive = $page.route.id.includes("/settings");
   }
-
   const expandParents = (item, currentId, currentType) => {
     if (currentType === "category" && item.id === currentId) {
       item.open = true;
       return true;
     }
-
     if (currentType === "template" && item.templates) {
       for (const template of item.templates) {
         if (template.id === currentId) {
@@ -42,7 +35,6 @@
         }
       }
     }
-
     if (item.sub) {
       for (const subItem of item.sub) {
         if (expandParents(subItem, currentId, currentType)) {
@@ -51,58 +43,30 @@
         }
       }
     }
-
     return false;
   };
-
-  onMount(async () => {
-    data = await fetchWorkspaceData("categories");
-    if (data) {
-      data = data.map((category) => ({
-        ...category,
-        open: false, // Add open property to handle accordion state
-      }));
+  onMount(() => {
+    const unsubscribe = categories.subscribe((updatedCategories) => {
+      // data = updatedCategories.map((category) => ({
+      //   ...category,
+      //   open: false,
+      // }));
+      data = updatedCategories;
       data.forEach((item) => expandParents(item, currentId, currentType));
-      console.log(data);
-    } else {
-      console.log("Categories not found");
-    }
-  });
+    });
 
+    return unsubscribe;
+  });
   // Logout function
   const logout = async () => {
     const auth = getAuth();
     try {
       await signOut(auth);
-      localStorage.removeItem("workspace");
       goto("/login");
     } catch (error) {
       console.error("Logout failed", error);
     }
   };
-
-  if (browser) {
-    // Listen for category modification and deletion events
-    window.addEventListener("category-modified", (event) => {
-      clearCache();
-      const { categoryId, newName } = event.detail;
-      data = data.map((item) => {
-        if (item.id === categoryId) {
-          return {
-            ...item,
-            name: newName,
-          };
-        }
-        return item;
-      });
-    });
-
-    window.addEventListener("category-deleted", (event) => {
-      clearCache();
-      const deletedCategoryId = event.detail;
-      data = removeCategoryFromData(data, deletedCategoryId);
-    });
-  }
 </script>
 
 <aside class="sidebar">
@@ -116,7 +80,6 @@
       <SidebarItem {item} {currentId} {currentType} />
     {/each}
   </div>
-
   <a class="menu_item" href="/settings" class:active={isSettingsActive}
     ><Gear size={20} />Instellingen</a
   >
@@ -133,18 +96,16 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-
     .logo {
       max-width: 200px;
       margin-inline: auto;
       width: 100%;
       display: block;
-      padding-block: 50px;
+      padding-block: 30px;
     }
     .label {
       color: #fff;
     }
-
     .templates {
       flex-grow: 1;
     }
@@ -166,7 +127,6 @@
       color: #fff;
       text-decoration: none;
       margin-bottom: 20px;
-
       &.active {
         background-color: rgba(
           0,
@@ -189,7 +149,6 @@
       color: #fff;
       cursor: pointer;
       transition: background-color 0.1s ease-out;
-
       &:hover {
         background-color: rgba(255, 255, 255, 0.2);
       }
