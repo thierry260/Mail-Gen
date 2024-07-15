@@ -3,9 +3,9 @@
   export let item;
   export let currentId;
   export let currentType;
+  let dropdownState = false;
   import { goto } from "$app/navigation";
   import { CaretRight, DotsThreeVertical, Plus } from "phosphor-svelte";
-  import { onMount } from "svelte";
   import Dropdown from "$lib/components/Dropdown.svelte";
 
   const viewTemplate = (templateId) => {
@@ -14,10 +14,6 @@
 
   const viewCategory = (categoryId) => {
     goto(`/category/${categoryId}`);
-  };
-
-  const expandParents = (item, currentId, currentType) => {
-    // Function unchanged from your provided code
   };
 
   const addItems = [
@@ -38,6 +34,12 @@
 
   const optionsItems = [
     {
+      label: "Aan favorieten toevoegen",
+      class: "",
+      action: "cat_favourite",
+      icon: "star",
+    },
+    {
       label: "Naam bewerken",
       class: "",
       action: "cat_modify-name",
@@ -45,7 +47,7 @@
     },
     { class: "separator" },
     {
-      label: "Verwijder",
+      label: "Verwijderen",
       class: "remove",
       action: "cat_delete",
       icon: "delete",
@@ -70,49 +72,6 @@
     window.dispatchEvent(event);
   }
 
-  function handleCategoryAdded(event) {
-    const { parentCategoryId, newCategory } = event.detail;
-    if (item.id === parentCategoryId) {
-      item = {
-        ...item,
-        sub: [...item.sub, newCategory],
-      };
-    }
-    item = { ...item }; // Trigger reactivity
-  }
-
-  function handleCategoryModified(event) {
-    const { categoryId, newName } = event.detail;
-    if (item.id === categoryId) {
-      console.log("handleCategoryModified");
-      item = {
-        ...item,
-        name: newName,
-      };
-    }
-    item = { ...item }; // Trigger reactivity
-  }
-
-  function handleCategoryDeleted(event) {
-    const { categoryId } = event.detail;
-    if (item.sub) {
-      item.sub = item.sub.filter((subItem) => subItem.id !== categoryId);
-    }
-    item = { ...item }; // Trigger reactivity
-  }
-
-  onMount(() => {
-    expandParents(item, currentId, currentType);
-    window.addEventListener("category-added", handleCategoryAdded);
-    window.addEventListener("category-modified", handleCategoryModified);
-    window.addEventListener("category-deleted", handleCategoryDeleted);
-    return () => {
-      window.removeEventListener("category-added", handleCategoryAdded);
-      window.removeEventListener("category-modified", handleCategoryModified);
-      window.removeEventListener("category-deleted", handleCategoryDeleted);
-    };
-  });
-
   $: isActiveCategory = currentType === "category" && item.id === currentId;
   $: isActiveTemplate =
     currentType === "template" &&
@@ -120,76 +79,85 @@
     item.templates.some((template) => template.id === currentId);
 </script>
 
-<div class="accordion_item" id={`accordion_item_${item.id}`}>
-  <button
-    class="accordion_header {isActiveCategory ? 'active' : ''}"
-    on:click={() => {
-      item.open = !item.open;
-      if (item.open || 1 == 1) {
-        viewCategory(item.id);
-      }
-    }}
-    on:mouseleave={() => {
-      closeDropdown();
-    }}
-    class:open={item.open}
-  >
-    <CaretRight size={12} class="dropdown" /><span class="name"
-      >{item.name}</span
-    ><span class="actions"
-      ><button
-        on:click={(event) => {
-          event.stopPropagation();
-          triggerDropdown(`options_${item.id}`);
-        }}
-      >
-        <DotsThreeVertical size={18} data-action="options" />
-        <Dropdown
-          items={optionsItems}
-          id={`options_${item.id}`}
-          categoryId={item.id}
-        />
-      </button>
-      <button
-        on:click={(event) => {
-          event.stopPropagation();
-          triggerDropdown(`add_${item.id}`);
-        }}
-      >
-        <Plus size={16} data-action="add" />
-        <Dropdown items={addItems} id={`add_${item.id}`} categoryId={item.id} />
-      </button></span
+{#if Object.keys(item).length > 0}
+  <div class="accordion_item" id={`accordion_item_${item.id}`}>
+    <button
+      class="accordion_header {isActiveCategory ? 'active' : ''}"
+      on:click={() => {
+        item.open = !item.open;
+        if (item.open || 1 == 1) {
+          viewCategory(item.id);
+        }
+      }}
+      on:mouseleave={() => {
+        closeDropdown();
+      }}
+      class:open={item.open}
     >
-  </button>
-  {#if item.open}
-    {#if item.sub}
-      <div class="accordion_content">
-        {#each item.sub as subItem}
-          <svelte:self item={subItem} {currentId} {currentType} />
-        {/each}
-      </div>
+      <CaretRight size={12} class="dropdown" /><span class="name"
+        >{item.name}</span
+      ><span class="actions"
+        ><button
+          on:click={(event) => {
+            event.stopPropagation();
+            dropdownState = !dropdownState;
+          }}
+        >
+          <DotsThreeVertical size={18} data-action="options" />
+          <Dropdown
+            bind:item
+            open={dropdownState}
+            items={optionsItems}
+            id={`options_${item.id}`}
+            categoryId={item.id}
+          />
+        </button>
+        <button
+          on:click={(event) => {
+            event.stopPropagation();
+            triggerDropdown(`add_${item.id}`);
+          }}
+        >
+          <Plus size={16} data-action="add" />
+          <Dropdown
+            bind:item
+            items={addItems}
+            id={`add_${item.id}`}
+            categoryId={item.id}
+          />
+        </button></span
+      >
+    </button>
+    {#if item.open}
+      {#if item.sub}
+        <div class="accordion_content">
+          {#each item.sub as subItem}
+            <svelte:self bind:item={subItem} {currentId} {currentType} />
+          {/each}
+        </div>
+      {/if}
+      {#if item.templates}
+        <div class="accordion_templates">
+          {#each item.templates as template}
+            <button
+              class="template {currentType === 'template' &&
+              template.id === currentId
+                ? 'active'
+                : ''}"
+              on:click={() => {
+                template.open = true;
+                viewTemplate(template.id);
+              }}
+              class:open={template.open}
+            >
+              {template.name}
+            </button>
+          {/each}
+        </div>
+      {/if}
     {/if}
-    {#if item.templates}
-      <div class="accordion_templates">
-        {#each item.templates as template}
-          <button
-            class="template {currentType === 'template' &&
-            template.id === currentId
-              ? 'active'
-              : ''}"
-            on:click={() => {
-              template.open = true;
-              viewTemplate(template.id);
-            }}
-            class:open={template.open}
-          >
-            {template.name}
-          </button>
-        {/each}
-      </div>
-    {/if}
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style lang="scss">
   .accordion_item {

@@ -2,11 +2,12 @@ import { doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
 import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
 import { browser } from "$app/environment";
-import categories from "$lib/store/categories"; // Adjust import path as per your setup
 
 export const deleteCategory = async (categoryId) => {
   try {
-    const workspaceId = "wms"; // Adjust according to your setup
+    if (!browser) return;
+
+    const workspaceId = localStorage.getItem("workspace"); // Adjust according to your setup
     const docRef = doc(db, "workspaces", workspaceId);
     const docSnap = await getDoc(docRef);
 
@@ -20,6 +21,7 @@ export const deleteCategory = async (categoryId) => {
       await updateDoc(docRef, {
         categories: updatedCategories,
       });
+
       console.log(`Category with ID ${categoryId} deleted successfully`);
       clearCache();
     } else {
@@ -60,7 +62,9 @@ export const deleteDocument = async (collectionPath, documentId) => {
     const docRef = doc(db, collectionPath, documentId);
     await deleteDoc(docRef);
     clearCache();
-    console.log(`Document with ID ${documentId} deleted successfully from ${collectionPath}`);
+    console.log(
+      `Document with ID ${documentId} deleted successfully from ${collectionPath}`
+    );
   } catch (error) {
     console.error(`Error deleting document from ${collectionPath}:`, error);
     throw error;
@@ -69,7 +73,9 @@ export const deleteDocument = async (collectionPath, documentId) => {
 
 export const deleteTemplate = async (templateId) => {
   try {
-    const workspaceId = "wms"; // Adjust according to your setup
+    if (!browser) return;
+
+    const workspaceId = localStorage.getItem("workspace"); // Adjust according to your setup
     const docRef = doc(db, "workspaces", workspaceId);
     const docSnap = await getDoc(docRef);
 
@@ -92,7 +98,7 @@ export const deleteTemplate = async (templateId) => {
       });
 
       // Update categories store
-      categories.set(updatedCategories);
+      // categories.set(updatedCategories);
 
       // Clear cache or perform any additional actions if needed
       clearCache();
@@ -113,7 +119,10 @@ const removeTemplateFromCategories = (categoriesArray, templateIdToDelete) => {
       );
     }
     if (category.sub && category.sub.length > 0) {
-      category.sub = removeTemplateFromCategories(category.sub, templateIdToDelete);
+      category.sub = removeTemplateFromCategories(
+        category.sub,
+        templateIdToDelete
+      );
     }
     return category;
   });

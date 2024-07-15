@@ -6,7 +6,7 @@
   import { get } from "svelte/store";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
-  import categories from "$lib/store/categories"; // Adjust import path as per your setup
+  import { fetchWorkspaceData } from "$lib/utils/get";
 
   let data = [];
   let currentId = "";
@@ -45,17 +45,18 @@
     }
     return false;
   };
-  onMount(() => {
-    const unsubscribe = categories.subscribe((updatedCategories) => {
-      // data = updatedCategories.map((category) => ({
-      //   ...category,
-      //   open: false,
-      // }));
-      data = updatedCategories;
+  onMount(async () => {
+    data = await fetchWorkspaceData("categories");
+    if (data) {
+      data = data.map((category) => ({
+        ...category,
+        open: false, // Add open property to handle accordion state
+      }));
       data.forEach((item) => expandParents(item, currentId, currentType));
-    });
-
-    return unsubscribe;
+      console.log(data);
+    } else {
+      console.log("Categories not found");
+    }
   });
   // Logout function
   const logout = async () => {
@@ -77,7 +78,7 @@
   <div class="templates">
     <span class="label">Templates</span>
     {#each data as item}
-      <SidebarItem {item} {currentId} {currentType} />
+      <SidebarItem bind:item {currentId} {currentType} />
     {/each}
   </div>
   <a class="menu_item" href="/settings" class:active={isSettingsActive}

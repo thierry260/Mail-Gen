@@ -4,19 +4,21 @@
   import { deleteCategory } from "$lib/utils/delete";
   import { updateCategoryName } from "$lib/utils/set";
   import { createCategory } from "$lib/utils/create";
-  import { Plus, TrashSimple, PencilSimple } from "phosphor-svelte";
+  import { Plus, TrashSimple, PencilSimple, Star } from "phosphor-svelte";
 
   // Icons map for dynamic rendering
   const icons = {
     add: Plus,
     delete: TrashSimple,
     edit: PencilSimple,
+    star: Star,
   };
 
+  export let item;
   export let items = [];
   export let id = ""; // Unique ID for the dropdown
   export let categoryId = ""; // Unique ID for the category
-  let open = false;
+  export let open = false;
 
   const toggleDropdown = () => {
     open = !open;
@@ -31,6 +33,12 @@
     console.log(`Clicked item with action: ${action}`);
 
     if (action === "templ_add") {
+      // const newTemplateId = Math.random().toString(36).substr(2, 8);
+      // const newTemplate = { name: "Nieuwe template", id: newTemplateId };
+      // item = {
+      //   ...item,
+      //   templates: [...item.templates, newTemplate],
+      // };
       goto(`/category/${categoryId}/add-template`);
       closeDropdown();
     } else if (action === "cat_delete") {
@@ -40,12 +48,7 @@
         )
       ) {
         deleteCategory(categoryId).then(() => {
-          const deleteEvent = new CustomEvent("category-deleted", {
-            detail: categoryId,
-            bubbles: true,
-            composed: true,
-          });
-          window.dispatchEvent(deleteEvent);
+          item = {};
           closeDropdown();
         });
       }
@@ -53,12 +56,7 @@
       const newName = prompt("Geef een nieuwe naam voor de categorie:");
       if (newName) {
         updateCategoryName(categoryId, newName).then(() => {
-          const modifyEvent = new CustomEvent("category-modified", {
-            detail: { categoryId, newName },
-            bubbles: true,
-            composed: true,
-          });
-          window.dispatchEvent(modifyEvent);
+          item.name = newName;
           closeDropdown();
         });
       }
@@ -68,12 +66,10 @@
       );
       if (newCategoryName) {
         createCategory(categoryId, newCategoryName).then((newCategory) => {
-          const addEvent = new CustomEvent("category-added", {
-            detail: { parentCategoryId: categoryId, newCategory },
-            bubbles: true,
-            composed: true,
-          });
-          window.dispatchEvent(addEvent);
+          item = {
+            ...item,
+            sub: [...item.sub, newCategory],
+          };
           closeDropdown();
         });
       }
@@ -95,7 +91,7 @@
     {:else}
       <li class={item.class} on:click={() => handleItemClick(item.action)}>
         {#if item.icon && icons[item.icon]}
-          <svelte:component this={icons[item.icon]} />
+          <svelte:component this={icons[item.icon]} size={18} />
         {/if}
         {item.label}
       </li>

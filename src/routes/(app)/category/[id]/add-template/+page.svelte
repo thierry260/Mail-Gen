@@ -16,6 +16,21 @@
   // Custom NodeView for the variable node
   import { Node, mergeAttributes } from "@tiptap/core";
 
+  let workspaceVariables = {};
+  let selectedVariable = "";
+  let newVariable = { field_name: "", placeholder: "" };
+  let templateName = "";
+  let templateContent = "";
+  let categoryId = "";
+  let inputRef; // Reference to the input element
+  let showVariablePopup = false; // State to control the popup visibility
+  let variableSearchQuery = ""; // Query for variable search
+  let showPlaceholderField = false; // State to control placeholder field visibility
+
+  $: {
+    categoryId = $page.params.id;
+  }
+
   const Variable = Node.create({
     name: "variable",
     group: "inline",
@@ -66,21 +81,6 @@
       };
     },
   });
-
-  let workspaceVariables = {};
-  let selectedVariable = "";
-  let newVariable = { field_name: "", placeholder: "" };
-  let templateName = "";
-  let templateContent = "";
-  let categoryId = "";
-  let inputRef; // Reference to the input element
-  let showVariablePopup = false; // State to control the popup visibility
-  let variableSearchQuery = ""; // Query for variable search
-  let showPlaceholderField = false; // State to control placeholder field visibility
-
-  $: {
-    categoryId = $page.params.id;
-  }
 
   // Fetch existing variables from the workspace
   const fetchVariables = async () => {
@@ -149,9 +149,9 @@
           db,
           "workspaces",
           localStorage.getItem("workspace"),
-          "templates",
+          "templates"
         ),
-        newTemplate,
+        newTemplate
       );
       console.log("Template added with ID: ", docRef.id);
 
@@ -197,7 +197,7 @@
       ([id, data]) =>
         data.field_name
           .toLowerCase()
-          .includes(variableSearchQuery.toLowerCase()),
+          .includes(variableSearchQuery.toLowerCase())
     );
 
     if (existingVariable.length > 0) {
@@ -333,7 +333,7 @@
       <ul>
         {#each Object.entries(workspaceVariables).filter( ([id, data]) => data.field_name
               .toLowerCase()
-              .includes(variableSearchQuery.toLowerCase()), ) as [id, data]}
+              .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
           <li on:click={() => insertVariable(data.field_name)}>
             {data.field_name}
           </li>

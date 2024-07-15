@@ -7,6 +7,7 @@
   import { browser } from "$app/environment";
   import { updateDoc, doc } from "firebase/firestore"; // Import Firestore update function
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
+  import { Star } from "phosphor-svelte";
 
   let id;
   let templateData = {};
@@ -20,6 +21,7 @@
   let isActive = false;
   let isEditMode = false; // Toggle for edit mode
   let selectedVariable = ""; // Track the selected variable for insertion
+  let isFavorite = false;
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
@@ -60,8 +62,55 @@
     if (id) {
       console.log("Fetching template details for template ID:", id);
       fetchWorkspaceAndTemplateData();
+      loadFavoriteState();
     }
   }
+
+  const toggleFavorite = () => {
+    isFavorite = !isFavorite;
+    saveFavoriteState();
+  };
+
+  const saveFavoriteState = () => {
+    if (browser) {
+      let favoriteTemplates =
+        JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
+
+      const index = favoriteTemplates.findIndex(
+        (item) => item.id === templateData.id
+      );
+
+      if (isFavorite && index === -1) {
+        favoriteTemplates.unshift(templateData);
+      } else if (!isFavorite && index !== -1) {
+        favoriteTemplates.splice(index, 1);
+      }
+
+      localStorage.setItem(
+        "favoriteTemplates",
+        JSON.stringify(favoriteTemplates)
+      );
+    } else {
+      console.warn("localStorage is not available in this environment.");
+    }
+  };
+
+  const loadFavoriteState = () => {
+    if (browser) {
+      let favoriteTemplates =
+        JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
+
+      isFavorite = favoriteTemplates.some(
+        (item) => item.id === templateData.id
+      );
+    } else {
+      console.warn("localStorage is not available in this environment.");
+    }
+  };
+
+  onMount(() => {
+    // loadFavoriteState();
+  });
 
   // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
@@ -144,7 +193,7 @@
 
   const confirmAndDelete = () => {
     const confirmDelete = window.confirm(
-      "Weet je zeker dat je deze template wilt verwijderen?",
+      "Weet je zeker dat je deze template wilt verwijderen?"
     );
     if (confirmDelete) {
       deleteTemplate(templateData.id)
@@ -194,6 +243,16 @@
       >
       {#if !isEditMode}
         <button on:click={confirmAndDelete}>Verwijderen</button>
+        <button class="favorite-button" on:click={toggleFavorite}>
+          {#if isFavorite}
+            <Star size="18" weight="fill" />
+          {:else}
+            <Star size="18" />
+          {/if}
+          {isFavorite
+            ? "Uit favorieten verwijderen"
+            : "Aan favorieten toevoegen"}
+        </button>
       {/if}
     </h1>
     {#if isEditMode}

@@ -20,7 +20,7 @@
 	"type": "module",
 	"dependencies": {
 		"@tiptap/core": "^2.5.0",
-		"@tiptap/extension-placeholder": "^2.5.0",
+		"@tiptap/extension-placeholder": "^2.5.1",
 		"@tiptap/pm": "^2.5.0",
 		"@tiptap/starter-kit": "^2.5.0",
 		"firebase": "^9.1.2",

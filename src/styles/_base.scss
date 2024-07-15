@@ -68,57 +68,57 @@ h4,
 
 h1,
 .h1 {
-  font-size: (50 / 16) * 1rem;
+  font-size: calc(50 / 16) * 1rem;
 
   @media screen and (max-width: $lg) {
-    font-size: (45 / 16) * 1rem;
+    font-size: calc(45 / 16) * 1rem;
   }
 
   @media screen and (max-width: $md) {
-    font-size: (40 / 16) * 1rem;
+    font-size: calc(40 / 16) * 1rem;
   }
 
   @media screen and (max-width: $sm) {
-    font-size: (35 / 16) * 1rem;
+    font-size: calc(35 / 16) * 1rem;
   }
 }
 
 h2,
 .h2 {
-  font-size: (40 / 16) * 1rem;
+  font-size: calc(40 / 16) * 1rem;
 
   @media screen and (max-width: $lg) {
-    font-size: (35 / 16) * 1rem;
+    font-size: calc(35 / 16) * 1rem;
   }
 
   @media screen and (max-width: $sm) {
-    font-size: (28 / 16) * 1rem;
+    font-size: calc(28 / 16) * 1rem;
   }
 }
 
 h3,
 .h3 {
-  font-size: (30 / 16) * 1rem;
+  font-size: calc(30 / 16) * 1rem;
 
   @media screen and (max-width: $md) {
-    font-size: (25 / 16) * 1rem;
+    font-size: calc(25 / 16) * 1rem;
   }
 }
 
 h4,
 .h4 {
-  font-size: (18 / 16) * 1rem;
+  font-size: calc(18 / 16) * 1rem;
 }
 
 p {
   font-family: $inter;
   font-weight: 400;
-  font-size: (18 / 16) * 1rem;
+  font-size: calc(18 / 16) * 1rem;
   line-height: 1.7em;
   color: $black;
 
   @media screen and (max-width: $sm) {
-    font-size: (16 / 16) * 1rem;
+    font-size: calc(16 / 16) * 1rem;
   }
 }
 
@@ -166,7 +166,7 @@ p {
       position: absolute;
       display: block;
       right: 20px;
-      font-size: (20 / 16) * 1em;
+      font-size: calc(20 / 16) * 1em;
       top: calc(50% - 10px);
     }
   }
@@ -307,7 +307,7 @@ legend {
   transition: transform 0.1s ease-out;
 }
 
-.open>.dropdown {
+.open > .dropdown {
   transform: rotate(90deg);
 }
 
@@ -340,6 +340,5 @@ main:has(.home) nav:first-child {
     background-color: var(--gray-100);
     margin-inline: 2px;
     display: inline-block;
-
   }
 }
