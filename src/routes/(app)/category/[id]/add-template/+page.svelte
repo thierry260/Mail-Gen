@@ -127,7 +127,7 @@
   };
 
   const insertVariable = (variable) => {
-    templateContent += ` {{${variable}}} `;
+    templateContent += ` <span class="variable">{{${variable}}}</span> `;
     showVariablePopup = false;
     variableSearchQuery = "";
     showPlaceholderField = false;
@@ -135,9 +135,11 @@
 
   const handleVariableSearch = (e) => {
     variableSearchQuery = e.target.value;
-    const existingVariable = Object.entries(workspaceVariables).find(
+    const existingVariable = Object.entries(workspaceVariables).filter(
       ([id, data]) =>
-        data.field_name.toLowerCase() === variableSearchQuery.toLowerCase()
+        data.field_name
+          .toLowerCase()
+          .includes(variableSearchQuery.toLowerCase())
     );
 
     if (existingVariable) {
@@ -180,11 +182,14 @@
 />
 
 <div>
-  <h2>Template details</h2>
+  <h2>Inhoud</h2>
   <textarea placeholder="Email inhoud" bind:value={templateContent}></textarea>
+  <!-- <div contenteditable="true" bind:innerHTML={templateContent}></div> -->
 </div>
 
-<button on:click={() => (showVariablePopup = true)}>Voeg Variabele Toe</button>
+<button class="button outline" on:click={() => (showVariablePopup = true)}
+  >+ Voeg variabele toe</button
+>
 
 {#if showVariablePopup}
   <div class="popup">
@@ -220,7 +225,7 @@
 {/if}
 
 <!-- Save Template Button -->
-<button on:click={addTemplate}>Save</button>
+<button class="button" on:click={addTemplate}>Opslaan</button>
 
 <style>
   input,
