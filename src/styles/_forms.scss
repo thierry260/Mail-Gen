@@ -20,7 +20,7 @@ textarea {
     padding: 26px 18px 10px;
     border: none;
     outline: none;
-    background-color: var(--background);
+    background-color: var(--input-background, #fff);
     border-radius: 5px;
     border: 1px solid var(--border);
     max-width: 100%;

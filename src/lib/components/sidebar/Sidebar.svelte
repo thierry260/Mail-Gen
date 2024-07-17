@@ -6,6 +6,7 @@
   import { get } from "svelte/store";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
+  import { templatesStore } from "$lib/stores/templates";
   import { fetchWorkspaceData } from "$lib/utils/get";
 
   let data = [];
@@ -53,6 +54,7 @@
         open: false, // Add open property to handle accordion state
       }));
       data.forEach((item) => expandParents(item, currentId, currentType));
+      templatesStore.set(data); // Initialize the store with the data
       console.log(data);
     } else {
       console.log("Categories not found");

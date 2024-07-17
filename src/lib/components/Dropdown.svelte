@@ -3,6 +3,7 @@
   import { goto } from "$app/navigation";
   import { deleteCategory } from "$lib/utils/delete";
   import { updateCategoryName } from "$lib/utils/set";
+  import { createNewTemplate } from "$lib/utils/create";
   import { createCategory } from "$lib/utils/create";
   import { Plus, TrashSimple, PencilSimple, Star } from "phosphor-svelte";
 
@@ -29,17 +30,27 @@
   };
 
   // Handle click events on dropdown items
-  function handleItemClick(action) {
+  async function handleItemClick(action) {
     console.log(`Clicked item with action: ${action}`);
 
     if (action === "templ_add") {
-      // const newTemplateId = Math.random().toString(36).substr(2, 8);
-      // const newTemplate = { name: "Nieuwe template", id: newTemplateId };
-      // item = {
-      //   ...item,
-      //   templates: [...item.templates, newTemplate],
-      // };
-      goto(`/category/${categoryId}/add-template`);
+      const newTemplateName = prompt(
+        "Geef een naam in voor de nieuwe template:"
+      );
+      const newTemplateId = await createNewTemplate(
+        categoryId,
+        newTemplateName
+      );
+
+      console.log(newTemplateId);
+      if (newTemplateId) {
+        const newTemplate = { name: newTemplateName, id: newTemplateId };
+        item = {
+          ...item,
+          templates: [...item.templates, newTemplate],
+        };
+        goto(`/template/${newTemplateId}#edit`);
+      }
       closeDropdown();
     } else if (action === "cat_delete") {
       if (

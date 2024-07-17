@@ -1,9 +1,10 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { page } from "$app/stores";
-  import Placeholder from "@tiptap/extension-placeholder";
   import { Editor } from "@tiptap/core";
+  import { Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
+  import Placeholder from "@tiptap/extension-placeholder";
   import {
     db,
     collection,
@@ -14,7 +15,6 @@
   } from "$lib/firebase"; // Correct import path
 
   // Custom NodeView for the variable node
-  import { Node, mergeAttributes } from "@tiptap/core";
 
   let workspaceVariables = {};
   let selectedVariable = "";
@@ -293,22 +293,6 @@
         >
           P
         </button>
-        <!-- <div className="control-group">
-          <div className="button-group">
-            <button
-              onClick={() => editor.chain().focus().undo().run()}
-              disabled={!editor.can().undo()}
-            >
-              Undo
-            </button>
-            <button
-              onClick={() => editor.chain().focus().redo().run()}
-              disabled={!editor.can().redo()}
-            >
-              Redo
-            </button>
-          </div>
-        </div> -->
       </div>
     {/if}
     <div class="editor" bind:this={editorElement} />

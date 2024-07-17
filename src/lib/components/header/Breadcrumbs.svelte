@@ -123,7 +123,7 @@
     display: flex;
     list-style: none;
     padding: 0;
-    margin: 10px 0;
+    margin: 0 0 20px;
     font-size: 1.2rem;
 
     li {

@@ -16,7 +16,6 @@ export async function fetchWorkspaceData(fieldName = null) {
   }
 
   if (cachedData && cacheExpiration && Date.now() < parseInt(cacheExpiration)) {
-    console.log("Using cached workspace data");
   } else {
     console.log("Fetching fresh workspace data");
     try {

@@ -7,6 +7,21 @@
   import { goto } from "$app/navigation";
   import { CaretRight, DotsThreeVertical, Plus } from "phosphor-svelte";
   import Dropdown from "$lib/components/Dropdown.svelte";
+  import { templatesStore } from "$lib/stores/templates";
+  import { onDestroy } from "svelte";
+
+  let unsubscribe;
+
+  unsubscribe = templatesStore.subscribe((value) => {
+    const itemFromStore = value.find((cat) => cat.id === item.id);
+    if (itemFromStore) {
+      item = itemFromStore;
+    }
+  });
+
+  onDestroy(() => {
+    unsubscribe();
+  });
 
   const viewTemplate = (templateId) => {
     goto(`/template/${templateId}`);
@@ -33,12 +48,12 @@
   ];
 
   const optionsItems = [
-    {
-      label: "Aan favorieten toevoegen",
-      class: "",
-      action: "cat_favourite",
-      icon: "star",
-    },
+    // {
+    //   label: "Aan favorieten toevoegen",
+    //   class: "",
+    //   action: "cat_favourite",
+    //   icon: "star",
+    // },
     {
       label: "Naam bewerken",
       class: "",

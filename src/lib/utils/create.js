@@ -1,5 +1,5 @@
 // src/lib/utils/create.js
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, addDoc, collection } from "firebase/firestore";
 import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
 import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
 import { browser } from "$app/environment";
@@ -72,4 +72,67 @@ export const addCategoryToData = (dataArray, parentCategoryId, newCategory) => {
       return category; // No changes needed
     }
   });
+};
+
+export async function createNewTemplate(
+  categoryId,
+  templateName = "Nieuwe template"
+) {
+  try {
+    if (!browser) return;
+
+    const docRef = await addDoc(
+      collection(
+        db,
+        "workspaces",
+        localStorage.getItem("workspace"),
+        "templates"
+      ),
+      {
+        content: "Beste ",
+        name: templateName,
+        variables: [],
+      }
+    );
+
+    await addTemplateToCategory(docRef.id, templateName, categoryId);
+    clearCache();
+
+    return docRef.id;
+    // return { id: docRef.id, name: templateName };
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    return null;
+  }
+}
+
+const addTemplateToCategory = async (templateId, templateName, categoryId) => {
+  const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    let categories = docSnap.data().categories || [];
+
+    const findAndAddTemplate = (categories) => {
+      for (let category of categories) {
+        if (category.id === categoryId) {
+          category.templates = category.templates || [];
+          category.templates.push({ id: templateId, name: templateName });
+          return true;
+        }
+        if (category.sub) {
+          if (findAndAddTemplate(category.sub)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    findAndAddTemplate(categories);
+
+    await updateDoc(docRef, {
+      categories: categories,
+    });
+  }
 };

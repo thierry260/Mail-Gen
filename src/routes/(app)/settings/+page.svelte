@@ -10,6 +10,7 @@
     updatePassword,
   } from "firebase/auth";
   import { page } from "$app/stores";
+  import { TrashSimple } from "phosphor-svelte";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
@@ -24,6 +25,8 @@
   let workspaceName = "";
   let workspaceNameError = writable("");
   let workspaceNameSuccess = writable("");
+
+  let activeTab = "variables";
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -100,7 +103,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword,
+        currentPassword
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -162,120 +165,170 @@
 
 <h1>Instellingen</h1>
 
-<!-- Add New Variable Form -->
-<div class="settings">
-  <h2>Variabelen managen</h2>
-  <input type="text" placeholder="Naam" bind:value={newVariable.field_name} />
-  <input
-    type="text"
-    placeholder="Placeholder"
-    bind:value={newVariable.placeholder}
-  />
-  <button on:click={addVariable}>Voeg toe</button>
+<!-- Tab Navigation -->
+<div class="tabs">
+  <button
+    class:active={activeTab === "variables"}
+    on:click={() => (activeTab = "variables")}>Variabelen</button
+  >
+  <button
+    class:active={activeTab === "account"}
+    on:click={() => (activeTab = "account")}>Account</button
+  >
+  <button
+    class:active={activeTab === "workspace"}
+    on:click={() => (activeTab = "workspace")}>Workspace</button
+  >
 </div>
 
-<!-- Existing Variables Table -->
-{#if Object.keys(workspaceVariables).length > 0}
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Naam</th>
-        <th>Placeholder</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each Object.entries(workspaceVariables) as [variableId, variableData]}
-        <tr>
-          <td>{variableId}</td>
-          <td>
-            <input
-              type="text"
-              value={variableData.field_name}
-              on:input={(e) =>
-                updateVariable(variableId, "field_name", e.target.value)}
-            />
-          </td>
-          <td>
-            <input
-              type="text"
-              value={variableData.placeholder}
-              on:input={(e) =>
-                updateVariable(variableId, "placeholder", e.target.value)}
-            />
-          </td>
-          <td>
-            <button on:click={() => removeVariable(variableId)}
-              >Verwijder</button
-            >
-          </td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-{:else}
-  <p>Loading variables...</p>
+<!-- Tab Content -->
+{#if activeTab === "variables"}
+  <div class="tab-content">
+    <h2>Variabelen managen</h2>
+    <input type="text" placeholder="Naam" bind:value={newVariable.field_name} />
+    <input
+      type="text"
+      placeholder="Placeholder"
+      bind:value={newVariable.placeholder}
+    />
+    <button class="button" on:click={addVariable}>+ Voeg toe</button>
+
+    {#if Object.keys(workspaceVariables).length > 0}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Naam</th>
+            <th>Placeholder</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each Object.entries(workspaceVariables) as [variableId, variableData]}
+            <tr>
+              <td>{variableId}</td>
+              <td>
+                <input
+                  type="text"
+                  value={variableData.field_name}
+                  on:input={(e) =>
+                    updateVariable(variableId, "field_name", e.target.value)}
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={variableData.placeholder}
+                  on:input={(e) =>
+                    updateVariable(variableId, "placeholder", e.target.value)}
+                />
+              </td>
+              <td>
+                <button
+                  class="button basic"
+                  on:click={() => removeVariable(variableId)}
+                  ><TrashSimple size="18" /></button
+                >
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {:else}
+      <p>Loading variables...</p>
+    {/if}
+  </div>
+{:else if activeTab === "account"}
+  <div class="tab-content">
+    <h2>Wachtwoord wijzigen</h2>
+    <input
+      type="password"
+      placeholder="Huidig wachtwoord"
+      bind:value={currentPassword}
+    />
+    <input
+      type="password"
+      placeholder="Nieuw wachtwoord"
+      bind:value={newPassword}
+    />
+    <button class="button" on:click={handleChangePassword}
+      >Wachtwoord wijzigen</button
+    >
+    {#if $passwordError}
+      <p style="color: red">{$passwordError}</p>
+    {/if}
+    {#if $passwordSuccess}
+      <p style="color: green">{$passwordSuccess}</p>
+    {/if}
+  </div>
+{:else if activeTab === "workspace"}
+  <div class="tab-content">
+    <h2>Workspacenaam wijzigen</h2>
+    <input
+      type="text"
+      placeholder="Nieuwe workspacenaam"
+      bind:value={workspaceName}
+    />
+    <button class="button" on:click={handleChangeWorkspaceName}
+      >Workspacenaam wijzigen</button
+    >
+    {#if $workspaceNameError}
+      <p style="color: red">{$workspaceNameError}</p>
+    {/if}
+    {#if $workspaceNameSuccess}
+      <p style="color: green">{$workspaceNameSuccess}</p>
+    {/if}
+    <h2>Uitnodigen voor Workspace</h2>
+    <input type="email" placeholder="E-mailadres" bind:value={inviteEmail} />
+    <button class="button" on:click={generateInviteLink}
+      >Genereer uitnodigingslink</button
+    >
+    {#if $inviteError}
+      <p style="color: red">{$inviteError}</p>
+    {/if}
+    {#if $inviteSuccess}
+      <p style="color: green">{$inviteSuccess}</p>
+    {/if}
+    {#if $inviteLink}
+      <p>
+        Uitnodigingslink: <a href={$inviteLink} target="_blank">{$inviteLink}</a
+        >
+      </p>
+    {/if}
+  </div>
 {/if}
 
-<!-- Change Workspace Name Section -->
-<div class="change-workspace-name">
-  <h2>Workspacenaam wijzigen</h2>
-  <input
-    type="text"
-    placeholder="Nieuwe workspacenaam"
-    bind:value={workspaceName}
-  />
-  <button on:click={handleChangeWorkspaceName}>Workspacenaam wijzigen</button>
-  {#if $workspaceNameError}
-    <p style="color: red">{$workspaceNameError}</p>
-  {/if}
-  {#if $workspaceNameSuccess}
-    <p style="color: green">{$workspaceNameSuccess}</p>
-  {/if}
-</div>
-
-<!-- Change Password Section -->
-<div class="change-password">
-  <h2>Wachtwoord wijzigen</h2>
-  <input
-    type="password"
-    placeholder="Huidig wachtwoord"
-    bind:value={currentPassword}
-  />
-  <input
-    type="password"
-    placeholder="Nieuw wachtwoord"
-    bind:value={newPassword}
-  />
-  <button on:click={handleChangePassword}>Wachtwoord wijzigen</button>
-  {#if $passwordError}
-    <p style="color: red">{$passwordError}</p>
-  {/if}
-  {#if $passwordSuccess}
-    <p style="color: green">{$passwordSuccess}</p>
-  {/if}
-</div>
-
-<!-- Invite to Workspace Section -->
-<div class="invite-to-workspace">
-  <h2>Uitnodigen voor Workspace</h2>
-  <input type="email" placeholder="E-mailadres" bind:value={inviteEmail} />
-  <button on:click={generateInviteLink}>Genereer uitnodigingslink</button>
-  {#if $inviteError}
-    <p style="color: red">{$inviteError}</p>
-  {/if}
-  {#if $inviteSuccess}
-    <p style="color: green">{$inviteSuccess}</p>
-  {/if}
-  {#if $inviteLink}
-    <p>
-      Uitnodigingslink: <a href={$inviteLink} target="_blank">{$inviteLink}</a>
-    </p>
-  {/if}
-</div>
-
 <style>
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .tabs button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+  }
+
+  .tabs button:hover {
+    background-color: #f2f2f2;
+  }
+
+  .tabs button.active {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+  }
+
+  .tab-content {
+    /* padding: 20px;
+    border: 1px solid #ddd;
+    border-top: none; */
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
@@ -318,11 +371,11 @@
     margin: 5px 0;
   }
 
-  button {
+  /* button {
     padding: 8px 16px;
     margin: 5px 0;
     cursor: pointer;
-  }
+  } */
 
   div {
     margin-bottom: 20px;
