@@ -7,7 +7,7 @@
   import { browser } from "$app/environment";
   import { updateDoc, doc } from "firebase/firestore"; // Import Firestore update function
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
-  import { Star } from "phosphor-svelte";
+  import { Star, TrashSimple, PencilSimple, X } from "phosphor-svelte";
 
   let id;
   let templateData = {};
@@ -52,6 +52,9 @@
 
       // Save to localStorage as recently viewed template
       saveRecentlyViewedTemplate(templateData);
+
+      // Load favorite state after fetching template data
+      loadFavoriteState();
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -62,7 +65,6 @@
     if (id) {
       console.log("Fetching template details for template ID:", id);
       fetchWorkspaceAndTemplateData();
-      loadFavoriteState();
     }
   }
 
@@ -109,7 +111,9 @@
   };
 
   onMount(() => {
-    // loadFavoriteState();
+    if (id) {
+      fetchWorkspaceAndTemplateData();
+    }
   });
 
   // Replace variables in content based on user input
@@ -235,26 +239,31 @@
 
 {#if templateData.content}
   {#if !isNextStage}
-    <h1>
-      Template:
-      {templateData.name}
-      <button class="button" on:click={toggleEditMode}
-        >{isEditMode ? "Cancel" : "Aanpassen"}</button
-      >
+    <div class="top">
+      <h1>
+        Template:
+        {templateData.name}
+      </h1>
+      <button class="button basic" on:click={toggleEditMode}>
+        {#if isEditMode}
+          <X size="18" />Annuleren
+        {:else}
+          <PencilSimple size="18" />Aanpassen
+        {/if}
+      </button>
       {#if !isEditMode}
-        <button on:click={confirmAndDelete}>Verwijderen</button>
-        <button class="favorite-button" on:click={toggleFavorite}>
+        <button class="button basic" on:click={confirmAndDelete}>
+          <TrashSimple size="18" />
+        </button>
+        <button class="button basic favorite_button" on:click={toggleFavorite}>
           {#if isFavorite}
             <Star size="18" weight="fill" />
           {:else}
             <Star size="18" />
           {/if}
-          {isFavorite
-            ? "Uit favorieten verwijderen"
-            : "Aan favorieten toevoegen"}
         </button>
       {/if}
-    </h1>
+    </div>
     {#if isEditMode}
       <div class="edit-template">
         <input
@@ -351,6 +360,20 @@
 {/if}
 
 <style lang="scss">
+  .top {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    h1 {
+      flex-grow: 1;
+      margin-bottom: 0;
+    }
+  }
   .template {
     display: flex;
     flex-direction: column;

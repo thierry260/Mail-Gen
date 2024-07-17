@@ -60,29 +60,58 @@
 
 {#if step === 1}
   <form on:submit|preventDefault={checkWorkspace}>
-    <h1>Welkom terug!</h1>
-    <p>Vul je bedrijfsnaam in om toegang te krijgen tot het inlogformulier.</p>
-    <div class="input_wrapper">
-      <label class="label" for="workspace">Workspace</label>
-      <input type="text" id="workspace" bind:value={workspace} required />
+    <div class="form_intro">
+      <h1>Welkom terug!</h1>
+      <p>
+        Vul je bedrijfsnaam in om toegang te krijgen tot het inlogformulier.
+      </p>
     </div>
+    <label class="input_wrapper">
+      <input
+        type="text"
+        id="workspace"
+        bind:value={workspace}
+        required
+        placeholder="&nbsp;"
+      />
+      <span>Bedrijfsnaam</span>
+    </label>
     <button class="button" type="submit">Door naar inloggen</button>
+    <p class="form_note">
+      <small>Nieuw met MailGen? </small><a href="/get-mailgen"
+        >Maak een workspace aan</a
+      >
+    </p>
     {#if $workspaceErrorMessage}
       <p style="color: red">{$workspaceErrorMessage}</p>
     {/if}
   </form>
 {:else}
   <form on:submit|preventDefault={login}>
-    <h1>Je bent er bijna</h1>
-    <p>Vul je gegevens in om in te loggen.</p>
-    <div class="input_wrapper">
-      <label class="label" for="email">Email</label>
-      <input type="email" id="email" bind:value={email} required />
+    <div class="form_intro">
+      <h1>Je bent er bijna</h1>
+      <p>Vul je gegevens in om in te loggen.</p>
     </div>
-    <div class="input_wrapper">
-      <label class="label" for="password">Password</label>
-      <input type="password" id="password" bind:value={password} required />
-    </div>
+    <label class="input_wrapper">
+      <input
+        type="email"
+        id="email"
+        bind:value={email}
+        required
+        placeholder="&nbsp;"
+      />
+      <span>E-mailadres</span>
+    </label>
+    <label class="input_wrapper">
+      <input
+        type="password"
+        id="password"
+        bind:value={password}
+        required
+        placeholder="&nbsp;"
+      />
+      <span>Wachtwoord</span>
+    </label>
     <button class="button" type="submit">Login</button>
     {#if $errorMessage}
       <p style="color: red">{$errorMessage}</p>
@@ -99,6 +128,9 @@
 {/if}
 
 <style lang="scss">
+  .form_intro {
+    margin-bottom: 30px;
+  }
   form {
     display: flex;
     flex-direction: column;

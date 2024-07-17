@@ -6,6 +6,7 @@
 
   let data = [];
   let recentlyViewed = [];
+  let favoriteTemplates = [];
   let searchInput = "";
   let searchResults = [];
 
@@ -26,8 +27,14 @@
       return JSON.parse(localStorage.getItem("recentlyViewed")) || [];
     };
 
-    // Retrieve recently viewed templates
+    // Function to retrieve favorite templates from localStorage
+    const getFavoriteTemplates = () => {
+      return JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
+    };
+
+    // Retrieve recently viewed and favorite templates
     recentlyViewed = getRecentlyViewed();
+    favoriteTemplates = getFavoriteTemplates();
   });
 
   // Function to handle search input change
@@ -118,6 +125,23 @@
       {/each}
     </div>
   </div>
+
+  <div class="favorite_templates">
+    <h2>Favoriete templates</h2>
+    {#if favoriteTemplates.length === 0}
+      <p>Geen favoriete templates.</p>
+    {:else}
+      <div class="recent_templates">
+        {#each favoriteTemplates as template}
+          <a href="/template/{template.id}" class="recent_template">
+            <h3>{template.name}</h3>
+            <CaretRight size={14} />
+          </a>
+        {/each}
+      </div>
+    {/if}
+  </div>
+
   <div class="recently_viewed">
     <h2>Recent bekeken</h2>
     {#if recentlyViewed.length === 0}

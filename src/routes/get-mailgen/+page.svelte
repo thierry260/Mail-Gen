@@ -57,7 +57,7 @@
 
           if (usersCount >= parseInt(workspaceDoc.data().usersNo, 10)) {
             errorMessage.set(
-              "Maximum number of users reached for this workspace.",
+              "Maximum number of users reached for this workspace."
             );
             return;
           }
@@ -65,7 +65,7 @@
           await createAndRegisterUser(workspaceRef);
         } else {
           errorMessage.set(
-            "Workspace does not exist. Please check the invite link.",
+            "Workspace does not exist. Please check the invite link."
           );
         }
       } else {
@@ -92,7 +92,7 @@
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
       const userUID = user.uid;
 
@@ -105,7 +105,7 @@
 
       await setDoc(
         doc(db, "workspaces", workspaceId, "users", userUID),
-        userData,
+        userData
       );
 
       const userCommonData = {
@@ -133,42 +133,79 @@
 
 <form on:submit|preventDefault={register}>
   <h1>
-    {isInvited ? `Join Workspace: ${workspaceName}` : "Create a Workspace"}
+    {isInvited ? `Join workspace: ${workspaceName}` : "Maak een workspace"}
   </h1>
   {#if !isInvited}
-    <div class="input_wrapper">
-      <label for="workspaceName">Workspace Name</label>
+    <label class="input_wrapper">
       <input
+        placeholder="&nbsp;"
         type="text"
         id="workspaceName"
         bind:value={workspaceName}
         required
       />
-    </div>
+      <span>Bedrijfsnaam</span>
+    </label>
   {/if}
-  <div class="input_wrapper">
-    <label for="firstName">Voornaam</label>
-    <input type="text" id="firstName" bind:value={firstName} required />
+  <div class="input_columns" data-columns="2">
+    <label class="input_wrapper">
+      <input
+        placeholder="&nbsp;"
+        type="text"
+        id="firstName"
+        bind:value={firstName}
+        required
+      />
+      <span>Voornaam</span>
+    </label>
+    <label class="input_wrapper">
+      <input
+        placeholder="&nbsp;"
+        type="text"
+        id="lastName"
+        bind:value={lastName}
+        required
+      />
+      <span>Achternaam</span>
+    </label>
   </div>
-  <div class="input_wrapper">
-    <label for="lastName">Achternaam</label>
-    <input type="text" id="lastName" bind:value={lastName} required />
-  </div>
-  <div class="input_wrapper">
-    <label for="email">E-mailadres</label>
+  <label class="input_wrapper">
     {#if isInvited}
-      <input type="email" id="email" bind:value={email} required readonly />
+      <input
+        placeholder="&nbsp;"
+        type="email"
+        id="email"
+        bind:value={email}
+        required
+        readonly
+      />
     {:else}
-      <input type="email" id="email" bind:value={email} required />
+      <input
+        placeholder="&nbsp;"
+        type="email"
+        id="email"
+        bind:value={email}
+        required
+      />
     {/if}
-  </div>
-  <div class="input_wrapper">
-    <label for="password">Wachtwoord</label>
-    <input type="password" id="password" bind:value={password} required />
-  </div>
+    <span>E-mailadres</span>
+  </label>
+  <label class="input_wrapper">
+    <input
+      placeholder="&nbsp;"
+      type="password"
+      id="password"
+      bind:value={password}
+      required
+    />
+    <span>Wachtwoord</span>
+  </label>
   <button class="button" type="submit">
     {isInvited ? `Join ${workspaceName}` : "Workspace aanmaken"}
   </button>
+  <p class="form_note">
+    <small>Heb je al een workspace? </small><a href="/login">Inloggen</a>
+  </p>
   {#if $errorMessage}
     <p style="color: red">{$errorMessage}</p>
   {/if}
