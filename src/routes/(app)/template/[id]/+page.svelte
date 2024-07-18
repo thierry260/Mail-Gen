@@ -139,6 +139,7 @@
 
   $: {
     if (id) {
+      isNextStage = false;
       console.log("Fetching template details for template ID:", id);
       isEditMode = browser && window.location.hash.includes("#edit");
       fetchWorkspaceAndTemplateData();
@@ -752,7 +753,7 @@
       </div>
     {/if}
   {:else}
-    <h1>Email verzenden</h1>
+    <h1>{templateData.name} - Mailen</h1>
     <div class="email-details">
       <label class="input_wrapper">
         <input
@@ -796,7 +797,7 @@
     </div>
     <div class="buttons mail_actions">
       <button class="button outline" on:click={prevPage}>Vorige</button>
-      <button class="button" on:click={sendEmail}>Versturen</button>
+      <button class="button" on:click={sendEmail}>Mail aanmaken</button>
     </div>
   {/if}
 {/if}
@@ -842,6 +843,9 @@
     }
     .preview-content {
       line-height: 1.5;
+      p:empty {
+        height: 1.5em;
+      }
     }
     .variable {
       text-decoration: underline; /* Voor onderstreping */

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { fetchWorkspaceData } from "$lib/utils/get";
-  import { CaretRight } from "phosphor-svelte";
+  import { CaretRight, ArrowRight } from "phosphor-svelte";
   import { goto } from "$app/navigation";
 
   let data = [];
@@ -120,7 +120,10 @@
       {#each data as item}
         <a href="/category/{item.id}" class="category">
           <h3>{item.name}</h3>
-          <CaretRight size={18} />
+          <div class="view_button">
+            Bekijken
+            <CaretRight size={16} />
+          </div>
         </a>
       {/each}
     </div>
@@ -214,6 +217,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
+
+    .view_button {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text);
+    }
     .category {
       background-color: #fff;
       padding: 30px;
