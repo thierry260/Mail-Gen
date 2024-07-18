@@ -348,6 +348,7 @@ main:has(.home) nav:first-child {
   padding: 30px;
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
+  outline: none;
 
   code {
     padding: 2px 6px;
@@ -362,6 +363,7 @@ main:has(.home) nav:first-child {
 // Tooltips
 [data-tooltip] {
   position: relative;
+  white-space: nowrap;
   cursor: pointer;
 
   &:before,

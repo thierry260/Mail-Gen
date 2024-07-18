@@ -39,10 +39,7 @@
   let workspaceVariables = { variables: {} }; // Ensure workspaceVariables is initialized with a default structure
   let userInput = {};
   let isNextStage = false; // Control the visibility of stages
-  let userName = "";
-  let userEmail = "";
-  let cc = "";
-  let bcc = "";
+  let mail = {};
   let isActive = false;
   let isEditMode = false; // Toggle for edit mode
   let selectedVariable = ""; // Track the selected variable for insertion
@@ -403,16 +400,28 @@
     isNextStage = true;
   };
 
-  // Handle the send button click
-  const sendEmail = () => {
-    console.log({
-      name: userName,
-      email: userEmail,
-      cc: cc,
-      bcc: bcc,
-      content: document.querySelector(".preview-content").innerHTML,
+  function sendEmail() {
+    mail.body = replaceVariables(templateData.content, userInput);
+    // mail.body = "test";
+
+    const params = new URLSearchParams({
+      subject: mail.subject,
+      body: mail.body,
     });
-  };
+
+    if (mail.cc) {
+      params.append("cc", mail.cc);
+    }
+
+    if (mail.bcc) {
+      params.append("bcc", mail.bcc);
+    }
+
+    const mailtoLink = `mailto:${encodeURIComponent(mail.to)}${params.toString() ? `?${params.toString()}` : ""}`;
+    console.log("mailtoLink", mailtoLink);
+
+    window.open(mailtoLink);
+  }
 
   // Toggle edit mode
   const toggleEditMode = () => {
@@ -736,7 +745,7 @@
               ><CopySimple size="18" />Kopiëren</button
             >
           </span>
-          <button class="button" on:click={nextPage}
+          <button class="button outline" on:click={nextPage}
             ><EnvelopeSimple size="18" />Mailen</button
           >
         </div>
@@ -748,29 +757,36 @@
       <label class="input_wrapper">
         <input
           type="text"
-          id="userName"
-          bind:value={userName}
+          id="subject"
+          bind:value={mail.subject}
           placeholder="&nbsp;"
         />
-        <span for="userName">Name</span>
+        <span for="userEmail">Onderwerp</span>
       </label>
       <label class="input_wrapper">
-        <input
-          type="email"
-          id="userEmail"
-          bind:value={userEmail}
-          placeholder="&nbsp;"
-        />
-        <span for="userEmail">Email</span>
+        <input type="text" id="to" bind:value={mail.to} placeholder="&nbsp;" />
+        <span for="userEmail">Aan</span>
       </label>
-      <label class="input_wrapper">
-        <input type="email" id="cc" bind:value={cc} placeholder="&nbsp;" />
-        <span for="cc">CC</span>
-      </label>
-      <label class="input_wrapper">
-        <input type="email" id="bcc" bind:value={bcc} placeholder="&nbsp;" />
-        <span for="bcc">BCC</span>
-      </label>
+      <div class="input_columns">
+        <label class="input_wrapper">
+          <input
+            type="email"
+            id="cc"
+            bind:value={mail.cc}
+            placeholder="&nbsp;"
+          />
+          <span for="cc">CC</span>
+        </label>
+        <label class="input_wrapper">
+          <input
+            type="email"
+            id="bcc"
+            bind:value={mail.bcc}
+            placeholder="&nbsp;"
+          />
+          <span for="bcc">BCC</span>
+        </label>
+      </div>
     </div>
     <span class="label">Preview</span>
     <div class="preview">
@@ -778,8 +794,10 @@
         {@html replaceVariables(templateData.content, userInput)}
       </div>
     </div>
-    <button class="button outline" on:click={prevPage}>Vorige</button>
-    <button class="button" on:click={sendEmail}>Versturen</button>
+    <div class="buttons mail_actions">
+      <button class="button outline" on:click={prevPage}>Vorige</button>
+      <button class="button" on:click={sendEmail}>Versturen</button>
+    </div>
   {/if}
 {/if}
 
@@ -830,6 +848,14 @@
       cursor: pointer; /* Verander cursor naar pointer bij hover */
       /* Of gebruik bijvoorbeeld background-color voor achtergrondmarkering */
     }
+  }
+
+  .mail_actions {
+    margin-top: 20px;
+  }
+  .buttons {
+    display: flex;
+    gap: 10px;
   }
   .email-details {
     display: flex;

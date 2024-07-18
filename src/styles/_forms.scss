@@ -99,7 +99,7 @@ textarea {
   }
 }
 
-.input_columns {
+.input_columns.input_columns {
   gap: inherit;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
