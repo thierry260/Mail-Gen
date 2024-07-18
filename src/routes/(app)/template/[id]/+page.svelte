@@ -8,7 +8,14 @@
   import { browser } from "$app/environment";
   import { updateDoc, doc, getDoc } from "firebase/firestore"; // Import Firestore update function
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
-  import { Star, TrashSimple, PencilSimple, X } from "phosphor-svelte";
+  import {
+    Star,
+    TrashSimple,
+    PencilSimple,
+    X,
+    CopySimple,
+    EnvelopeSimple,
+  } from "phosphor-svelte";
   import { Editor } from "@tiptap/core";
   import { Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
@@ -250,6 +257,32 @@
     });
   };
 
+  const removeTemplateFromStore = (id) => {
+    templatesStore.update((categories) => {
+      const removeNestedTemplate = (items) => {
+        for (const item of items) {
+          if (item.templates) {
+            const templateIndex = item.templates.findIndex(
+              (template) => template.id === id
+            );
+            if (templateIndex !== -1) {
+              item.templates.splice(templateIndex, 1); // Remove the template
+              return true; // Exit after removing
+            }
+          }
+          if (item.sub) {
+            if (removeNestedTemplate(item.sub)) {
+              return true; // Exit after removing
+            }
+          }
+        }
+        return false;
+      };
+      removeNestedTemplate(categories);
+      return categories;
+    });
+  };
+
   // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
     if (!content) return ""; // Check if content is defined
@@ -272,7 +305,8 @@
   };
 
   // Copy the generated content to clipboard
-  const copyToClipboard = async () => {
+  const copyToClipboard = async (e) => {
+    e.currentTarget.parentNode.dataset.tooltip = "Gekopieerd";
     const content = document.querySelector(".preview-content").innerText;
     try {
       await navigator.clipboard.writeText(content);
@@ -280,6 +314,13 @@
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
+  };
+
+  const resetCopyTooltip = (e) => {
+    setTimeout(() => {
+      e.currentTarget.parentNode.dataset.tooltip =
+        e.currentTarget.parentNode.dataset.default_tooltip;
+    }, 250);
   };
 
   // Function to save the recently viewed template to localStorage
@@ -338,6 +379,7 @@
         .then(() => {
           // Handle success, e.g., show success message or redirect
           console.log("Template deleted successfully");
+          removeTemplateFromStore();
         })
         .catch((error) => {
           // Handle error, e.g., show error message
@@ -591,15 +633,26 @@
           </div>
         </div>
         <div class="buttons">
-          <button class="button outline" on:click={copyToClipboard}
-            >Kopieer</button
+          <span
+            data-flow="top"
+            data-tooltip="Klik om te kopiëren"
+            data-default_tooltip="Klik om te kopiëren"
           >
-          <button class="button" on:click={nextPage}>Volgende</button>
+            <button
+              class="button outline"
+              on:mouseleave={resetCopyTooltip}
+              on:click={copyToClipboard}
+              ><CopySimple size="18" />Kopiëren</button
+            >
+          </span>
+          <button class="button" on:click={nextPage}
+            ><EnvelopeSimple size="18" />Mailen</button
+          >
         </div>
       </div>
     {/if}
   {:else}
-    <h1>Send Email</h1>
+    <h1>Email verzenden</h1>
     <div class="email-details">
       <label class="input_wrapper">
         <input
@@ -628,14 +681,14 @@
         <span for="bcc">BCC</span>
       </label>
     </div>
+    <span class="label">Preview</span>
     <div class="preview">
-      <h2>Generated Email Content</h2>
       <div class="preview-content">
         {@html replaceVariables(templateData.content, userInput)}
       </div>
-      <button class="button outline" on:click={prevPage}>Vorige</button>
-      <button class="button" on:click={sendEmail}>Versturen</button>
     </div>
+    <button class="button outline" on:click={prevPage}>Vorige</button>
+    <button class="button" on:click={sendEmail}>Versturen</button>
   {/if}
 {/if}
 
@@ -668,23 +721,23 @@
         gap: 0;
       }
     }
-    .preview {
-      background-color: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--border-radius);
-      padding: 30px;
-      h2 {
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 0.5em;
-      }
-      .preview-content {
-        line-height: 1.5;
-      }
-      .variable {
-        text-decoration: underline; /* Voor onderstreping */
-        cursor: pointer; /* Verander cursor naar pointer bij hover */
-        /* Of gebruik bijvoorbeeld background-color voor achtergrondmarkering */
-      }
+  }
+  .preview {
+    background-color: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    h2 {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5em;
+    }
+    .preview-content {
+      line-height: 1.5;
+    }
+    .variable {
+      text-decoration: underline; /* Voor onderstreping */
+      cursor: pointer; /* Verander cursor naar pointer bij hover */
+      /* Of gebruik bijvoorbeeld background-color voor achtergrondmarkering */
     }
   }
   .email-details {

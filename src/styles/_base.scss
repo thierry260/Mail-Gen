@@ -233,6 +233,7 @@ p {
 }
 
 input[type="text"],
+input[type="password"],
 input[type="url"],
 input[type="tel"],
 input[type="email"],
@@ -355,5 +356,190 @@ main:has(.home) nav:first-child {
     background-color: var(--gray-100);
     margin-inline: 2px;
     display: inline-block;
+  }
+}
+
+// Tooltips
+[data-tooltip] {
+  position: relative;
+  cursor: pointer;
+
+  &:before,
+  &:after {
+    line-height: 1;
+    font-size: 0.9em;
+    pointer-events: none;
+    position: absolute;
+    box-sizing: border-box;
+    pointer-events: none;
+    opacity: 0;
+    transition-property: all;
+    transition-duration: 0.2s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &:before {
+    content: "";
+    border: 5px solid transparent;
+    z-index: 100;
+    top: -10px;
+  }
+
+  &:after {
+    content: attr(data-tooltip);
+    text-align: center;
+    width: fit-content;
+    text-overflow: ellipsis;
+    padding: 8px 8px;
+    line-height: 1.4;
+    font-size: 12px;
+    border-radius: 5px;
+    background: var(--gray-700);
+    color: #fff;
+    z-index: 9;
+  }
+
+  &:hover {
+    &:before,
+    &:after {
+      pointer-events: auto;
+      opacity: 1;
+    }
+  }
+
+  &:not([data-flow])::before,
+  &[data-flow="top"]::before {
+    bottom: 100%;
+    border-bottom-width: 0;
+    border-top-color: var(--text);
+  }
+
+  &:not([data-flow])::after,
+  &[data-flow="top"]::after {
+    bottom: calc(100% + 10px);
+  }
+
+  &:not([data-flow])::before {
+    left: 50%;
+    -webkit-transform: translate(-50%, 5px);
+    transform: translate(-50%, 5px);
+  }
+}
+
+[tooltip]:not([data-flow])::after {
+  left: 50%;
+  -webkit-transform: translate(-50%, 5px);
+  transform: translate(-50%, 5px);
+}
+
+[data-tooltip] {
+  &[data-flow="top"] {
+    &::before,
+    &::after {
+      left: 50%;
+      -webkit-transform: translate(-50%, 5px);
+      transform: translate(-50%, 5px);
+    }
+
+    &[data-source="deadline"] {
+      &::before,
+      &::after {
+        left: 25%;
+        -webkit-transform: translate(-50%, 10px);
+        transform: translate(-50%, 10px);
+      }
+
+      &:hover {
+        &::before,
+        &::after {
+          -webkit-transform: translate(-50%, 5px);
+          transform: translate(-50%, 5px);
+        }
+      }
+    }
+  }
+
+  &:not([data-flow]):hover::before {
+    -webkit-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+  }
+}
+
+[tooltip]:not([data-flow]):hover::after {
+  -webkit-transform: translate(-50%, 0);
+  transform: translate(-50%, 0);
+}
+
+[data-tooltip] {
+  &[data-flow="top"]:hover {
+    &::before,
+    &::after {
+      -webkit-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
+  }
+
+  &[data-flow="bottom"] {
+    &::before {
+      top: 100%;
+      border-top-width: 0;
+      border-bottom-color: var(--text);
+    }
+
+    &::after {
+      top: calc(100% + 5px);
+    }
+
+    &::before,
+    &::after {
+      left: 50%;
+      -webkit-transform: translate(-50%, 8px);
+      transform: translate(-50%, 8px);
+    }
+  }
+
+  &[data-flow="left"] {
+    &::before {
+      top: 50%;
+      border-right-width: 0;
+      border-left-color: var(--text);
+      left: calc(0em - 5px);
+      -webkit-transform: translate(-8px, -50%);
+      transform: translate(-8px, -50%);
+    }
+
+    &::after {
+      top: 50%;
+      right: calc(100% + 10px);
+      -webkit-transform: translate(-8px, -50%);
+      transform: translate(-8px, -50%);
+    }
+  }
+
+  &[data-flow="right"] {
+    &::before {
+      top: 50%;
+      border-left-width: 0;
+      border-right-color: var(--text);
+      right: calc(0em - 5px);
+      -webkit-transform: translate(8px, -50%);
+      transform: translate(8px, -50%);
+    }
+
+    &::after {
+      top: 50%;
+      left: calc(100% + 10px);
+      -webkit-transform: translate(8px, -50%);
+      transform: translate(8px, -50%);
+    }
+  }
+}
+
+[data-tooltip=""] {
+  &::after,
+  &::before {
+    display: none !important;
   }
 }
