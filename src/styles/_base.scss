@@ -545,3 +545,10 @@ main:has(.home) nav:first-child {
     display: none !important;
   }
 }
+
+.preview-content {
+  p:empty {
+    display: flex;
+    height: 1.5em;
+  }
+}

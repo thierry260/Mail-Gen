@@ -497,12 +497,16 @@
   const handleVariableSearch = (e) => {
     variableSearchQuery = e.target.value;
     console.log(workspaceVariables);
-    const existingVariable = Object.entries(workspaceVariables).filter(
-      ([id, data]) =>
-        data.field_name
-          .toLowerCase()
-          .includes(variableSearchQuery.toLowerCase())
-    );
+    let existingVariable = {};
+    if (workspaceVariables.variables) {
+      console.log(workspaceVariables.variables);
+      existingVariable = Object.entries(workspaceVariables.variables).filter(
+        ([data]) =>
+          data.field_name
+            .toLowerCase()
+            .includes(variableSearchQuery.toLowerCase())
+      );
+    }
 
     if (existingVariable.length > 0) {
       // If existing variable is found
@@ -526,6 +530,15 @@
         addNewVariable();
         insertVariable(newVariable.field_name);
       }
+    }
+  };
+
+  const addVariableAction = (e) => {
+    if (selectedVariable) {
+      insertVariable(selectedVariable[1].field_name);
+    } else if (newVariable.field_name && newVariable.placeholder) {
+      addNewVariable();
+      insertVariable(newVariable.field_name);
     }
   };
 
@@ -686,9 +699,9 @@
             on:input={handleVariableSearch}
             on:keypress={handleKeyPress}
           />
-          {#if variableSearchQuery && workspaceVariables && !showPlaceholderField}
+          {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
             <ul>
-              {#each Object.entries(workspaceVariables).filter( ([id, data]) => data.field_name
+              {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                     .toLowerCase()
                     .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
                 <li on:click={() => insertVariable(data.field_name)}>
@@ -705,7 +718,13 @@
               on:keypress={handleKeyPress}
             />
           {/if}
-          <button on:click={() => (showVariablePopup = false)}>Sluiten</button>
+          <button
+            class="button basic"
+            on:click={() => (showVariablePopup = false)}>Sluiten</button
+          >
+          <button class="button" on:click={addVariableAction}
+            >+ Toevoegen</button
+          >
         </div>
       {/if}
     {:else}
@@ -844,6 +863,7 @@
     .preview-content {
       line-height: 1.5;
       p:empty {
+        display: flex;
         height: 1.5em;
       }
     }
