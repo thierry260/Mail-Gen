@@ -20,6 +20,7 @@
   import { Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Placeholder from "@tiptap/extension-placeholder";
+  import { goto } from "$app/navigation";
 
   let id;
   let templateData = {};
@@ -258,6 +259,8 @@
   };
 
   const removeTemplateFromStore = (id) => {
+    let categoryId = null;
+
     templatesStore.update((categories) => {
       const removeNestedTemplate = (items) => {
         for (const item of items) {
@@ -267,6 +270,7 @@
             );
             if (templateIndex !== -1) {
               item.templates.splice(templateIndex, 1); // Remove the template
+              categoryId = item.id; // Store the category id
               return true; // Exit after removing
             }
           }
@@ -281,6 +285,8 @@
       removeNestedTemplate(categories);
       return categories;
     });
+
+    return categoryId;
   };
 
   // Replace variables in content based on user input
@@ -317,10 +323,8 @@
   };
 
   const resetCopyTooltip = (e) => {
-    setTimeout(() => {
-      e.currentTarget.parentNode.dataset.tooltip =
-        e.currentTarget.parentNode.dataset.default_tooltip;
-    }, 250);
+    e.currentTarget.parentNode.dataset.tooltip =
+      e.currentTarget.parentNode.dataset.default_tooltip;
   };
 
   // Function to save the recently viewed template to localStorage
@@ -379,7 +383,8 @@
         .then(() => {
           // Handle success, e.g., show success message or redirect
           console.log("Template deleted successfully");
-          removeTemplateFromStore();
+          const templateCatId = removeTemplateFromStore(templateData.id);
+          goto(`/category/${templateCatId}`);
         })
         .catch((error) => {
           // Handle error, e.g., show error message
