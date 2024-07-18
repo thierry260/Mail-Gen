@@ -87,6 +87,16 @@ video {
     vertical-align: baseline;
 }
 
+strong {
+    font-weight: bold;
+}
+em {
+    font-style: italic;
+}
+u {
+    text-decoration: underline;
+}
+
 /* HTML5 display-role reset for older browsers */
 article,
 aside,
@@ -108,7 +118,7 @@ body {
 
 ol,
 ul {
-    padding-left: 15px;
+    padding-left: 20px;
 }
 
 blockquote,

@@ -30,6 +30,9 @@
   import OrderedList from "@tiptap/extension-ordered-list";
   import ListItem from "@tiptap/extension-list-item";
   import History from "@tiptap/extension-history";
+  import Underline from "@tiptap/extension-underline";
+  import Bold from "@tiptap/extension-bold";
+  import Italic from "@tiptap/extension-italic";
 
   let id;
   let templateData = {};
@@ -170,7 +173,7 @@
         StarterKit.configure({
           history: false,
           heading: {
-            levels: [1, 2, 3],
+            levels: [1, 2, 3, 4, 5, 6],
           },
         }),
         Placeholder.configure({
@@ -181,6 +184,9 @@
         ListItem,
         Variable,
         History,
+        Bold,
+        Italic,
+        Underline,
       ],
       onTransaction: () => {
         editor = editor; // force re-render so `editor.isActive` works as expected
@@ -200,6 +206,18 @@
       ) {
         event.preventDefault();
         editor.commands.redo();
+      } else if ((event.ctrlKey || event.metaKey) && event.key === "b") {
+        event.preventDefault();
+        editor.commands.setBold();
+        // editor.commands.toggleBold();
+      } else if ((event.ctrlKey || event.metaKey) && event.key === "i") {
+        event.preventDefault();
+        editor.commands.setItalic();
+        // editor.commands.toggleItalic();
+      } else if ((event.ctrlKey || event.metaKey) && event.key === "u") {
+        event.preventDefault();
+        editor.commands.setUnderline();
+        // editor.commands.toggleUnderline();
       }
     });
   };
@@ -567,17 +585,10 @@
               <div class="formatting">
                 <button
                   on:click={() =>
-                    editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                  class:active={editor.isActive("heading", { level: 1 })}
+                    editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                  class:active={editor.isActive("heading", { level: 3 })}
                 >
-                  H1
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                  class:active={editor.isActive("heading", { level: 2 })}
-                >
-                  H2
+                  H
                 </button>
                 <button
                   on:click={() => editor.chain().focus().setParagraph().run()}
@@ -586,18 +597,37 @@
                   P
                 </button>
                 <button
+                  on:click={() => editor.chain().focus().toggleBold().run()}
+                  class:active={editor.isActive("bold")}
+                >
+                  B
+                </button>
+                <button
+                  on:click={() => editor.chain().focus().toggleItalic().run()}
+                  class:active={editor.isActive("italic")}
+                >
+                  I
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleUnderline().run()}
+                  class:active={editor.isActive("underline")}
+                >
+                  U
+                </button>
+                <button
                   on:click={() =>
                     editor.chain().focus().toggleBulletList().run()}
                   class:active={editor.isActive("bulletList")}
                 >
-                  <ListBullets size="18" />
+                  <ListBullets size="14" />
                 </button>
                 <button
                   on:click={() =>
                     editor.chain().focus().toggleOrderedList().run()}
                   class:active={editor.isActive("orderedList")}
                 >
-                  <ListNumbers size="18" />
+                  <ListNumbers size="14" />
                 </button>
               </div>
               <div class="actions">
@@ -829,6 +859,9 @@
       padding: 5px;
       .formatting {
         flex-grow: 1;
+        display: flex;
+        align-items: center;
+        gap: 5px;
       }
       .actions {
         .disabled {
@@ -843,6 +876,7 @@
         padding: 8px;
         border-radius: var(--border-radius);
         transition: background-color 0.2s ease-out;
+        min-width: 32px;
         &.active {
           border-color: var(--border);
         }
