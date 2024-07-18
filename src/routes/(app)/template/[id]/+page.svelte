@@ -1,7 +1,9 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
   import { fetchWorkspaceData, fetchTemplateData } from "$lib/utils/get";
+  import { updateTemplateNameinDB } from "$lib/utils/set";
   import { deleteTemplate } from "$lib/utils/delete";
   import { templatesStore } from "$lib/stores/templates";
   import { get } from "svelte/store";
@@ -15,12 +17,19 @@
     X,
     CopySimple,
     EnvelopeSimple,
+    ListBullets,
+    ListNumbers,
+    ArrowUUpLeft,
+    ArrowUUpRight,
   } from "phosphor-svelte";
   import { Editor } from "@tiptap/core";
   import { Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Placeholder from "@tiptap/extension-placeholder";
-  import { goto } from "$app/navigation";
+  import BulletList from "@tiptap/extension-bullet-list";
+  import OrderedList from "@tiptap/extension-ordered-list";
+  import ListItem from "@tiptap/extension-list-item";
+  import History from "@tiptap/extension-history";
 
   let id;
   let templateData = {};
@@ -167,7 +176,11 @@
         Placeholder.configure({
           placeholder: "Write something …",
         }),
+        BulletList,
+        OrderedList,
+        ListItem,
         Variable,
+        History,
       ],
       onTransaction: () => {
         editor = editor; // force re-render so `editor.isActive` works as expected
@@ -175,6 +188,20 @@
     });
 
     console.log(editor);
+
+    // Add keyboard shortcuts for undo/redo
+    editor.view.dom.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "z") {
+        event.preventDefault();
+        editor.commands.undo();
+      } else if (
+        (event.ctrlKey || event.metaKey) &&
+        (event.key === "y" || (event.shiftKey && event.key === "z"))
+      ) {
+        event.preventDefault();
+        editor.commands.redo();
+      }
+    });
   };
 
   const toggleFavorite = () => {
@@ -405,6 +432,7 @@
       });
       toggleEditMode();
       updateTemplateName(id, templateData.name);
+      updateTemplateNameinDB(id, templateData.name);
       fetchWorkspaceAndTemplateData(); // Refresh the data
     } catch (e) {
       console.error("Error updating document: ", e);
@@ -536,26 +564,54 @@
         <div class="editor_outer">
           {#if editor}
             <div class="editor_buttons">
-              <button
-                on:click={() =>
-                  editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                class:active={editor.isActive("heading", { level: 1 })}
-              >
-                H1
-              </button>
-              <button
-                on:click={() =>
-                  editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                class:active={editor.isActive("heading", { level: 2 })}
-              >
-                H2
-              </button>
-              <button
-                on:click={() => editor.chain().focus().setParagraph().run()}
-                class:active={editor.isActive("paragraph")}
-              >
-                P
-              </button>
+              <div class="formatting">
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                  class:active={editor.isActive("heading", { level: 1 })}
+                >
+                  H1
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                  class:active={editor.isActive("heading", { level: 2 })}
+                >
+                  H2
+                </button>
+                <button
+                  on:click={() => editor.chain().focus().setParagraph().run()}
+                  class:active={editor.isActive("paragraph")}
+                >
+                  P
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleBulletList().run()}
+                  class:active={editor.isActive("bulletList")}
+                >
+                  <ListBullets size="18" />
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleOrderedList().run()}
+                  class:active={editor.isActive("orderedList")}
+                >
+                  <ListNumbers size="18" />
+                </button>
+              </div>
+              <div class="actions">
+                <button
+                  on:click={() => editor.chain().focus().undo().run()}
+                  class:disabled={!editor.can().undo()}
+                  ><ArrowUUpLeft size="18" /></button
+                >
+                <button
+                  on:click={() => editor.chain().focus().redo().run()}
+                  class:disabled={!editor.can().redo()}
+                  ><ArrowUUpRight size="18" /></button
+                >
+              </div>
             </div>
           {/if}
           <div class="editor" bind:this={editorElement}></div>
@@ -771,6 +827,15 @@
       align-items: center;
       gap: 5px;
       padding: 5px;
+      .formatting {
+        flex-grow: 1;
+      }
+      .actions {
+        .disabled {
+          pointer-events: none;
+          opacity: 0.5;
+        }
+      }
       button {
         background-color: transparent;
         border: 1px solid transparent;

@@ -20,6 +20,10 @@
 	"type": "module",
 	"dependencies": {
 		"@tiptap/core": "^2.5.0",
+		"@tiptap/extension-bullet-list": "^2.5.4",
+		"@tiptap/extension-history": "^2.5.4",
+		"@tiptap/extension-list-item": "^2.5.4",
+		"@tiptap/extension-ordered-list": "^2.5.4",
 		"@tiptap/extension-placeholder": "^2.5.1",
 		"@tiptap/pm": "^2.5.0",
 		"@tiptap/starter-kit": "^2.5.0",
