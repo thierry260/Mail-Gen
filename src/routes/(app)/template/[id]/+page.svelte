@@ -22,8 +22,7 @@
     ArrowUUpLeft,
     ArrowUUpRight,
   } from "phosphor-svelte";
-  import { Editor } from "@tiptap/core";
-  import { Node, mergeAttributes } from "@tiptap/core";
+  import { Editor, generateHTML, Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Placeholder from "@tiptap/extension-placeholder";
   import BulletList from "@tiptap/extension-bullet-list";
@@ -36,6 +35,7 @@
 
   let id;
   let templateData = {};
+  let templateContentHTML = "";
   let workspaceVariables = { variables: {} }; // Ensure workspaceVariables is initialized with a default structure
   let userInput = {};
   let isNextStage = false; // Control the visibility of stages
@@ -61,6 +61,9 @@
 
     addAttributes() {
       return {
+        id: {
+          default: null,
+        },
         variable: {
           default: null,
         },
@@ -73,7 +76,7 @@
     parseHTML() {
       return [
         {
-          tag: "code[data-variable][data-placeholder]",
+          tag: "code[data-variable][data-variable][data-placeholder]",
         },
       ];
     },
@@ -84,10 +87,11 @@
       return [
         "code",
         mergeAttributes(HTMLAttributes, {
+          "data-id": node.attrs.id || "",
           "data-variable": node.attrs.variable || "",
           "data-placeholder": node.attrs.placeholder || "",
         }),
-        `{{${node.attrs.variable || ""}}}`,
+        `{{${node.attrs.placeholder || node.attrs.variable || ""}}}`,
       ];
     },
 
@@ -95,6 +99,7 @@
       return ({ node, getPos, view }) => {
         const dom = document.createElement("code");
         dom.classList.add("variable");
+        dom.setAttribute("data-id", node.attrs.id || "");
         dom.setAttribute("data-variable", node.attrs.variable || "");
         dom.setAttribute("data-placeholder", node.attrs.placeholder || "");
         dom.setAttribute("contenteditable", "false");
@@ -123,6 +128,15 @@
     },
   });
 
+  function isJson(str) {
+    try {
+      JSON.parse(str);
+    } catch (e) {
+      return false;
+    }
+    return true;
+  }
+
   // Fetch all data for the component
   const fetchWorkspaceAndTemplateData = async () => {
     try {
@@ -134,16 +148,73 @@
         workspaceVariables.variables = {};
       }
 
+      // Helper function to extract variable IDs from nested content
+      const extractVariableIds = (content) => {
+        const variableIds = [];
+        const extract = (items) => {
+          if (Array.isArray(items)) {
+            console.log("items is array");
+            items.forEach((item) => {
+              console.log("looping through items");
+              if (item.type === "variable" && item.attrs && item.attrs.id) {
+                console.log("item with type variable found");
+                variableIds.push(item.attrs.id);
+              }
+              if (item.content && Array.isArray(item.content)) {
+                console.log("go deeper");
+                extract(item.content);
+              }
+            });
+          } else {
+            console.log("items is not array");
+          }
+        };
+        extract(content);
+        return variableIds;
+      };
+
+      const variableIds = extractVariableIds(templateData.content.content);
+
+      console.log(variableIds);
+
       // Initialize user input fields with placeholders
-      if (templateData.variables) {
-        userInput = {}; // Reset userInput to avoid carrying over data from previous templates
-        templateData.variables.forEach((variableId) => {
+      if (variableIds.length > 0) {
+        userInput = {};
+        variableIds.forEach((variableId) => {
           if (workspaceVariables.variables[variableId]) {
             userInput[variableId] =
               workspaceVariables.variables[variableId].placeholder || "";
           }
         });
       }
+
+      console.log(templateData.content);
+
+      if (
+        templateData &&
+        templateData.content &&
+        typeof templateData.content === "object" &&
+        !Array.isArray(templateData.content) &&
+        templateData.content !== null
+      ) {
+        console.log("json content");
+        templateContentHTML = generateHTML(templateData.content, [
+          StarterKit,
+          BulletList,
+          OrderedList,
+          ListItem,
+          Variable,
+          History,
+          Bold,
+          Italic,
+          Underline,
+        ]);
+      } else {
+        console.log("html content");
+        templateContentHTML = templateData.content;
+      }
+
+      console.log(templateContentHTML);
 
       templateData.id = id;
 
@@ -218,11 +289,11 @@
 
     console.log(editorElement);
 
-    const initialContent = templateData.content; // Fetch or define your initial content
+    const initialContent = templateContentHTML; // Fetch or define your initial content
     const parsedContent = parseVariables(initialContent);
 
     editor = new Editor({
-      content: parsedContent,
+      content: templateData.content,
       element: editorElement,
       extensions: [
         StarterKit.configure({
@@ -378,11 +449,15 @@
 
   // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
+    console.log(variables);
     if (!content) return ""; // Check if content is defined
 
     return content.replace(/{{(.*?)}}/g, (match, p1) => {
+      if (match) {
+        console.log(match);
+      }
       const value = variables[p1] || match;
-      return `<span class="variable" on:click={handleVariableClick.bind(null, p1)}>${value}</span>`;
+      return value;
     });
   };
 
@@ -509,7 +584,8 @@
 
   // Handle save button click
   const saveTemplate = async () => {
-    templateData.content = editor.getHTML();
+    templateData.content = editor.getJSON();
+    console.log(templateData.content);
     try {
       // Update the template data with the current content, name, and variables
       await updateDoc(doc(db, "workspaces/wms/templates", id), {
@@ -542,6 +618,8 @@
 
       newVariable = { field_name: "", placeholder: "" };
       selectedVariable = id;
+
+      return id;
     }
   };
 
@@ -551,7 +629,7 @@
       .focus()
       .insertContent({
         type: "variable",
-        attrs: { variable },
+        attrs: variable,
       })
       .run();
 
@@ -595,21 +673,26 @@
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      if (selectedVariable) {
-        insertVariable(selectedVariable[1].field_name);
-      } else if (newVariable.field_name && newVariable.placeholder) {
-        addNewVariable();
-        insertVariable(newVariable.field_name);
-      }
+      addVariableAction();
     }
   };
 
-  const addVariableAction = (e) => {
+  const addVariableAction = () => {
     if (selectedVariable) {
-      insertVariable(selectedVariable[1].field_name);
+      console.log(selectedVariable);
+      insertVariable({
+        id: selectedVariable[0],
+        variable: selectedVariable[1].field_name,
+        placeholder: selectedVariable[1].placeholder,
+      });
     } else if (newVariable.field_name && newVariable.placeholder) {
-      addNewVariable();
-      insertVariable(newVariable.field_name);
+      console.log("custom var");
+      const newVariableID = addNewVariable();
+      insertVariable({
+        id: newVariableID,
+        variable: newVariable.field_name,
+        placeholder: newVariable.placeholder,
+      });
     }
   };
 
@@ -770,7 +853,14 @@
             {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                   .toLowerCase()
                   .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
-              <li on:click={() => insertVariable(data.field_name)}>
+              <li
+                on:click={() =>
+                  insertVariable({
+                    id: id,
+                    variable: data.field_name,
+                    placeholder: data.placeholder,
+                  })}
+              >
                 {data.field_name}
               </li>
             {/each}
@@ -813,7 +903,7 @@
       </div>
       <div class="preview">
         <div class="preview-content">
-          {@html replaceVariables(templateData.content, userInput) ||
+          {@html replaceVariables(templateContentHTML, userInput) ||
             "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
         </div>
       </div>
@@ -870,7 +960,7 @@
   <span class="label">Preview</span>
   <div class="preview">
     <div class="preview-content">
-      {@html replaceVariables(templateData.content, userInput) ||
+      {@html replaceVariables(templateContentHTML, userInput) ||
         "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
     </div>
   </div>

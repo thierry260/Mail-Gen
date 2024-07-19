@@ -327,7 +327,8 @@ legend {
   transform: rotate(90deg);
 }
 
-.variable {
+.variable,
+code {
   padding: 2px 6px;
   border-radius: 5px;
   border: 1px solid var(--border);
@@ -335,6 +336,9 @@ legend {
   margin-inline: 2px;
   display: inline-block;
   user-select: none;
+  color: var(--secondary);
+  font-weight: 500;
+  font-size: 1.4rem;
 }
 
 main:has(.settings) nav:first-child,
