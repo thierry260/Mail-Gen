@@ -3,11 +3,11 @@
   import { page } from "$app/stores";
   import SidebarItem from "./SidebarItem.svelte";
   import { House, Gear } from "phosphor-svelte";
-  import { get } from "svelte/store";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
   import { templatesStore } from "$lib/stores/templates";
   import { fetchWorkspaceData } from "$lib/utils/get";
+  import { createCategory } from "$lib/utils/create";
 
   let data = [];
   let currentId = "";
@@ -70,6 +70,29 @@
       console.error("Logout failed", error);
     }
   };
+
+  const addMainCat = async () => {
+    try {
+      const newCategoryName = prompt(
+        "Geef een naam in voor de nieuwe categorie:"
+      );
+
+      if (newCategoryName && newCategoryName.trim() !== "") {
+        const newCategory = await createCategory(false, newCategoryName.trim());
+
+        if (newCategory) {
+          console.log(`New category created successfully:`, newCategory);
+          data = [...data, newCategory];
+        } else {
+          console.log("Failed to create the new category.");
+        }
+      } else {
+        console.log("Category name cannot be empty.");
+      }
+    } catch (error) {
+      console.error("Error creating category:", error);
+    }
+  };
 </script>
 
 <aside class="sidebar">
@@ -82,6 +105,9 @@
     {#each data as item}
       <SidebarItem bind:item {currentId} {currentType} />
     {/each}
+    <button class="menu_item add_main_cat" on:click={addMainCat}
+      >+ Hoofdcategorie toevoegen</button
+    >
   </div>
   <a class="menu_item" href="/settings" class:active={isSettingsActive}
     ><Gear size={20} />Instellingen</a
@@ -115,6 +141,7 @@
     .menu_item {
       cursor: pointer;
       padding: 10px;
+      min-height: 44px;
       background-color: transparent;
       border: 1px solid transparent;
       border-radius: 10px;
@@ -141,6 +168,14 @@
       &:not(.active):hover {
         border-color: rgba(255, 255, 255, 0.6);
       }
+    }
+    .add_main_cat {
+      // border: 2px dashed rgba(255, 255, 255, 0.6);
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.7);
+      // text-align: center;
+      // justify-content: center;
+      // font-size: 1.4rem;
     }
     .logout-button {
       margin-top: auto;

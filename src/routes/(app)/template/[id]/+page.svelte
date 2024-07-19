@@ -63,24 +63,30 @@
         variable: {
           default: null,
         },
+        placeholder: {
+          default: "",
+        },
       };
     },
 
     parseHTML() {
       return [
         {
-          tag: "code[data-variable]",
+          tag: "code[data-variable][data-placeholder]",
         },
       ];
     },
 
-    renderHTML({ HTMLAttributes }) {
+    renderHTML({ HTMLAttributes, node }) {
+      console.log("HTMLAttributes", HTMLAttributes);
+      console.log("node", node);
       return [
         "code",
         mergeAttributes(HTMLAttributes, {
-          "data-variable": this.attrs.variable,
+          "data-variable": node.attrs.variable || "",
+          "data-placeholder": node.attrs.placeholder || "",
         }),
-        `{{${this.attrs.variable}}}`,
+        `{{${node.attrs.variable || ""}}}`,
       ];
     },
 
@@ -88,12 +94,25 @@
       return ({ node, getPos, view }) => {
         const dom = document.createElement("code");
         dom.classList.add("variable");
-        dom.setAttribute("data-variable", node.attrs.variable);
-        dom.textContent = `{{${node.attrs.variable}}}`;
+        dom.setAttribute("data-variable", node.attrs.variable || "");
+        dom.setAttribute("data-placeholder", node.attrs.placeholder || "");
+        dom.setAttribute("contenteditable", "false");
+        dom.textContent = `{{${node.attrs.variable || ""}}}`;
 
-        dom.addEventListener("click", () => {
-          // Your custom behavior here
-          alert(`Variable: ${node.attrs.variable}`);
+        console.log(view);
+
+        dom.addEventListener("click", (view) => {
+          if (!view) {
+            console.error("Editor view is not available");
+            return;
+          }
+          const variable = prompt("Edit variable", node.attrs.variable);
+          if (variable) {
+            console.log(view);
+            view.dispatch(
+              view.state.tr.setNodeMarkup(getPos(), null, { variable })
+            );
+          }
         });
 
         return {
@@ -159,13 +178,46 @@
     editor.destroy();
   }
 
+  const parseVariables = (content) => {
+    const regex = /{{(.*?)}}/g;
+    let match;
+    const result = [];
+
+    let lastIndex = 0;
+    while ((match = regex.exec(content)) !== null) {
+      const [fullMatch, variableName] = match;
+      const startIndex = match.index;
+      const endIndex = regex.lastIndex;
+
+      if (lastIndex < startIndex) {
+        result.push(content.slice(lastIndex, startIndex));
+      }
+
+      result.push({
+        type: "variable",
+        attrs: { variable: variableName },
+      });
+
+      lastIndex = endIndex;
+    }
+
+    if (lastIndex < content.length) {
+      result.push(content.slice(lastIndex));
+    }
+
+    return result;
+  };
+
   const initializeEditor = () => {
     if (!editorElement) return;
 
     console.log(editorElement);
 
+    const initialContent = templateData.content; // Fetch or define your initial content
+    const parsedContent = parseVariables(initialContent);
+
     editor = new Editor({
-      content: templateData.content,
+      content: parsedContent,
       element: editorElement,
       extensions: [
         StarterKit.configure({
@@ -189,34 +241,6 @@
       onTransaction: () => {
         editor = editor; // force re-render so `editor.isActive` works as expected
       },
-    });
-
-    console.log(editor);
-
-    // Add keyboard shortcuts for undo/redo
-    editor.view.dom.addEventListener("keydown", (event) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === "z") {
-        event.preventDefault();
-        editor.commands.undo();
-      } else if (
-        (event.ctrlKey || event.metaKey) &&
-        (event.key === "y" || (event.shiftKey && event.key === "z"))
-      ) {
-        event.preventDefault();
-        editor.commands.redo();
-      } else if ((event.ctrlKey || event.metaKey) && event.key === "b") {
-        event.preventDefault();
-        editor.commands.setBold();
-        // editor.commands.toggleBold();
-      } else if ((event.ctrlKey || event.metaKey) && event.key === "i") {
-        event.preventDefault();
-        editor.commands.setItalic();
-        // editor.commands.toggleItalic();
-      } else if ((event.ctrlKey || event.metaKey) && event.key === "u") {
-        event.preventDefault();
-        editor.commands.setUnderline();
-        // editor.commands.toggleUnderline();
-      }
     });
   };
 
@@ -402,12 +426,20 @@
   };
 
   function sendEmail() {
-    mail.body = replaceVariables(templateData.content, userInput);
-    // mail.body = "test";
+    const content = document.querySelector(".preview-content").innerText;
+    try {
+      navigator.clipboard.writeText(content);
+      console.log(`Copied to clipboard:\n\n${content}`);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+
+    // Construct the email body with the correct spaces
+    const bodyContent = "Gebruik Ctrl/Cmd + V om de mail te plakken.";
 
     const params = new URLSearchParams({
       subject: mail.subject,
-      body: mail.body,
+      body: bodyContent,
     });
 
     if (mail.cc) {
@@ -418,7 +450,14 @@
       params.append("bcc", mail.bcc);
     }
 
-    const mailtoLink = `mailto:${encodeURIComponent(mail.to)}${params.toString() ? `?${params.toString()}` : ""}`;
+    // Manually encode the parameters
+    const encodedParams = Array.from(params.entries())
+      .map(([key, value]) => {
+        return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+      })
+      .join("&");
+
+    const mailtoLink = `mailto:${encodeURIComponent(mail.to)}${encodedParams ? `?${encodedParams}` : ""}`;
     console.log("mailtoLink", mailtoLink);
 
     window.open(mailtoLink);
@@ -487,11 +526,23 @@
   };
 
   const insertVariable = (variable) => {
-    const html = `<code data-variable="${variable}">{{${variable}}}</code>`;
-    editor.chain().focus().insertContent(html).run();
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "variable",
+        attrs: { variable },
+      })
+      .run();
+
+    // const html = `<code contenteditable="false" data-variable="${variable}">{{${variable}}}</code> `;
+    // editor.chain().focus().insertContent(html).run();
+
     showVariablePopup = false;
     variableSearchQuery = "";
     showPlaceholderField = false;
+
+    console.log(editor.state.selection.to);
   };
 
   const handleVariableSearch = (e) => {
@@ -501,7 +552,7 @@
     if (workspaceVariables.variables) {
       console.log(workspaceVariables.variables);
       existingVariable = Object.entries(workspaceVariables.variables).filter(
-        ([data]) =>
+        ([id, data]) =>
           data.field_name
             .toLowerCase()
             .includes(variableSearchQuery.toLowerCase())
@@ -545,11 +596,9 @@
   // Fetch existing variables from the workspace
   const fetchVariables = async () => {
     if (!browser) return;
-    const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
-    const docSnap = await getDoc(docRef);
+    workspaceVariables = await fetchWorkspaceData("variables");
 
-    if (docSnap.exists()) {
-      workspaceVariables = docSnap.data().variables || {};
+    if (workspaceVariables) {
       console.log("Workspace Variables:", workspaceVariables);
     } else {
       console.log("No such document!");
@@ -655,6 +704,11 @@
               </div>
               <div class="actions">
                 <button
+                  class="button outline add_variable"
+                  on:click={() => (showVariablePopup = true)}
+                  >+ Voeg variabele toe</button
+                >
+                <button
                   on:click={() => editor.chain().focus().undo().run()}
                   class:disabled={!editor.can().undo()}
                   ><ArrowUUpLeft size="18" /></button
@@ -669,11 +723,6 @@
           {/if}
           <div class="editor" bind:this={editorElement}></div>
         </div>
-        <button
-          class="button outline"
-          on:click={() => (showVariablePopup = true)}
-          >+ Voeg variabele toe</button
-        >
         <!-- <textarea bind:value={templateData.content} placeholder="Email inhoud"
         ></textarea>
         <div>
@@ -816,7 +865,7 @@
     </div>
     <div class="buttons mail_actions">
       <button class="button outline" on:click={prevPage}>Vorige</button>
-      <button class="button" on:click={sendEmail}>Mail aanmaken</button>
+      <button class="button" on:click={sendEmail}>Mail openen</button>
     </div>
   {/if}
 {/if}
@@ -914,6 +963,21 @@
         gap: 5px;
       }
       .actions {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: center;
+        button {
+          display: flex;
+        }
+        .add_variable {
+          padding: 10px 20px;
+          display: inline-flex;
+          font-size: 1.5rem;
+          font-family: inherit;
+          font-weight: 400;
+          margin: 4px 5px;
+        }
         .disabled {
           pointer-events: none;
           opacity: 0.5;
@@ -948,7 +1012,8 @@
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: white;
-    padding: 20px;
+    padding: 30px;
+    border-radius: var(--border-radius);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     input {
@@ -957,6 +1022,11 @@
 
     button {
       margin-right: 10px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
     }
 
     li {

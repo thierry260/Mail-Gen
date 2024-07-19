@@ -334,6 +334,7 @@ legend {
   background-color: var(--gray-100);
   margin-inline: 2px;
   display: inline-block;
+  user-select: none;
 }
 
 main:has(.settings) nav:first-child,
@@ -357,6 +358,7 @@ main:has(.home) nav:first-child {
     background-color: var(--gray-100);
     margin-inline: 2px;
     display: inline-block;
+    user-select: none;
   }
 }
 

@@ -184,6 +184,7 @@
     .template {
       cursor: pointer;
       padding: 10px;
+      min-height: 44px;
       background-color: transparent;
       border: 1px solid transparent;
       border-radius: 10px;

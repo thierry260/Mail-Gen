@@ -90,8 +90,11 @@
   };
 
   const removeVariable = (id) => {
-    delete workspaceVariables[id];
-    saveVariables();
+    if (confirm("Weet je zeker dat je deze variabele wilt verwijderen?")) {
+      delete workspaceVariables[id];
+      workspaceVariables = workspaceVariables;
+      saveVariables();
+    }
   };
 
   // Function to handle password change

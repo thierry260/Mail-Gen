@@ -26,11 +26,23 @@ export const createCategory = async (parentCategoryId, newCategoryName) => {
         templates: [],
       };
 
-      const updatedCategories = addCategoryToData(
-        workspaceData.categories,
-        parentCategoryId,
-        newCategory
-      );
+      let updatedCategories;
+
+      if (parentCategoryId) {
+        console.log("has parent cat");
+        // Add the new category as a subcategory
+        updatedCategories = addCategoryToData(
+          workspaceData.categories,
+          parentCategoryId,
+          newCategory
+        );
+      } else {
+        console.log("main cat");
+        // Add the new category at the top level
+        updatedCategories = [...workspaceData.categories, newCategory];
+      }
+
+      console.log(updatedCategories);
 
       await updateDoc(docRef, {
         categories: updatedCategories,
