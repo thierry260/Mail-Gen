@@ -48,6 +48,7 @@
         item = {
           ...item,
           templates: [...item.templates, newTemplate],
+          open: true,
         };
         goto(`/template/${newTemplateId}#edit`);
       }

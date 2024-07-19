@@ -47,6 +47,7 @@
   let showVariablePopup = false; // State to control the popup visibility
   let variableSearchQuery = "";
   let newVariable = { field_name: "", placeholder: "" };
+  let variableInput;
   let showPlaceholderField = false; // State to control placeholder field visibility
 
   // Subscribe to the page store to get the ID parameter
@@ -178,6 +179,17 @@
     editor.destroy();
   }
 
+  // Function to focus the input element
+  function focusInput() {
+    if (variableInput) {
+      variableInput.focus();
+    }
+  }
+
+  $: if (showVariablePopup) {
+    focusInput();
+  }
+
   const parseVariables = (content) => {
     const regex = /{{(.*?)}}/g;
     let match;
@@ -227,7 +239,8 @@
           },
         }),
         Placeholder.configure({
-          placeholder: "Write something …",
+          placeholder:
+            "Begin met schrijven. Typ { om een variabele toe te voegen.",
         }),
         BulletList,
         OrderedList,
@@ -286,14 +299,28 @@
     }
   };
 
+  // Function to handle key combination
+  function addVariableShortcut(event) {
+    if (!isEditMode) return;
+    const isShift = event.shiftKey;
+    const isOpenBrace = event.key === "{";
+
+    if (isShift && isOpenBrace) {
+      event.preventDefault(); // Prevent default action for this shortcut
+      showVariablePopup = true;
+    }
+  }
+
   onMount(() => {
     if (id) {
       fetchWorkspaceAndTemplateData();
       fetchVariables();
+      document.addEventListener("keydown", addVariableShortcut);
     }
   });
 
   onDestroy(() => {
+    document.removeEventListener("keydown", addVariableShortcut);
     if (editor) {
       editor.destroy();
     }
@@ -616,114 +643,111 @@
   };
 </script>
 
-{#if templateData.content}
-  {#if !isNextStage}
-    <div class="top">
-      <h1>
-        {templateData.name}
-      </h1>
-      <button class="button basic" on:click={toggleEditMode}>
-        {#if isEditMode}
-          <X size="18" />Annuleren
+{#if !isNextStage}
+  <div class="top">
+    <h1>
+      {templateData.name}
+    </h1>
+    <button class="button basic" on:click={toggleEditMode}>
+      {#if isEditMode}
+        <X size="18" />Annuleren
+      {:else}
+        <PencilSimple size="18" />Aanpassen
+      {/if}
+    </button>
+    {#if !isEditMode}
+      <button class="button basic" on:click={confirmAndDelete}>
+        <TrashSimple size="18" />
+      </button>
+      <button class="button basic favorite_button" on:click={toggleFavorite}>
+        {#if isFavorite}
+          <Star size="18" weight="fill" />
         {:else}
-          <PencilSimple size="18" />Aanpassen
+          <Star size="18" />
         {/if}
       </button>
-      {#if !isEditMode}
-        <button class="button basic" on:click={confirmAndDelete}>
-          <TrashSimple size="18" />
-        </button>
-        <button class="button basic favorite_button" on:click={toggleFavorite}>
-          {#if isFavorite}
-            <Star size="18" weight="fill" />
-          {:else}
-            <Star size="18" />
-          {/if}
-        </button>
-      {/if}
-    </div>
-    {#if isEditMode}
-      <div class="edit-template">
-        <h2>Template naam</h2>
-        <input
-          type="text"
-          bind:value={templateData.name}
-          placeholder="Template naam"
-        />
-        <h2>Template inhoud</h2>
-        <div class="editor_outer">
-          {#if editor}
-            <div class="editor_buttons">
-              <div class="formatting">
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                  class:active={editor.isActive("heading", { level: 3 })}
-                >
-                  H
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().setParagraph().run()}
-                  class:active={editor.isActive("paragraph")}
-                >
-                  P
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().toggleBold().run()}
-                  class:active={editor.isActive("bold")}
-                >
-                  B
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().toggleItalic().run()}
-                  class:active={editor.isActive("italic")}
-                >
-                  I
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleUnderline().run()}
-                  class:active={editor.isActive("underline")}
-                >
-                  U
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleBulletList().run()}
-                  class:active={editor.isActive("bulletList")}
-                >
-                  <ListBullets size="14" />
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleOrderedList().run()}
-                  class:active={editor.isActive("orderedList")}
-                >
-                  <ListNumbers size="14" />
-                </button>
-              </div>
-              <div class="actions">
-                <button
-                  class="button outline add_variable"
-                  on:click={() => (showVariablePopup = true)}
-                  >+ Voeg variabele toe</button
-                >
-                <button
-                  on:click={() => editor.chain().focus().undo().run()}
-                  class:disabled={!editor.can().undo()}
-                  ><ArrowUUpLeft size="18" /></button
-                >
-                <button
-                  on:click={() => editor.chain().focus().redo().run()}
-                  class:disabled={!editor.can().redo()}
-                  ><ArrowUUpRight size="18" /></button
-                >
-              </div>
+    {/if}
+  </div>
+  {#if isEditMode}
+    <div class="edit-template">
+      <h2>Template naam</h2>
+      <input
+        type="text"
+        bind:value={templateData.name}
+        placeholder="Template naam"
+      />
+      <h2>Template inhoud</h2>
+      <div class="editor_outer">
+        {#if editor}
+          <div class="editor_buttons">
+            <div class="formatting">
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                class:active={editor.isActive("heading", { level: 3 })}
+              >
+                H
+              </button>
+              <button
+                on:click={() => editor.chain().focus().setParagraph().run()}
+                class:active={editor.isActive("paragraph")}
+              >
+                P
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleBold().run()}
+                class:active={editor.isActive("bold")}
+              >
+                B
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleItalic().run()}
+                class:active={editor.isActive("italic")}
+              >
+                I
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleUnderline().run()}
+                class:active={editor.isActive("underline")}
+              >
+                U
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleBulletList().run()}
+                class:active={editor.isActive("bulletList")}
+              >
+                <ListBullets size="14" />
+              </button>
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleOrderedList().run()}
+                class:active={editor.isActive("orderedList")}
+              >
+                <ListNumbers size="14" />
+              </button>
             </div>
-          {/if}
-          <div class="editor" bind:this={editorElement}></div>
-        </div>
-        <!-- <textarea bind:value={templateData.content} placeholder="Email inhoud"
+            <div class="actions">
+              <button
+                class="button outline add_variable"
+                on:click={() => (showVariablePopup = true)}
+                >+ Voeg variabele toe</button
+              >
+              <button
+                on:click={() => editor.chain().focus().undo().run()}
+                class:disabled={!editor.can().undo()}
+                ><ArrowUUpLeft size="18" /></button
+              >
+              <button
+                on:click={() => editor.chain().focus().redo().run()}
+                class:disabled={!editor.can().redo()}
+                ><ArrowUUpRight size="18" /></button
+              >
+            </div>
+          </div>
+        {/if}
+        <div class="editor" bind:this={editorElement}></div>
+      </div>
+      <!-- <textarea bind:value={templateData.content} placeholder="Email inhoud"
         ></textarea>
         <div>
           <h2>Variabele selecteren</h2>
@@ -735,139 +759,132 @@
           </select>
           <button on:click={insertVariable}>Voeg toe</button>
         </div> -->
-        <button class="button" on:click={saveTemplate}>Opslaan</button>
-      </div>
+      <button class="button" on:click={saveTemplate}>Opslaan</button>
+    </div>
 
-      {#if showVariablePopup}
-        <div class="popup">
-          <h2>Voeg een variabele toe</h2>
+    {#if showVariablePopup}
+      <div class="popup">
+        <h2>Voeg een variabele toe</h2>
+        <input
+          type="text"
+          placeholder="Variabele naam"
+          bind:value={variableSearchQuery}
+          on:input={handleVariableSearch}
+          on:keypress={handleKeyPress}
+        />
+        {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
+          <ul>
+            {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
+                  .toLowerCase()
+                  .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+              <li on:click={() => insertVariable(data.field_name)}>
+                {data.field_name}
+              </li>
+            {/each}
+          </ul>
+        {/if}
+        {#if showPlaceholderField}
           <input
             type="text"
-            placeholder="Variabele naam"
-            bind:value={variableSearchQuery}
-            on:input={handleVariableSearch}
+            placeholder="Placeholder"
+            bind:value={newVariable.placeholder}
             on:keypress={handleKeyPress}
           />
-          {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
-            <ul>
-              {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
-                    .toLowerCase()
-                    .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
-                <li on:click={() => insertVariable(data.field_name)}>
-                  {data.field_name}
-                </li>
-              {/each}
-            </ul>
-          {/if}
-          {#if showPlaceholderField}
-            <input
-              type="text"
-              placeholder="Placeholder"
-              bind:value={newVariable.placeholder}
-              on:keypress={handleKeyPress}
-            />
-          {/if}
-          <button
-            class="button basic"
-            on:click={() => (showVariablePopup = false)}>Sluiten</button
-          >
-          <button class="button" on:click={addVariableAction}
-            >+ Toevoegen</button
-          >
-        </div>
-      {/if}
-    {:else}
-      <div class="template">
-        <div class="variables">
-          {#each Object.keys(userInput) as variableId}
-            {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-              <div>
-                <label class="label" for={variableId}>
-                  {workspaceVariables.variables[variableId].field_name}
-                </label>
-                <input
-                  type="text"
-                  id={variableId}
-                  bind:value={userInput[variableId]}
-                  placeholder={workspaceVariables.variables[variableId]
-                    .placeholder}
-                />
-              </div>
-            {/if}
-          {/each}
-        </div>
-        <div class="preview">
-          <div class="preview-content">
-            {@html replaceVariables(templateData.content, userInput)}
-          </div>
-        </div>
-        <div class="buttons">
-          <span
-            data-flow="top"
-            data-tooltip="Klik om te kopiëren"
-            data-default_tooltip="Klik om te kopiëren"
-          >
-            <button
-              class="button outline"
-              on:mouseleave={resetCopyTooltip}
-              on:click={copyToClipboard}
-              ><CopySimple size="18" />Kopiëren</button
-            >
-          </span>
-          <button class="button outline" on:click={nextPage}
-            ><EnvelopeSimple size="18" />Mailen</button
-          >
-        </div>
+        {/if}
+        <button
+          class="button basic"
+          on:click={() => (showVariablePopup = false)}>Sluiten</button
+        >
+        <button class="button" on:click={addVariableAction}>+ Toevoegen</button>
       </div>
     {/if}
   {:else}
-    <h1>{templateData.name} - Mailen</h1>
-    <div class="email-details">
-      <label class="input_wrapper">
-        <input
-          type="text"
-          id="subject"
-          bind:value={mail.subject}
-          placeholder="&nbsp;"
-        />
-        <span for="userEmail">Onderwerp</span>
-      </label>
-      <label class="input_wrapper">
-        <input type="text" id="to" bind:value={mail.to} placeholder="&nbsp;" />
-        <span for="userEmail">Aan</span>
-      </label>
-      <div class="input_columns">
-        <label class="input_wrapper">
-          <input
-            type="email"
-            id="cc"
-            bind:value={mail.cc}
-            placeholder="&nbsp;"
-          />
-          <span for="cc">CC</span>
-        </label>
-        <label class="input_wrapper">
-          <input
-            type="email"
-            id="bcc"
-            bind:value={mail.bcc}
-            placeholder="&nbsp;"
-          />
-          <span for="bcc">BCC</span>
-        </label>
+    <div class="template">
+      <div class="variables">
+        {#each Object.keys(userInput) as variableId}
+          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+            <div>
+              <label class="label" for={variableId}>
+                {workspaceVariables.variables[variableId].field_name}
+              </label>
+              <input
+                type="text"
+                id={variableId}
+                bind:value={userInput[variableId]}
+                placeholder={workspaceVariables.variables[variableId]
+                  .placeholder}
+              />
+            </div>
+          {/if}
+        {/each}
       </div>
-    </div>
-    <span class="label">Preview</span>
-    <div class="preview">
-      <div class="preview-content">
-        {@html replaceVariables(templateData.content, userInput)}
+      <div class="preview">
+        <div class="preview-content">
+          {@html replaceVariables(templateData.content, userInput) ||
+            "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
+        </div>
       </div>
-    </div>
-    <div class="buttons mail_actions">
-      <button class="button outline" on:click={prevPage}>Vorige</button>
-      <button class="button" on:click={sendEmail}>Mail openen</button>
+      <div class="buttons">
+        <span
+          data-flow="top"
+          data-tooltip="Klik om te kopiëren"
+          data-default_tooltip="Klik om te kopiëren"
+        >
+          <button
+            class="button outline"
+            on:mouseleave={resetCopyTooltip}
+            on:click={copyToClipboard}><CopySimple size="18" />Kopiëren</button
+          >
+        </span>
+        <button class="button outline" on:click={nextPage}
+          ><EnvelopeSimple size="18" />Mailen</button
+        >
+      </div>
     </div>
   {/if}
+{:else}
+  <h1>{templateData.name} - Mailen</h1>
+  <div class="email-details">
+    <label class="input_wrapper">
+      <input
+        type="text"
+        id="subject"
+        bind:value={mail.subject}
+        placeholder="&nbsp;"
+      />
+      <span for="userEmail">Onderwerp</span>
+    </label>
+    <label class="input_wrapper">
+      <input type="text" id="to" bind:value={mail.to} placeholder="&nbsp;" />
+      <span for="userEmail">Aan</span>
+    </label>
+    <div class="input_columns">
+      <label class="input_wrapper">
+        <input type="email" id="cc" bind:value={mail.cc} placeholder="&nbsp;" />
+        <span for="cc">CC</span>
+      </label>
+      <label class="input_wrapper">
+        <input
+          type="email"
+          id="bcc"
+          bind:value={mail.bcc}
+          placeholder="&nbsp;"
+        />
+        <span for="bcc">BCC</span>
+      </label>
+    </div>
+  </div>
+  <span class="label">Preview</span>
+  <div class="preview">
+    <div class="preview-content">
+      {@html replaceVariables(templateData.content, userInput) ||
+        "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
+    </div>
+  </div>
+  <div class="buttons mail_actions">
+    <button class="button outline" on:click={prevPage}>Vorige</button>
+    <button class="button" on:click={sendEmail}>Mail openen</button>
+  </div>
 {/if}
 
 <style lang="scss">

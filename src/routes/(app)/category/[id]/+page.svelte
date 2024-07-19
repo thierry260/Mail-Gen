@@ -70,9 +70,9 @@
 <div class="category">
   <h1>{name}</h1>
 
-  {#if subcategories.length > 0}
-    <div class="categories">
-      <h2>Categorieën</h2>
+  <div class="categories">
+    <h2>Onderliggende categorieën</h2>
+    {#if subcategories.length > 0}
       <div class="categories_grid">
         {#each subcategories as subcategory}
           <a href={`/category/${subcategory.id}`} class="category">
@@ -84,12 +84,17 @@
           </a>
         {/each}
       </div>
-    </div>
-  {/if}
+    {:else}
+      <p class="placeholder">
+        Je hebt nog geen onderliggende categorieën toegevoegd aan <u>{name}</u>.
+        Voeg een categorie toe via de + in het linker zijvenster
+      </p>
+    {/if}
+  </div>
 
-  {#if templates.length > 0}
-    <div class="templates">
-      <h2>Templates</h2>
+  <div class="templates">
+    <h2>Templates</h2>
+    {#if templates.length > 0}
       <div class="templates_list">
         {#each templates as template}
           <a href={`/template/${template.id}`} class="template">
@@ -98,8 +103,13 @@
           </a>
         {/each}
       </div>
-    </div>
-  {/if}
+    {:else}
+      <p class="placeholder">
+        Je hebt nog geen templates toegevoegd aan <u>{name}</u>. Voeg een
+        template toe via de + in het linker zijvenster
+      </p>
+    {/if}
+  </div>
 </div>
 
 <style lang="scss">
@@ -185,5 +195,12 @@
 
   h2 {
     font-size: 2.6rem;
+  }
+
+  .placeholder {
+    padding: 20px;
+    background-color: var(--gray-200);
+    border-radius: var(--border-radius);
+    font-size: 1.4rem;
   }
 </style>

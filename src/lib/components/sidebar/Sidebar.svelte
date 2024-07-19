@@ -102,12 +102,14 @@
   >
   <div class="templates">
     <span class="label">Templates</span>
-    {#each data as item}
-      <SidebarItem bind:item {currentId} {currentType} />
-    {/each}
-    <button class="menu_item add_main_cat" on:click={addMainCat}
-      >+ Hoofdcategorie toevoegen</button
-    >
+    <div class="templates_items">
+      {#each data as item}
+        <SidebarItem bind:item {currentId} {currentType} />
+      {/each}
+      <button class="menu_item add_main_cat" on:click={addMainCat}
+        >+ Hoofdcategorie toevoegen</button
+      >
+    </div>
   </div>
   <a class="menu_item" href="/settings" class:active={isSettingsActive}
     ><Gear size={20} />Instellingen</a
@@ -137,6 +139,36 @@
     }
     .templates {
       flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 1px;
+
+      .templates_items {
+        overflow-y: auto;
+        padding-right: 10px;
+        margin-right: -10px;
+        flex-grow: 1;
+
+        /* ===== Scrollbar CSS ===== */
+        scrollbar-width: auto;
+        // scrollbar-color: #ebebeb #ffffff;
+
+        /* Chrome, Edge, and Safari */
+        &::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.1);
+          border-radius: 10px;
+          border: px solid transparent;
+        }
+      }
     }
     .menu_item {
       cursor: pointer;

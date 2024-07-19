@@ -101,7 +101,7 @@ export async function createNewTemplate(
         "templates"
       ),
       {
-        content: "Beste ",
+        content: "",
         name: templateName,
         variables: [],
       }

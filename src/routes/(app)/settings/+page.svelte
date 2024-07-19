@@ -305,25 +305,27 @@
   .tabs {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    gap: 30px;
+    margin-bottom: 40px;
   }
 
   .tabs button {
     background: none;
     border: none;
-    padding: 10px 20px;
+    padding: 6px 0;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s ease-out;
   }
 
   .tabs button:hover {
-    background-color: #f2f2f2;
+    border-color: var(--gray-300);
   }
 
   .tabs button.active {
-    color: var(--primary);
-    border-bottom: 2px solid var(--primary);
+    color: var(--secondary);
+    border-color: currentColor;
   }
 
   .tab-content {
