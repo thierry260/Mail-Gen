@@ -179,15 +179,8 @@
     editor.destroy();
   }
 
-  // Function to focus the input element
-  function focusInput() {
-    if (variableInput) {
-      variableInput.focus();
-    }
-  }
-
-  $: if (showVariablePopup) {
-    focusInput();
+  $: if (variableInput) {
+    variableInput.focus();
   }
 
   const parseVariables = (content) => {
@@ -240,7 +233,7 @@
         }),
         Placeholder.configure({
           placeholder:
-            "Begin met schrijven. Typ { om een variabele toe te voegen.",
+            "Begin met schrijven. Gebruik 'Shift + {' om een variabele toe te voegen.",
         }),
         BulletList,
         OrderedList,
