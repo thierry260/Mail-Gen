@@ -1,0 +1,16 @@
+// static/manifest.json
+{
+    "name": "Mail Gen", //long name of your app
+    "short_name": "Mail Gen", //name of your app on home screen
+    "start_url": "/", //homepage
+    "display": "standalone", //how app is displayed
+    "background_color": "#34e89e",
+    "theme_color": "#34e89e",
+    "icons": [ //icons for different uses, SVG can be used for all
+        {
+            "src": "%sveltekit.assets%/img/MailGen-beeldmerk.svg",
+            "type": "image/svg+xml",
+            "sizes": "any"
+        }
+    ]
+}

@@ -1,14 +1,22 @@
-import { sveltePreprocess } from "svelte-preprocess";
-import adapter from "@sveltejs/adapter-auto";
+import preprocess from 'svelte-preprocess';
+import adapter from '@sveltejs/adapter-static';
+import path from 'path';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   kit: {
-    adapter: adapter(),
+    adapter: adapter({
+      // default options are shown
+      pages: 'build',
+      assets: 'build',
+      fallback: 'index.html',
+      precompress: false
+    }),
   },
-  preprocess: sveltePreprocess({
+  preprocess: preprocess({
     scss: {
-      prependData: `@import 'src/styles/global.scss';`, // Optional: Prepend global styles
+      includePaths: ['src/styles'],
+      prependData: `@import 'global.scss';`, // Ensure this is correct
     },
   }),
   onwarn: (warning, handler) => {

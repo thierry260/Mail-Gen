@@ -1,21 +1,30 @@
 /* Global styles */
 
 :root {
-  --primary: #34e89e; /* any format you want here */
+  --primary: #34e89e;
+  /* any format you want here */
   --primary-darker: hsl(from var(--primary) h s calc(l - 5));
   --primary-darkest: hsl(from var(--primary) h s calc(l - 10));
   --secondary: #1c4657;
   --gradient: linear-gradient(230deg, var(--primary), var(--secondary));
 
   /* Shades of gray */
-  --gray-100: hsl(0, 0%, 97%); /* Very light gray */
-  --gray-200: hsl(0, 0%, 92%); /* Light gray */
-  --gray-300: hsl(0, 0%, 80%); /* Soft gray */
-  --gray-400: hsl(0, 0%, 60%); /* Medium gray */
-  --gray-500: hsl(0, 0%, 50%); /* Normal gray */
-  --gray-600: hsl(0, 0%, 35%); /* Dark gray */
-  --gray-700: hsl(0, 0%, 25%); /* Very dark gray */
-  --gray-800: hsl(0, 0%, 15%); /* Almost black */
+  --gray-100: hsl(0, 0%, 97%);
+  /* Very light gray */
+  --gray-200: hsl(0, 0%, 92%);
+  /* Light gray */
+  --gray-300: hsl(0, 0%, 80%);
+  /* Soft gray */
+  --gray-400: hsl(0, 0%, 60%);
+  /* Medium gray */
+  --gray-500: hsl(0, 0%, 50%);
+  /* Normal gray */
+  --gray-600: hsl(0, 0%, 35%);
+  /* Dark gray */
+  --gray-700: hsl(0, 0%, 25%);
+  /* Very dark gray */
+  --gray-800: hsl(0, 0%, 15%);
+  /* Almost black */
 
   --border: var(--gray-300, #707070);
   --border-radius: 10px;
@@ -24,7 +33,6 @@
   --background: var(--gray-150, hsl(0deg 0% 94.96%));
 }
 
-// Colors
 $blue: #2d1eed;
 $dark-blue: #0d2040;
 $orange: #ff623e;
@@ -39,12 +47,10 @@ $background: #f3f5f9;
 $placeholder: #e9e7e7;
 $online: #2ecc71;
 
-// Fonts
 $inter: "Inter", "Arial", sans-serif;
 $heading: "Comfortaa", "Arial", sans-serif;
 $icon: "Material Symbols Outlined";
 
-// Breakpoints
 $xl: 1400px;
 $xlm: 1200px;
 $lg: 992px;
@@ -54,7 +60,6 @@ $xs: 480px;
 
 $custom: 900px;
 
-// Animations
 $animation-speed: all 0.2s;
 
 @import "base";
