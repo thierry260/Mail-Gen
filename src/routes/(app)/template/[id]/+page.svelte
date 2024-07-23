@@ -8,8 +8,9 @@
   import { templatesStore } from "$lib/stores/templates";
   import { get } from "svelte/store";
   import { browser } from "$app/environment";
-  import { updateDoc, doc, getDoc } from "firebase/firestore"; // Import Firestore update function
+  import { updateDoc, doc, getDoc, setDoc } from "firebase/firestore"; // Import Firestore update function
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
+
   import {
     Star,
     TrashSimple,
@@ -76,7 +77,7 @@
     parseHTML() {
       return [
         {
-          tag: "code[data-variable][data-variable][data-placeholder]",
+          tag: "code[data-variable][data-id][data-placeholder]",
         },
       ];
     },
@@ -103,11 +104,11 @@
         dom.setAttribute("data-variable", node.attrs.variable || "");
         dom.setAttribute("data-placeholder", node.attrs.placeholder || "");
         dom.setAttribute("contenteditable", "false");
-        dom.textContent = `{{${node.attrs.variable || ""}}}`;
+        dom.textContent = `{{${node.attrs.placeholder || node.attrs.variable || ""}}}`;
 
         console.log(view);
 
-        dom.addEventListener("click", (view) => {
+        dom.addEventListener("click", () => {
           if (!view) {
             console.error("Editor view is not available");
             return;
@@ -116,7 +117,7 @@
           if (variable) {
             console.log(view);
             view.dispatch(
-              view.state.tr.setNodeMarkup(getPos(), null, { variable })
+              view.state.tr.setNodeMarkup(getPos(), null, { variable }),
             );
           }
         });
@@ -332,7 +333,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       const index = favoriteTemplates.findIndex(
-        (item) => item.id === templateData.id
+        (item) => item.id === templateData.id,
       );
 
       if (isFavorite && index === -1) {
@@ -343,7 +344,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates)
+        JSON.stringify(favoriteTemplates),
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -356,7 +357,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       isFavorite = favoriteTemplates.some(
-        (item) => item.id === templateData.id
+        (item) => item.id === templateData.id,
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -396,7 +397,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id
+              (template) => template.id === id,
             );
             if (templateIndex !== -1) {
               item.templates[templateIndex].name = newName;
@@ -424,7 +425,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id
+              (template) => template.id === id,
             );
             if (templateIndex !== -1) {
               item.templates.splice(templateIndex, 1); // Remove the template
@@ -565,7 +566,7 @@
 
   const confirmAndDelete = () => {
     const confirmDelete = window.confirm(
-      "Weet je zeker dat je deze template wilt verwijderen?"
+      "Weet je zeker dat je deze template wilt verwijderen?",
     );
     if (confirmDelete) {
       deleteTemplate(templateData.id)
@@ -587,12 +588,30 @@
     templateData.content = editor.getJSON();
     console.log(templateData.content);
     try {
-      // Update the template data with the current content, name, and variables
-      await updateDoc(doc(db, "workspaces/wms/templates", id), {
-        content: templateData.content,
-        name: templateData.name,
-        variables: templateData.variables,
-      });
+      const docRef = doc(
+        db,
+        `workspaces/${localStorage.getItem("workspace")}/templates`,
+        id,
+      );
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        // Document exists, so update it
+        await updateDoc(docRef, {
+          content: templateData.content,
+          name: templateData.name,
+          variables: templateData.variables,
+        });
+      } else {
+        // Document does not exist, so create it
+        await setDoc(docRef, {
+          content: templateData.content,
+          name: templateData.name,
+          variables: templateData.variables,
+          createdAt: new Date(),
+        });
+      }
+
       toggleEditMode();
       updateTemplateName(id, templateData.name);
       updateTemplateNameinDB(id, templateData.name);
@@ -608,39 +627,50 @@
         "var_" +
         Date.now().toString(36) +
         Math.random().toString(36).substr(2, 9);
-      workspaceVariables = { ...workspaceVariables, [id]: newVariable };
+      const variable = {
+        field_name: newVariable.field_name,
+        placeholder: newVariable.placeholder,
+      };
+      workspaceVariables.variables[id] = variable;
+
+      console.log("New Variable ID:", id);
+      console.log("New Variable:", variable);
 
       // Update the Firestore document with the new variable
       const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
       await updateDoc(docRef, {
-        [`variables.${id}`]: newVariable,
+        [`variables.${id}`]: variable,
       });
 
       newVariable = { field_name: "", placeholder: "" };
       selectedVariable = id;
 
-      return id;
+      return { id, ...variable }; // Return the object containing the new variable's attributes
     }
+    return null; // Ensure that a null value is returned if no variable is added
   };
 
   const insertVariable = (variable) => {
+    console.log("Inserting Variable:", variable);
+
     editor
       .chain()
       .focus()
       .insertContent({
         type: "variable",
-        attrs: variable,
+        attrs: {
+          id: variable.id,
+          variable: variable.field_name,
+          placeholder: variable.placeholder,
+        },
       })
       .run();
-
-    // const html = `<code contenteditable="false" data-variable="${variable}">{{${variable}}}</code> `;
-    // editor.chain().focus().insertContent(html).run();
 
     showVariablePopup = false;
     variableSearchQuery = "";
     showPlaceholderField = false;
 
-    console.log(editor.state.selection.to);
+    console.log("Inserted Variable:", variable);
   };
 
   const handleVariableSearch = (e) => {
@@ -653,7 +683,7 @@
         ([id, data]) =>
           data.field_name
             .toLowerCase()
-            .includes(variableSearchQuery.toLowerCase())
+            .includes(variableSearchQuery.toLowerCase()),
       );
     }
 
@@ -677,7 +707,7 @@
     }
   };
 
-  const addVariableAction = () => {
+  const addVariableAction = async () => {
     if (selectedVariable) {
       console.log(selectedVariable);
       insertVariable({
@@ -687,12 +717,10 @@
       });
     } else if (newVariable.field_name && newVariable.placeholder) {
       console.log("custom var");
-      const newVariableID = addNewVariable();
-      insertVariable({
-        id: newVariableID,
-        variable: newVariable.field_name,
-        placeholder: newVariable.placeholder,
-      });
+      const newVariableData = await addNewVariable(); // Wait for the Promise to resolve
+      if (newVariableData) {
+        insertVariable(newVariableData);
+      }
     }
   };
 
@@ -852,7 +880,7 @@
           <ul>
             {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                   .toLowerCase()
-                  .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+                  .includes(variableSearchQuery.toLowerCase()), ) as [id, data]}
               <li
                 on:click={() =>
                   insertVariable({
