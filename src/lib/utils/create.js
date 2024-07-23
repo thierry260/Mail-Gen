@@ -27,6 +27,9 @@ export const createCategory = async (parentCategoryId, newCategoryName) => {
       };
 
       let updatedCategories;
+      if (!workspaceData.categories) {
+        workspaceData.categories = []; // Ensure categories is an array
+      }
 
       if (parentCategoryId) {
         console.log("has parent cat");

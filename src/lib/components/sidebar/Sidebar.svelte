@@ -47,9 +47,9 @@
     return false;
   };
   onMount(async () => {
-    data = await fetchWorkspaceData("categories");
-    if (data) {
-      data = data.map((category) => ({
+    let fetchedData = await fetchWorkspaceData("categories");
+    if (Array.isArray(fetchedData)) {
+      data = fetchedData.map((category) => ({
         ...category,
         open: false, // Add open property to handle accordion state
       }));
@@ -58,6 +58,7 @@
       console.log(data);
     } else {
       console.log("Categories not found");
+      data = []; // Ensure data is an empty array if fetch fails
     }
   });
   // Logout function
@@ -74,7 +75,7 @@
   const addMainCat = async () => {
     try {
       const newCategoryName = prompt(
-        "Geef een naam in voor de nieuwe categorie:"
+        "Geef een naam in voor de nieuwe categorie:",
       );
 
       if (newCategoryName && newCategoryName.trim() !== "") {
@@ -97,23 +98,27 @@
 
 <aside class="sidebar">
   <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
-  <a class="menu_item" href="/" class:active={isHomeActive}
-    ><House size={20} />Home</a
-  >
+  <a class="menu_item" href="/" class:active={isHomeActive}>
+    <House size={20} />Home
+  </a>
   <div class="templates">
     <span class="label">Templates</span>
     <div class="templates_items">
-      {#each data as item}
-        <SidebarItem bind:item {currentId} {currentType} />
-      {/each}
-      <button class="menu_item add_main_cat" on:click={addMainCat}
-        >+ Hoofdcategorie toevoegen</button
-      >
+      {#if Array.isArray(data)}
+        {#each data as item}
+          <SidebarItem bind:item {currentId} {currentType} />
+        {/each}
+      {:else}
+        <p>Loading...</p>
+      {/if}
+      <button class="menu_item add_main_cat" on:click={addMainCat}>
+        + Hoofdcategorie toevoegen
+      </button>
     </div>
   </div>
-  <a class="menu_item" href="/settings" class:active={isSettingsActive}
-    ><Gear size={20} />Instellingen</a
-  >
+  <a class="menu_item" href="/settings" class:active={isSettingsActive}>
+    <Gear size={20} />Instellingen
+  </a>
   <button class="logout-button" on:click={logout}>Uitloggen</button>
 </aside>
 

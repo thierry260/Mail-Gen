@@ -73,7 +73,8 @@
   // Fetch workspace data and update fetchedData
   const fetchData = async () => {
     try {
-      fetchedData = await fetchWorkspaceData("categories");
+      const data = await fetchWorkspaceData("categories");
+      fetchedData = Array.isArray(data) ? data : [];
       console.log("fetchedData", fetchedData);
     } catch (error) {
       console.error("Failed to fetch workspace data:", error);
