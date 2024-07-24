@@ -53,7 +53,6 @@
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
-
   const Variable = Node.create({
     name: "variable",
     group: "inline",
@@ -141,7 +140,10 @@
   // Fetch all data for the component
   const fetchWorkspaceAndTemplateData = async () => {
     try {
+      console.log(`fetching template data with ID ${id}`);
       templateData = await fetchTemplateData(id);
+      console.log("Template data fetched:", templateData);
+
       workspaceVariables = (await fetchWorkspaceData()) || { variables: {} }; // Ensure workspaceVariables is not null
 
       // Ensure workspaceVariables has a variables property
@@ -376,9 +378,12 @@
     }
   }
 
+  // Call updatePreviewContent initially after fetching data
   onMount(() => {
     if (id) {
-      fetchWorkspaceAndTemplateData();
+      fetchWorkspaceAndTemplateData().then(() => {
+        updatePreviewContent();
+      });
       fetchVariables();
       document.addEventListener("keydown", addVariableShortcut);
     }
@@ -448,18 +453,37 @@
     return categoryId;
   };
 
+  // Reactive statement to update the preview content
+  $: previewContent = replaceVariables(templateContentHTML, userInput);
+
   // Replace variables in content based on user input
   const replaceVariables = (content, variables) => {
-    console.log(variables);
     if (!content) return ""; // Check if content is defined
 
     return content.replace(/{{(.*?)}}/g, (match, p1) => {
-      if (match) {
-        console.log(match);
-      }
-      const value = variables[p1] || match;
+      const variable = Object.entries(workspaceVariables.variables).find(
+        ([id, data]) => {
+          return data.placeholder === p1.trim();
+        },
+      );
+      const value = variable ? variables[variable[0]] || match : match;
       return value;
     });
+  };
+
+  const handleInputChange = (variableId, event) => {
+    userInput = { ...userInput, [variableId]: event.target.value };
+    updatePreviewContent(); // Ensure the preview content updates
+  };
+
+  const updatePreviewContent = () => {
+    const previewElement = document.querySelector(".preview-content");
+    if (previewElement) {
+      previewElement.innerHTML = replaceVariables(
+        templateContentHTML,
+        userInput,
+      );
+    }
   };
 
   // Handle click on variable span
@@ -704,6 +728,9 @@
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       addVariableAction();
+    } else if (e.key === "Escape") {
+      console.log("Escape clicked");
+      showVariablePopup = false;
     }
   };
 
@@ -724,6 +751,18 @@
     }
   };
 
+  // Set focus on the variable search input when the popup is shown
+  $: if (showVariablePopup) {
+    setTimeout(() => {
+      const variableInputElement = document.querySelector(".popup input");
+      if (variableInputElement) {
+        variableInputElement.focus();
+      }
+      document.addEventListener("keydown", handleKeyPress);
+    }, 0);
+  } else {
+    document.removeEventListener("keydown", handleKeyPress);
+  }
   // Fetch existing variables from the workspace
   const fetchVariables = async () => {
     if (!browser) return;
@@ -851,18 +890,6 @@
         {/if}
         <div class="editor" bind:this={editorElement}></div>
       </div>
-      <!-- <textarea bind:value={templateData.content} placeholder="Email inhoud"
-        ></textarea>
-        <div>
-          <h2>Variabele selecteren</h2>
-          <select bind:value={selectedVariable}>
-            <option value="" disabled>Selecteer</option>
-            {#each Object.entries(workspaceVariables.variables) as [variableId, variableData]}
-              <option value={variableId}>{variableData.field_name}</option>
-            {/each}
-          </select>
-          <button on:click={insertVariable}>Voeg toe</button>
-        </div> -->
       <button class="button" on:click={saveTemplate}>Opslaan</button>
     </div>
 
@@ -924,14 +951,16 @@
                 bind:value={userInput[variableId]}
                 placeholder={workspaceVariables.variables[variableId]
                   .placeholder}
+                on:input={(e) => handleInputChange(variableId, e)}
               />
             </div>
           {/if}
         {/each}
       </div>
+
       <div class="preview">
         <div class="preview-content">
-          {@html replaceVariables(templateContentHTML, userInput) ||
+          {@html previewContent ||
             "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
         </div>
       </div>

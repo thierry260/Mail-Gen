@@ -2,7 +2,12 @@
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import SidebarItem from "./SidebarItem.svelte";
-  import { House, Gear } from "phosphor-svelte";
+  import {
+    House,
+    Gear,
+    ArrowsInLineVertical,
+    ArrowsOutLineVertical,
+  } from "phosphor-svelte";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
   import { templatesStore } from "$lib/stores/templates";
@@ -14,6 +19,8 @@
   let currentType;
   let isHomeActive = false;
   let isSettingsActive = false;
+  let areAllOpen = false;
+
   $: {
     currentId = $page.params.id;
     currentType = $page.route.id.includes("template") ? "template" : "category";
@@ -61,6 +68,22 @@
       data = []; // Ensure data is an empty array if fetch fails
     }
   });
+  const toggleAll = () => {
+    areAllOpen = !areAllOpen;
+    data = data.map((category) => ({
+      ...category,
+      open: areAllOpen,
+      sub: category.sub
+        ? category.sub.map((sub) => ({ ...sub, open: areAllOpen }))
+        : category.sub,
+      templates: category.templates
+        ? category.templates.map((template) => ({
+            ...template,
+            open: areAllOpen,
+          }))
+        : category.templates,
+    }));
+  };
   // Logout function
   const logout = async () => {
     const auth = getAuth();
@@ -102,7 +125,16 @@
     <House size={20} />Home
   </a>
   <div class="templates">
-    <span class="label">Templates</span>
+    <span class="label">
+      Templates
+      <button class="toggle-all-icon" on:click={toggleAll}>
+        {#if areAllOpen}
+          <ArrowsInLineVertical size={15} />
+        {:else}
+          <ArrowsOutLineVertical size={15} />
+        {/if}
+      </button>
+    </span>
     <div class="templates_items">
       {#if Array.isArray(data)}
         {#each data as item}
@@ -148,6 +180,36 @@
       flex-direction: column;
       min-height: 1px;
 
+      .label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: default; /* Default cursor for the label */
+        padding: 10px;
+        min-height: 44px;
+        background-color: transparent;
+        border-radius: 10px;
+        width: 100%;
+        text-align: left;
+        transition: background-color 0.1s ease-out;
+        color: #fff;
+        text-decoration: none;
+
+        button {
+          font-size: 0.5rem;
+          cursor: default; /* Default cursor for the label */
+          background-color: transparent;
+          border: none; /* Remove border */
+          text-align: left;
+          transition: background-color 0.1s ease-out;
+          color: #fff;
+        }
+
+        .toggle-all-icon {
+          flex-shrink: 0;
+          cursor: pointer; /* Pointer cursor for the icon */
+        }
+      }
       .templates_items {
         overflow-y: auto;
         padding-right: 10px;
