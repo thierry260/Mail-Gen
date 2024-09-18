@@ -1,7 +1,13 @@
 <script>
   import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
   import { fetchWorkspaceData } from "$lib/utils/get";
   import { CaretRight, ArrowRight } from "phosphor-svelte";
+  import { createCategory } from "$lib/utils/create";
+  import { createNewTemplate } from "$lib/utils/create";
+  import { Plus } from "phosphor-svelte";
+  import { templatesStore } from "$lib/stores/templates";
+
   import Thumbnail from "$lib/components/Thumbnail.svelte";
   import Header from "$lib/components/header/Header.svelte";
 
@@ -58,6 +64,100 @@
     }
   };
 
+  const handleAddCat = async () => {
+    const newCategoryName = prompt(
+      "Geef een naam in voor de nieuwe categorie:"
+    );
+
+    if (newCategoryName) {
+      try {
+        // Create the new category
+        const newCategory = await createCategory(id, newCategoryName);
+
+        // Update the templatesStore directly
+        templatesStore.update((templates) => {
+          // Recursive function to find the parent category and add the new subcategory
+          const addCategoryToParent = (categories) =>
+            categories.map((category) => {
+              // If current category matches the parent ID, add the new category
+              if (category.id === id) {
+                return {
+                  ...category,
+                  sub: [...category.sub, newCategory], // Add new category to sub array
+                };
+              }
+
+              // If the category has subcategories, recursively update them
+              if (category.sub && category.sub.length > 0) {
+                return {
+                  ...category,
+                  sub: addCategoryToParent(category.sub), // Update subcategories recursively
+                };
+              }
+
+              // Return unchanged if no match found
+              return category;
+            });
+
+          // Return the updated templates array
+          return addCategoryToParent(templates);
+        });
+
+        // On success, navigate to the new category page
+        goto(`/category/${newCategory.id}`);
+      } catch (error) {
+        console.error("Error adding category:", error);
+        alert("Er is iets misgegaan bij het toevoegen van de categorie.");
+      }
+    }
+  };
+
+  const handleAddTemplate = async () => {
+    const newTemplateName = prompt("Geef een naam in voor de nieuwe template:");
+    if (newTemplateName) {
+      try {
+        // Create the new category
+        const newTemplateId = await createNewTemplate(id, newTemplateName);
+        const newTemplate = { name: newTemplateName, id: newTemplateId };
+
+        // Update the templatesStore directly
+        templatesStore.update((templates) => {
+          // Recursive function to find the parent category and add the new subcategory
+          const addTemplateToParent = (categories) =>
+            categories.map((category) => {
+              // If current category matches the parent ID, add the new category
+              if (category.id === id) {
+                return {
+                  ...category,
+                  templates: [...category.templates, newTemplate],
+                  open: true,
+                };
+              }
+
+              // If the category has subcategories, recursively update them
+              if (category.sub && category.sub.length > 0) {
+                return {
+                  ...category,
+                  sub: addTemplateToParent(category.sub), // Update subcategories recursively
+                };
+              }
+
+              // Return unchanged if no match found
+              return category;
+            });
+
+          // Return the updated templates array
+          return addTemplateToParent(templates);
+        });
+
+        goto(`/template/${newTemplateId}#edit`);
+      } catch (error) {
+        console.error("Error adding category:", error);
+        alert("Er is iets misgegaan bij het toevoegen van de categorie.");
+      }
+    }
+  };
+
   // Load the category data on mount
   loadCategoryData();
 
@@ -74,7 +174,12 @@
   <!-- <h1>{name}</h1> -->
 
   <div class="categories">
-    <h2>Subcategorieën</h2>
+    <div class="flex space-between flex-wrap gap-15 align-center mb-20">
+      <h2 class="mb-0">Subcategorieën</h2>
+      <button class="button basic" on:click={handleAddCat}
+        ><Plus size={16} />Categorie toevoegen</button
+      >
+    </div>
     {#if subcategories.length > 0}
       <div class="categories_grid">
         {#each subcategories as subcategory}
@@ -96,7 +201,13 @@
   </div>
 
   <div class="templates">
-    <h2>Templates</h2>
+    <div class="flex space-between flex-wrap gap-15 align-center mb-20">
+      <h2 class="mb-0">Templates</h2>
+      <button class="button basic" on:click={handleAddTemplate}
+        ><Plus size={16} />Template toevoegen</button
+      >
+    </div>
+
     {#if templates.length > 0}
       <div class="templates_list">
         {#each templates as template}
@@ -207,5 +318,27 @@
     background-color: var(--gray-200);
     border-radius: var(--border-radius);
     font-size: 1.4rem;
+  }
+
+  :global(.flex) {
+    display: flex;
+  }
+  :global(.space-between) {
+    justify-content: space-between;
+  }
+  :global(.flex-wrap) {
+    flex-wrap: wrap;
+  }
+  :global(.gap-15) {
+    gap: 15px;
+  }
+  :global(.align-center) {
+    align-items: center;
+  }
+  :global(body .mb-0.mb-0) {
+    margin-bottom: 0;
+  }
+  :global(.mb-20) {
+    margin-bottom: 20px;
   }
 </style>

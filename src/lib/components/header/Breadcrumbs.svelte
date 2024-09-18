@@ -147,7 +147,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     gap: 10px;
     color: var(--gray-400);
 

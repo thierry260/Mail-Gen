@@ -37,6 +37,8 @@
       const newTemplateName = prompt(
         "Geef een naam in voor de nieuwe template:"
       );
+
+      if (!newTemplateName) return;
       const newTemplateId = await createNewTemplate(
         categoryId,
         newTemplateName
