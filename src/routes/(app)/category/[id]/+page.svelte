@@ -2,6 +2,7 @@
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
   import { CaretRight, ArrowRight } from "phosphor-svelte";
+  import Thumbnail from "$lib/components/Thumbnail.svelte";
 
   let id;
   let name;
@@ -97,10 +98,7 @@
     {#if templates.length > 0}
       <div class="templates_list">
         {#each templates as template}
-          <a href={`/template/${template.id}`} class="template">
-            <h3>{template.name}</h3>
-            <CaretRight size={14} />
-          </a>
+          <Thumbnail type={"template"} id={template.id} name={template.name} />
         {/each}
       </div>
     {:else}

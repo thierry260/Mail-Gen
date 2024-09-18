@@ -3,7 +3,7 @@
   import { page } from "$app/stores";
   import SidebarItem from "./SidebarItem.svelte";
   import {
-    House,
+    Layout,
     Gear,
     ArrowsInLineVertical,
     ArrowsOutLineVertical,
@@ -12,6 +12,7 @@
   import { goto } from "$app/navigation";
   import { templatesStore } from "$lib/stores/templates";
   import { fetchWorkspaceData } from "$lib/utils/get";
+  import Search from "$lib/components/Search.svelte";
   import { createCategory } from "$lib/utils/create";
 
   let data = [];
@@ -89,6 +90,7 @@
     const auth = getAuth();
     try {
       await signOut(auth);
+      localStorage.clear();
       goto("/login");
     } catch (error) {
       console.error("Logout failed", error);
@@ -98,7 +100,7 @@
   const addMainCat = async () => {
     try {
       const newCategoryName = prompt(
-        "Geef een naam in voor de nieuwe categorie:",
+        "Geef een naam in voor de nieuwe categorie:"
       );
 
       if (newCategoryName && newCategoryName.trim() !== "") {
@@ -122,8 +124,9 @@
 <aside class="sidebar">
   <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
   <a class="menu_item" href="/" class:active={isHomeActive}>
-    <House size={20} />Home
+    <Layout size={20} />Dashboard
   </a>
+  <Search />
   <div class="templates">
     <span class="label">
       Templates
@@ -165,11 +168,10 @@
     flex-direction: column;
     justify-content: space-between;
     .logo {
-      max-width: 200px;
-      margin-inline: auto;
+      max-width: 180px;
       width: 100%;
       display: block;
-      padding-block: 30px;
+      padding: 30px 10px;
     }
     .label {
       color: #fff;
@@ -194,6 +196,7 @@
         transition: background-color 0.1s ease-out;
         color: #fff;
         text-decoration: none;
+        margin-block: 10px 0;
 
         button {
           font-size: 0.5rem;

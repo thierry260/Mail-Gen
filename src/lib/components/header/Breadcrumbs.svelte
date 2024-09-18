@@ -14,7 +14,7 @@
         return `/category/${breadcrumb.id}`;
       case "template":
         return `/template/${breadcrumb.id}`;
-      case "home":
+      case "dash":
         return "/";
       default:
         return "#";
@@ -56,14 +56,14 @@
       return false;
     };
 
-    if (currentType === "home") {
-      path.push({ name: "Home", type: "home", id: null });
+    if (currentType === "dash") {
+      path.push({ name: "Dashboard", type: "dash", id: null });
       return path;
     }
 
     data.forEach((category) => {
       if (findPath(category)) {
-        path.unshift({ name: "Home", type: "home", id: null });
+        path.unshift({ name: "Dashboard", type: "dash", id: null });
       }
     });
 
