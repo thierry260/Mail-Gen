@@ -1,6 +1,4 @@
 <script>
-  import { onMount } from "svelte";
-  import { derived, get } from "svelte/store";
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
 
@@ -93,16 +91,17 @@
         ? "template"
         : "category";
 
+    console.log($page.params);
+
+    if (!currentId) {
+      breadcrumbs = [{ name: "Dashboard", type: "dash", id: null }];
+    }
     if (currentId && currentType && fetchedData && fetchedData.length > 0) {
       breadcrumbs = generateBreadcrumbs(currentId, currentType, fetchedData);
     } else {
       console.warn("Current ID or type not available.", currentId, currentType);
     }
   }
-
-  onMount(() => {
-    // No initial load here; rely on reactive statement
-  });
 </script>
 
 <nav aria-label="Breadcrumb">
@@ -111,9 +110,9 @@
       {#each breadcrumbs as crumb, index (index)}
         <li>
           <a href={breadcrumbUrl(crumb)}>{crumb.name}</a>
-          {#if index !== breadcrumbs.length - 1}<span>&nbsp;&gt;&nbsp;</span
-            >{/if}
         </li>
+        {#if index !== breadcrumbs.length - 1}<span class="separator">/</span
+          >{/if}
       {/each}
     {/if}
   </ol>
@@ -124,12 +123,15 @@
     display: flex;
     list-style: none;
     padding: 0;
-    margin: 0 0 20px;
-    font-size: 1.2rem;
+    margin: 0;
+    font-size: 1.8rem;
+    gap: 10px;
+    color: var(--gray-400);
 
     li {
       display: inline-flex;
       align-items: center;
+      gap: inherit;
 
       a {
         color: var(--blue); /* Customize link color */
@@ -141,9 +143,15 @@
         }
       }
 
-      span {
-        color: var(--gray-600); /* Customize arrow color */
+      &:last-child {
+        a {
+          color: var(--gray-800);
+          pointer-events: none;
+        }
       }
+    }
+    .separator {
+      color: var(--gray-300); /* Customize arrow color */
     }
   }
 </style>

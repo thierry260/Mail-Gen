@@ -12,6 +12,8 @@
   --gray-100: hsl(0, 0%, 97%);
   /* Very light gray */
   --gray-200: hsl(0, 0%, 92%);
+  /* Very light gray */
+  --gray-250: hsl(0, 0%, 86%);
   /* Light gray */
   --gray-300: hsl(0, 0%, 80%);
   /* Soft gray */
@@ -31,6 +33,7 @@
   --border-radius-small: 5px;
   --text: var(--gray-600);
   --background: var(--gray-150, hsl(0deg 0% 94.96%));
+  --body-background: #f8f8f8;
 }
 
 $blue: #2d1eed;

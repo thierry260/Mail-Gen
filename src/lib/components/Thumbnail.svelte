@@ -1,14 +1,23 @@
 <script>
   import { CaretRight } from "phosphor-svelte";
+  import { generateHTML } from "@tiptap/core";
 
   export let type = "template";
   export let id = null;
   export let name = null;
+  export let content = "";
+
+  const templateContentHTML = content && 1 == 2 ? generateHTML(content) : "";
 </script>
 
 <a href="/{type}/{id}" class="thumbnail" data-type={type}>
   <h3>{name}</h3>
   <CaretRight size={14} />
+  <div class="content">
+    {#if content}
+      {templateContentHTML}
+    {/if}
+  </div>
 </a>
 
 <style lang="scss">

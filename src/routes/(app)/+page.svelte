@@ -4,6 +4,7 @@
   import { CaretRight, ArrowRight } from "phosphor-svelte";
   import Search from "$lib/components/Search.svelte";
   import Thumbnail from "$lib/components/Thumbnail.svelte";
+  import Header from "$lib/components/header/Header.svelte";
 
   let data = [];
   let recentlyViewed = [];
@@ -39,9 +40,9 @@
   });
 </script>
 
+<Header />
 <div class="home">
   <div class="search">
-    <h1>Waar ben je naar op zoek?</h1>
     <Search />
   </div>
 
@@ -67,7 +68,12 @@
     {:else}
       <div class="recent_templates">
         {#each favoriteTemplates as template}
-          <Thumbnail type={"template"} id={template.id} name={template.name} />
+          <Thumbnail
+            type={"template"}
+            id={template.id}
+            name={template.name}
+            content={template.content}
+          />
         {/each}
       </div>
     {/if}
@@ -80,7 +86,12 @@
     {:else}
       <div class="recent_templates">
         {#each recentlyViewed as template}
-          <Thumbnail type={"template"} id={template.id} name={template.name} />
+          <Thumbnail
+            type={"template"}
+            id={template.id}
+            name={template.name}
+            content={template.content}
+          />
         {/each}
       </div>
     {/if}

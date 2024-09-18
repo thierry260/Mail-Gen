@@ -10,6 +10,7 @@
   import { browser } from "$app/environment";
   import { updateDoc, doc, getDoc, setDoc } from "firebase/firestore"; // Import Firestore update function
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
+  import Header from "$lib/components/header/Header.svelte";
 
   import {
     Star,
@@ -116,7 +117,7 @@
           if (variable) {
             console.log(view);
             view.dispatch(
-              view.state.tr.setNodeMarkup(getPos(), null, { variable }),
+              view.state.tr.setNodeMarkup(getPos(), null, { variable })
             );
           }
         });
@@ -335,7 +336,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       const index = favoriteTemplates.findIndex(
-        (item) => item.id === templateData.id,
+        (item) => item.id === templateData.id
       );
 
       if (isFavorite && index === -1) {
@@ -346,7 +347,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates),
+        JSON.stringify(favoriteTemplates)
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -359,7 +360,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       isFavorite = favoriteTemplates.some(
-        (item) => item.id === templateData.id,
+        (item) => item.id === templateData.id
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -402,7 +403,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id,
+              (template) => template.id === id
             );
             if (templateIndex !== -1) {
               item.templates[templateIndex].name = newName;
@@ -430,7 +431,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id,
+              (template) => template.id === id
             );
             if (templateIndex !== -1) {
               item.templates.splice(templateIndex, 1); // Remove the template
@@ -464,7 +465,7 @@
       const variable = Object.entries(workspaceVariables.variables).find(
         ([id, data]) => {
           return data.placeholder === p1.trim();
-        },
+        }
       );
       const value = variable ? variables[variable[0]] || match : match;
       return value;
@@ -481,7 +482,7 @@
     if (previewElement) {
       previewElement.innerHTML = replaceVariables(
         templateContentHTML,
-        userInput,
+        userInput
       );
     }
   };
@@ -590,7 +591,7 @@
 
   const confirmAndDelete = () => {
     const confirmDelete = window.confirm(
-      "Weet je zeker dat je deze template wilt verwijderen?",
+      "Weet je zeker dat je deze template wilt verwijderen?"
     );
     if (confirmDelete) {
       deleteTemplate(templateData.id)
@@ -615,7 +616,7 @@
       const docRef = doc(
         db,
         `workspaces/${localStorage.getItem("workspace")}/templates`,
-        id,
+        id
       );
       const docSnap = await getDoc(docRef);
 
@@ -707,7 +708,7 @@
         ([id, data]) =>
           data.field_name
             .toLowerCase()
-            .includes(variableSearchQuery.toLowerCase()),
+            .includes(variableSearchQuery.toLowerCase())
       );
     }
 
@@ -786,8 +787,30 @@
   };
 </script>
 
+<Header type={"template"}>
+  <button class="button basic" on:click={toggleEditMode}>
+    {#if isEditMode}
+      <X size="18" />Annuleren
+    {:else}
+      <PencilSimple size="18" />Aanpassen
+    {/if}
+  </button>
+  {#if !isEditMode}
+    <button class="button basic" on:click={confirmAndDelete}>
+      <TrashSimple size="18" />
+    </button>
+    <button class="button basic favorite_button" on:click={toggleFavorite}>
+      {#if isFavorite}
+        <Star size="18" weight="fill" />
+      {:else}
+        <Star size="18" />
+      {/if}
+    </button>
+  {/if}
+</Header>
+
 {#if !isNextStage}
-  <div class="top">
+  <!-- <div class="top">
     <h1>
       {templateData.name}
     </h1>
@@ -810,7 +833,7 @@
         {/if}
       </button>
     {/if}
-  </div>
+  </div> -->
   {#if isEditMode}
     <div class="edit-template">
       <h2>Template naam</h2>
@@ -907,7 +930,7 @@
           <ul>
             {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                   .toLowerCase()
-                  .includes(variableSearchQuery.toLowerCase()), ) as [id, data]}
+                  .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
               <li
                 on:click={() =>
                   insertVariable({

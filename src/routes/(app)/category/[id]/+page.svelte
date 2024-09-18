@@ -3,6 +3,7 @@
   import { fetchWorkspaceData } from "$lib/utils/get";
   import { CaretRight, ArrowRight } from "phosphor-svelte";
   import Thumbnail from "$lib/components/Thumbnail.svelte";
+  import Header from "$lib/components/header/Header.svelte";
 
   let id;
   let name;
@@ -68,11 +69,12 @@
   }
 </script>
 
+<Header />
 <div class="category">
-  <h1>{name}</h1>
+  <!-- <h1>{name}</h1> -->
 
   <div class="categories">
-    <h2>Onderliggende categorieën</h2>
+    <h2>Subcategorieën</h2>
     {#if subcategories.length > 0}
       <div class="categories_grid">
         {#each subcategories as subcategory}
@@ -98,7 +100,12 @@
     {#if templates.length > 0}
       <div class="templates_list">
         {#each templates as template}
-          <Thumbnail type={"template"} id={template.id} name={template.name} />
+          <Thumbnail
+            type={"template"}
+            id={template.id}
+            name={template.name}
+            content={template.content}
+          />
         {/each}
       </div>
     {:else}

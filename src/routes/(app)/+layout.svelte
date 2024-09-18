@@ -4,7 +4,7 @@
   import { onAuthStateChanged } from "firebase/auth";
   import { goto } from "$app/navigation";
   import Sidebar from "$lib/components/sidebar/Sidebar.svelte";
-  import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
+  import Header from "$lib/components/header/Header.svelte";
 
   let user = null;
 
@@ -21,19 +21,22 @@
 <div class="layout">
   <Sidebar />
   <main>
-    <Breadcrumbs />
     <slot />
   </main>
 </div>
 
-<style>
+<style lang="scss">
   .layout {
     display: flex;
     height: 100vh;
   }
   main {
     flex: 1;
-    padding: 80px;
+    padding: 50px;
     overflow-y: auto;
+  }
+
+  :global(body main:has(.home) nav:first-child) {
+    display: flex;
   }
 </style>
