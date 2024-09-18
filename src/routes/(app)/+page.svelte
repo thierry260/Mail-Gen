@@ -64,7 +64,7 @@
   <div class="favorite_templates">
     <h2>Favoriete templates</h2>
     {#if favoriteTemplates.length === 0}
-      <p>Geen favoriete templates.</p>
+      <p class="empty">Geen favoriete templates.</p>
     {:else}
       <div class="recent_templates">
         {#each favoriteTemplates as template}

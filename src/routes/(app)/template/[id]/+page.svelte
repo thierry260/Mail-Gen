@@ -157,20 +157,20 @@
         const variableIds = [];
         const extract = (items) => {
           if (Array.isArray(items)) {
-            console.log("items is array");
+            // console.log("items is array");
             items.forEach((item) => {
               console.log("looping through items");
               if (item.type === "variable" && item.attrs && item.attrs.id) {
-                console.log("item with type variable found");
+                // console.log("item with type variable found");
                 variableIds.push(item.attrs.id);
               }
               if (item.content && Array.isArray(item.content)) {
-                console.log("go deeper");
+                // console.log("go deeper");
                 extract(item.content);
               }
             });
           } else {
-            console.log("items is not array");
+            // console.log("items is not array");
           }
         };
         extract(content);

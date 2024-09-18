@@ -1,6 +1,7 @@
 <script>
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
+  import { Layout } from "phosphor-svelte";
 
   let breadcrumbs = [];
   let fetchedData = [];
@@ -45,7 +46,20 @@
       if (item.sub) {
         for (const subItem of item.sub) {
           if (findPath(subItem)) {
-            path.unshift({ name: item.name, type: "category", id: item.id });
+            // Add subcategory (subItem) only once
+            if (!path.some((crumb) => crumb.id === subItem.id)) {
+              path.unshift({
+                name: subItem.name,
+                type: "category",
+                id: subItem.id,
+              });
+            }
+
+            // Add parent category (item) only once
+            if (!path.some((crumb) => crumb.id === item.id)) {
+              path.unshift({ name: item.name, type: "category", id: item.id });
+            }
+
             return true;
           }
         }
@@ -109,7 +123,16 @@
     {#if breadcrumbs.length}
       {#each breadcrumbs as crumb, index (index)}
         <li>
-          <a href={breadcrumbUrl(crumb)}>{crumb.name}</a>
+          <a href={breadcrumbUrl(crumb)}>
+            {#if crumb.type == "dash"}
+              <div class="icon"><Layout size={18} /></div>
+              {#if breadcrumbs.length == 1}
+                Dashboard
+              {/if}
+            {:else}
+              {crumb.name}
+            {/if}
+          </a>
         </li>
         {#if index !== breadcrumbs.length - 1}<span class="separator">/</span
           >{/if}
@@ -137,6 +160,13 @@
         color: var(--blue); /* Customize link color */
         text-decoration: none;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: inherit;
+
+        .icon {
+          display: inline-flex;
+        }
 
         &:hover {
           text-decoration: underline;

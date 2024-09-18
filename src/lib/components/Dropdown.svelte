@@ -56,7 +56,7 @@
     } else if (action === "cat_delete") {
       if (
         confirm(
-          "Weet je zeker dat je deze categorie wilt verwijderen? Alle onderliggende categorieën en templates zullen tevens worden verwijderd."
+          "Weet je zeker dat je deze categorie wilt verwijderen? Alle subcategorieën en templates zullen tevens worden verwijderd."
         )
       ) {
         deleteCategory(categoryId).then(() => {

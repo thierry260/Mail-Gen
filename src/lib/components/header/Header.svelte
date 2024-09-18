@@ -43,7 +43,7 @@
     .actions {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
     }
 
     .action {

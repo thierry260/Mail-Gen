@@ -88,9 +88,9 @@
         {/each}
       </div>
     {:else}
-      <p class="placeholder">
-        Je hebt nog geen onderliggende categorieën toegevoegd aan <u>{name}</u>.
-        Voeg een categorie toe via de + in het linker zijvenster
+      <p class="empty">
+        Je hebt nog geen sub categorieën toegevoegd aan <u>{name}</u>. Voeg een
+        categorie toe via de + in het linker zijvenster
       </p>
     {/if}
   </div>
@@ -109,7 +109,7 @@
         {/each}
       </div>
     {:else}
-      <p class="placeholder">
+      <p class="empty">
         Je hebt nog geen templates toegevoegd aan <u>{name}</u>. Voeg een
         template toe via de + in het linker zijvenster
       </p>

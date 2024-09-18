@@ -31,7 +31,9 @@
   };
 
   const handleSearchInputblur = (event) => {
-    searchResults = [];
+    setTimeout(() => {
+      searchResults = [];
+    }, 100); // small delay to allow click event to be triggered
   };
 
   // Recursive function to search through categories and templates
@@ -100,6 +102,9 @@
         on:click={() => navigateTo(result.type, result.id)}
       >
         <h3>{result.name}</h3>
+        <span class="label"
+          >{result.type == "category" ? "categorie" : result.type}</span
+        >
         <CaretRight size={18} />
       </a>
     {/each}
@@ -131,13 +136,29 @@
         justify-content: space-between;
         align-items: center;
         text-decoration: none;
+        gap: 15px;
         transition:
           background-color,
           0.2s ease-out;
         h3 {
-          font-size: 1.6rem;
+          display: block;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          font-size: 1.4rem;
           font-weight: 500;
           margin-bottom: 0;
+          flex-grow: 1;
+        }
+
+        .label {
+          margin: 0;
+          // border: 1px solid var(--gray-400);
+          background-color: var(--gray-200);
+          padding: 2px 6px;
+          border-radius: 5px;
+          font-weight: 400;
+          text-transform: none;
         }
 
         &:hover {

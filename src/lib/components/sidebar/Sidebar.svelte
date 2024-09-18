@@ -218,6 +218,9 @@
         padding-right: 10px;
         margin-right: -10px;
         flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
 
         /* ===== Scrollbar CSS ===== */
         scrollbar-width: auto;
