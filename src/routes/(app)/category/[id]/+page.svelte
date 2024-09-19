@@ -2,12 +2,9 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { fetchWorkspaceData } from "$lib/utils/get";
-  import { CaretRight, ArrowRight } from "phosphor-svelte";
-  import { createCategory } from "$lib/utils/create";
-  import { createNewTemplate } from "$lib/utils/create";
-  import { Plus } from "phosphor-svelte";
+  import { CaretRight, Plus } from "phosphor-svelte";
+  import { createCategory, createNewTemplate } from "$lib/utils/create";
   import { templatesStore } from "$lib/stores/templates";
-
   import Thumbnail from "$lib/components/Thumbnail.svelte";
   import Header from "$lib/components/header/Header.svelte";
 
@@ -44,7 +41,9 @@
   };
 
   const loadCategoryData = async () => {
-    const data = await fetchWorkspaceData("categories");
+    const data = $templatesStore;
+
+    console.log("data: ", data);
     if (data) {
       categories = data.map((category) => ({
         ...category,
@@ -52,16 +51,28 @@
       }));
 
       const category = findCategoryById(categories, id);
+      console.log("category: ", category);
       if (category) {
         name = category.name;
         subcategories = category.sub || [];
         templates = extractTemplates(category);
+        console.log(templates);
       } else {
         console.log("Category not found");
       }
     } else {
       console.log("Categories not found");
     }
+  };
+
+  const updateTemplates = () => {
+    console.log("$templatesStore updated", $templatesStore);
+    const category = findCategoryById(categories, id);
+    if (category) {
+      templates = extractTemplates(category);
+    }
+
+    console.log("templates: ", templates);
   };
 
   const handleAddCat = async () => {
@@ -158,21 +169,20 @@
     }
   };
 
-  // Load the category data on mount
-  loadCategoryData();
+  // // Load the category data on mount
+  // loadCategoryData();
 
-  // Reactive statement to reload the category data whenever the ID changes
-  $: {
-    if (id) {
-      loadCategoryData();
-    }
+  // // Reactive statement to reload category data whenever the ID changes
+  $: if (id) {
+    loadCategoryData();
   }
+
+  // Reactive statement to update templates whenever templatesStore changes
+  $: $templatesStore, loadCategoryData(), updateTemplates();
 </script>
 
 <Header />
 <div class="category">
-  <!-- <h1>{name}</h1> -->
-
   <div class="categories">
     <div class="flex space-between flex-wrap gap-15 align-center mb-20">
       <h2 class="mb-0">Subcategorieën</h2>
@@ -194,7 +204,7 @@
       </div>
     {:else}
       <p class="empty">
-        Je hebt nog geen sub categorieën toegevoegd aan <u>{name}</u>. Voeg een
+        Je hebt nog geen subcategorieën toegevoegd aan <u>{name}</u>. Voeg een
         categorie toe via de + in het linker zijvenster
       </p>
     {/if}
@@ -211,6 +221,7 @@
     {#if templates.length > 0}
       <div class="templates_list">
         {#each templates as template}
+          <!-- {JSON.stringify(template)} -->
           <Thumbnail
             type={"template"}
             id={template.id}

@@ -10,10 +10,11 @@
   } from "phosphor-svelte";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
-  import { templatesStore } from "$lib/stores/templates";
   import { fetchWorkspaceData } from "$lib/utils/get";
   import Search from "$lib/components/Search.svelte";
   import { createCategory } from "$lib/utils/create";
+  import { templatesStore } from "$lib/stores/templates";
+  import { getCategoriesAndCachedTemplates } from "$lib/utils/cache";
 
   let data = [];
   let currentId = "";
@@ -31,6 +32,9 @@
       $page.route.id === "/(app)";
     isSettingsActive = $page.route.id.includes("/settings");
   }
+
+  $: $templatesStore, console.log("templatesStore updated:", $templatesStore);
+
   const expandParents = (item, currentId, currentType) => {
     if (currentType === "category" && item.id === currentId) {
       item.open = true;
@@ -56,14 +60,29 @@
   };
   onMount(async () => {
     let fetchedData = await fetchWorkspaceData("categories");
+    console.log("categories: ", fetchedData);
     if (Array.isArray(fetchedData)) {
       data = fetchedData.map((category) => ({
         ...category,
         open: false, // Add open property to handle accordion state
       }));
       data.forEach((item) => expandParents(item, currentId, currentType));
-      templatesStore.set(data); // Initialize the store with the data
+      // templatesStore.set(data); // Initialize the store with the data
+    } else {
+      console.log("Categories not found");
+      data = []; // Ensure data is an empty array if fetch fails
+    }
+
+    let categories = await getCategoriesAndCachedTemplates();
+    console.log("cached categories: ", categories);
+    if (Array.isArray(categories)) {
+      data = categories.map((category) => ({
+        ...category,
+        open: false, // Add open property to handle accordion state
+      }));
       console.log(data);
+      data.forEach((item) => expandParents(item, currentId, currentType));
+      templatesStore.set(data); // Initialize the store with the data
     } else {
       console.log("Categories not found");
       data = []; // Ensure data is an empty array if fetch fails

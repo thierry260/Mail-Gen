@@ -132,7 +132,11 @@ const addTemplateToCategory = async (templateId, templateName, categoryId) => {
       for (let category of categories) {
         if (category.id === categoryId) {
           category.templates = category.templates || [];
-          category.templates.push({ id: templateId, name: templateName });
+          category.templates.push({
+            id: templateId,
+            name: templateName,
+            lastUpdated: new Date(),
+          });
           return true;
         }
         if (category.sub) {

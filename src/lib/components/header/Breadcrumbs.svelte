@@ -87,7 +87,6 @@
     try {
       const data = await fetchWorkspaceData("categories");
       fetchedData = Array.isArray(data) ? data : [];
-      console.log("fetchedData", fetchedData);
     } catch (error) {
       console.error("Failed to fetch workspace data:", error);
       fetchedData = [];
@@ -104,9 +103,6 @@
       $page.route.id && $page.route.id.includes("template")
         ? "template"
         : "category";
-
-    console.log($page.params);
-
     if (!currentId) {
       breadcrumbs = [{ name: "Dashboard", type: "dash", id: null }];
     }

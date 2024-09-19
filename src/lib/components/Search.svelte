@@ -16,7 +16,6 @@
         ...category,
         open: false, // Add open property to handle accordion state
       }));
-      console.log(data);
     }
   });
 

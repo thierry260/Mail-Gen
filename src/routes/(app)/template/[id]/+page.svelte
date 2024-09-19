@@ -638,11 +638,54 @@
       }
 
       toggleEditMode();
+
+      // updateTemplateLastUpdated(id);
       updateTemplateName(id, templateData.name);
       updateTemplateNameinDB(id, templateData.name);
       fetchWorkspaceAndTemplateData(); // Refresh the data
     } catch (e) {
       console.error("Error updating document: ", e);
+    }
+  };
+
+  // Function to update the lastUpdated timestamp in the category
+  const updateTemplateLastUpdated = async (templateId) => {
+    const workspaceRef = doc(
+      db,
+      "workspaces",
+      localStorage.getItem("workspace")
+    );
+    const workspaceSnap = await getDoc(workspaceRef);
+
+    if (workspaceSnap.exists()) {
+      let categories = workspaceSnap.data().categories || [];
+
+      const findAndUpdateTemplate = (categories) => {
+        for (let category of categories) {
+          const template = category.templates?.find((t) => t.id === templateId);
+
+          if (template) {
+            // Update lastUpdated timestamp for the specific template
+            template.lastUpdated = new Date();
+            return true;
+          }
+
+          // Recursively check subcategories if they exist
+          if (category.sub) {
+            if (findAndUpdateTemplate(category.sub)) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      findAndUpdateTemplate(categories);
+
+      // Update categories in the workspace document
+      await updateDoc(workspaceRef, {
+        categories: categories,
+      });
     }
   };
 

@@ -100,6 +100,7 @@ const updateTemplateNameInData = (categories, templateId, newName) => {
         );
         if (template) {
           template.name = newName;
+          template.lastUpdated = new Date();
           return true; // Exit after updating
         }
       }

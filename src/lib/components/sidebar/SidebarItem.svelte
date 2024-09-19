@@ -14,7 +14,6 @@
 
   unsubscribe = templatesStore.subscribe((value) => {
     const itemFromStore = value.find((cat) => cat.id === item.id);
-    console.log(itemFromStore);
     if (itemFromStore) {
       item = itemFromStore;
     }
