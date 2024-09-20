@@ -109,9 +109,10 @@
       }}
       class:open={item.open}
     >
-      <CaretRight size={12} class="dropdown" /><span class="name"
-        >{item.name}</span
-      ><span class="actions"
+      <div class="dropdown_outer">
+        <CaretRight size={12} class="dropdown" />
+      </div>
+      <span class="name">{item.name}</span><span class="actions"
         ><button
           on:click={(event) => {
             event.stopPropagation();
@@ -178,7 +179,7 @@
   .accordion_item {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: inherit;
     .accordion_header,
     .template {
       cursor: pointer;
@@ -187,18 +188,23 @@
       background-color: transparent;
       border: 1px solid transparent;
       border-radius: 10px;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       width: 100%;
       text-align: left;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 8px;
       transition:
-        border-color 0.1s ease-out,
-        background-color 0.1s ease-out;
-      color: #fff;
+        border-color 0.2s ease-out,
+        background-color 0.2s ease-out,
+        color 0.2s ease-out;
+      color: inherit;
       .name {
         flex-grow: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        max-width: 100%;
       }
       .actions {
         display: flex;
@@ -226,25 +232,54 @@
           pointer-events: auto;
         }
       }
+      &::before {
+        content: "";
+        height: 0;
+        width: 5px;
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+        background: var(--primary);
+        position: absolute;
+        left: 0;
+        transition: height 0.2s ease-out;
+      }
       &.active {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: rgba(0, 0, 0, 0.12);
+        color: var(--primary);
+
+        .dropdown_outer {
+          background-color: transparent;
+        }
+        &::before {
+          // height: 34px;
+        }
       }
       &:not(.active):hover {
-        border-color: rgba(255, 255, 255, 0.6);
+        border-color: rgba(255, 255, 255, 0.2);
       }
     }
     .accordion_header .dropdown {
       transition: transform 0.2s ease-out;
     }
-    .accordion_header.open .dropdown {
+    .accordion_header.open .dropdown_outer {
       transform: rotate(90deg);
+    }
+    .accordion_header .dropdown_outer {
+      padding: 4px;
+      // border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(0, 0, 0, 0.08);
+      border-radius: 7px;
+      display: flex;
+      transition:
+        transform 0.2s ease-out,
+        background-color 0.2s ease-out;
     }
 
     .accordion_templates {
-      margin-left: 15px;
+      margin-left: 30px;
       display: flex;
       flex-direction: column;
-      gap: inherit;
+      gap: 5px;
 
       &:empty {
         display: none;
@@ -252,7 +287,7 @@
     }
 
     .accordion_content {
-      margin-left: 15px;
+      margin-left: 30px;
       display: flex;
       flex-direction: column;
       gap: 5px;

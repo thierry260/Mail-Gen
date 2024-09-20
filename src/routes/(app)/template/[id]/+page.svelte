@@ -844,7 +844,7 @@
     </button>
     <button class="button basic favorite_button" on:click={toggleFavorite}>
       {#if isFavorite}
-        <Star size="18" weight="fill" />
+        <Star size="18" weight="fill" color="var(--primary-darker)" />
       {:else}
         <Star size="18" />
       {/if}

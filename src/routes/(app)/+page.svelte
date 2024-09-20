@@ -42,21 +42,15 @@
 
 <Header />
 <div class="home">
-  <div class="search">
+  <!-- <div class="search">
     <Search />
-  </div>
+  </div> -->
 
   <div class="categories">
     <h2>Categorieën</h2>
     <div class="categories_grid">
       {#each data as item}
-        <a href="/category/{item.id}" class="category">
-          <h3>{item.name}</h3>
-          <div class="view_button">
-            Bekijken
-            <CaretRight size={16} />
-          </div>
-        </a>
+        <Thumbnail type={"category"} id={item.id} name={item.name} />
       {/each}
     </div>
   </div>
@@ -64,7 +58,7 @@
   <div class="favorite_templates">
     <h2>Favoriete templates</h2>
     {#if favoriteTemplates.length === 0}
-      <p class="empty">Geen favoriete templates.</p>
+      <p class="empty">Je hebt nog geen favoriete templates</p>
     {:else}
       <div class="recent_templates">
         {#each favoriteTemplates as template}
@@ -82,7 +76,7 @@
   <div class="recently_viewed">
     <h2>Recent bekeken</h2>
     {#if recentlyViewed.length === 0}
-      <p>Geen templates recent bekeken.</p>
+      <p class="empty">Je hebt geen recent bekeken templates</p>
     {:else}
       <div class="recent_templates">
         {#each recentlyViewed as template}
@@ -118,8 +112,7 @@
     }
     .category {
       background-color: #fff;
-      padding: 30px;
-      margin-bottom: 10px;
+      padding: 20px;
       border-radius: var(--border-radius);
       border: 1px solid var(--border);
       display: flex;
@@ -144,10 +137,10 @@
   }
 
   .recent_templates {
-    display: flex;
+    display: grid;
     flex-direction: column;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+    gap: 30px;
     .recent_template {
       padding: 15px;
       border-radius: var(--border-radius-small, 5px);

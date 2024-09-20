@@ -193,13 +193,11 @@
     {#if subcategories.length > 0}
       <div class="categories_grid">
         {#each subcategories as subcategory}
-          <a href={`/category/${subcategory.id}`} class="category">
-            <h3>{subcategory.name}</h3>
-            <div class="view_button">
-              Bekijken
-              <CaretRight size={16} />
-            </div>
-          </a>
+          <Thumbnail
+            type={"category"}
+            id={subcategory.id}
+            name={subcategory.name}
+          />
         {/each}
       </div>
     {:else}
@@ -290,16 +288,17 @@
   }
 
   .templates_list {
-    display: flex;
+    display: grid;
     flex-direction: column;
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+    gap: 30px;
     .template {
       padding: 15px;
       border-radius: var(--border-radius-small, 5px);
       border: 1px solid var(--border);
       background-color: #fff;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
       cursor: pointer;
       text-decoration: none;
@@ -329,27 +328,5 @@
     background-color: var(--gray-200);
     border-radius: var(--border-radius);
     font-size: 1.4rem;
-  }
-
-  :global(.flex) {
-    display: flex;
-  }
-  :global(.space-between) {
-    justify-content: space-between;
-  }
-  :global(.flex-wrap) {
-    flex-wrap: wrap;
-  }
-  :global(.gap-15) {
-    gap: 15px;
-  }
-  :global(.align-center) {
-    align-items: center;
-  }
-  :global(body .mb-0.mb-0) {
-    margin-bottom: 0;
-  }
-  :global(.mb-20) {
-    margin-bottom: 20px;
   }
 </style>

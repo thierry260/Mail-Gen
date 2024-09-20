@@ -1,21 +1,27 @@
 // src/routes/+layout.js
 import { auth } from "$lib/firebase";
-import { getAuth } from "firebase/auth";
-import { redirect } from "@sveltejs/kit";
+import { onAuthStateChanged } from "firebase/auth";
+import { browser } from "$app/environment";
+import { user } from "$lib/stores/user";
+
 export const ssr = false;
 
 export async function load({ url }) {
-  const auth = getAuth();
-  const user = auth.currentUser;
+  if (browser) {
+    // Ensure the auth state listener is set up if it hasn't been already
+    onAuthStateChanged(auth, (currentUser) => {
+      user.set(currentUser);
 
-  if (
-    !user &&
-    !url.pathname.startsWith("/login") &&
-    !url.pathname.startsWith("/get-mailgen")
-  ) {
-    console.log(auth, auth.currentUser);
-    // throw redirect(302, "/login");
+      // If the user is not authenticated and trying to access protected routes, redirect to login
+      if (
+        !currentUser &&
+        !url.pathname.startsWith("/login") &&
+        !url.pathname.startsWith("/get-mailgen")
+      ) {
+        window.location.href = "/login";
+      }
+    });
   }
 
-  return { user };
+  return { user: auth.currentUser || null };
 }

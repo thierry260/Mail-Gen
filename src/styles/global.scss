@@ -5,6 +5,7 @@
   /* any format you want here */
   --primary-darker: hsl(from var(--primary) h s calc(l - 5));
   --primary-darkest: hsl(from var(--primary) h s calc(l - 10));
+  --primary-darkest: hsl(from var(--primary) h s calc(l - 40));
   --secondary: #1c4657;
   --gradient: linear-gradient(230deg, var(--primary), var(--secondary));
 
@@ -29,7 +30,7 @@
   /* Almost black */
 
   --border: var(--gray-300, #707070);
-  --border-radius: 10px;
+  --border-radius: 5px;
   --border-radius-small: 5px;
   --text: var(--gray-600);
   --background: var(--gray-150, hsl(0deg 0% 94.96%));
@@ -50,8 +51,8 @@ $background: #f3f5f9;
 $placeholder: #e9e7e7;
 $online: #2ecc71;
 
-$inter: "Inter", "Arial", sans-serif;
-$heading: "Comfortaa", "Arial", sans-serif;
+$body: "Rubik", "Arial", sans-serif;
+$heading: "Red Hat Display", "Arial", sans-serif;
 $icon: "Material Symbols Outlined";
 
 $xl: 1400px;

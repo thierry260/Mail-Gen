@@ -1,8 +1,18 @@
 <script>
   import Breadcrumbs from "$lib/components/header/Breadcrumbs.svelte";
   import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
+  import { showContent } from "$lib/stores/showContent.js";
+  import { get } from "svelte/store";
 
   export let type = "overview";
+
+  // Get the initial value from the store
+  let checked = get(showContent);
+
+  // Update the store when the switch changes
+  function handleToggleChange(event) {
+    showContent.set(event.detail.checked);
+  }
 </script>
 
 <header>
@@ -14,12 +24,8 @@
       <slot></slot>
     {:else}
       <label class="action">
-        <span class="legend">Tekst voorbeeld bekijken</span>
-        <ToggleSwitch
-          on:change={(e) => {
-            console.log(e);
-          }}
-        />
+        <span class="legend">Mail voorbeeld tonen</span>
+        <ToggleSwitch bind:checked on:change={handleToggleChange} />
       </label>
     {/if}
   </div>

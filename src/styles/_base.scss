@@ -19,7 +19,7 @@ body {
   overflow-x: hidden;
   overflow-y: hidden;
   font-size: 1.8rem;
-  font-family: $inter;
+  font-family: $body;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -moz-osx-font-smoothing: grayscale;
@@ -48,7 +48,7 @@ h4,
   font-family: $heading;
   color: $black;
   margin: 0 0 20px 0;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 h1,
@@ -66,8 +66,12 @@ h4,
   line-height: 1.4em;
 }
 
+button {
+  font-family: $body;
+  font-weight: 300;
+}
 p {
-  font-family: $inter;
+  font-family: $body;
   font-weight: 400;
   line-height: 1.7em;
   color: $black;
@@ -119,9 +123,9 @@ p {
     font-size: 1.4rem;
     transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out;
     box-shadow: 0 0 0 rgba(0, 0, 0, 0.08);
+    background-color: #fff;
 
     &:hover {
-      background-color: #fff;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
   }
@@ -195,7 +199,7 @@ input[type="email"],
 textarea,
 select {
   font-size: 1.6rem;
-  font-family: $inter;
+  font-family: $body;
   color: $black;
   position: relative;
   border: none;
@@ -490,4 +494,34 @@ main:has(.settings) nav:first-child {
     display: flex;
     height: 1.5em;
   }
+}
+
+.flex {
+  display: flex;
+}
+.space-between {
+  justify-content: space-between;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.gap-15 {
+  gap: 15px;
+}
+.align-center {
+  align-items: center;
+}
+body .mb-0.mb-0 {
+  margin-bottom: 0;
+}
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.templates_items > .accordion_item > .accordion_header > .name {
+  font-size: 1.5rem;
+}
+
+::global(.templates_items > .accordion_item > .accordion_header > .name) {
+  font-size: 1.5rem;
 }
