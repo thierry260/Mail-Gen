@@ -1,4 +1,6 @@
 <script>
+  import { onMount, onDestroy } from "svelte";
+  import { browser } from "$app/environment";
   import { CaretRight, Star, CopySimple } from "phosphor-svelte";
   import { generateHTML, Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
@@ -10,6 +12,7 @@
   export let id = null;
   export let name = null;
   export let content = "";
+  let isFavorite = false;
 
   const Variable = Node.create({
     name: "variable",
@@ -118,10 +121,78 @@
 
     return templateCount;
   }
+
+  const toggleFavorite = () => {
+    isFavorite = !isFavorite;
+    saveFavoriteState();
+  };
+
+  const saveFavoriteState = () => {
+    if (browser) {
+      let favoriteTemplates =
+        JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
+
+      const index = favoriteTemplates.findIndex(
+        (item) => item.id === templateData.id
+      );
+
+      if (isFavorite && index === -1) {
+        favoriteTemplates.unshift(templateData);
+      } else if (!isFavorite && index !== -1) {
+        favoriteTemplates.splice(index, 1);
+      }
+
+      localStorage.setItem(
+        "favoriteTemplates",
+        JSON.stringify(favoriteTemplates)
+      );
+    } else {
+      console.warn("localStorage is not available in this environment.");
+    }
+  };
+
+  const loadFavoriteState = () => {
+    if (browser) {
+      let favoriteTemplates =
+        JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
+
+      isFavorite = favoriteTemplates.some((item) => item.id === id);
+    } else {
+      console.warn("localStorage is not available in this environment.");
+    }
+  };
+
+  const copyToClipboard = async (e) => {
+    e.currentTarget.dataset.tooltip = "Gekopieerd";
+    const content = document.querySelector(
+      `.thumbnail[id="${id}"] .content`
+    ).innerText;
+    try {
+      await navigator.clipboard.writeText(content);
+      console.log(`Copied to clipboard:\n\n${content}`);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  };
+
+  const resetCopyTooltip = (e) => {
+    const tooltipElement = e.currentTarget; // Store the reference before timeout
+    const defaultTooltip = tooltipElement.dataset.default_tooltip; // Store the necessary data
+
+    setTimeout(() => {
+      tooltipElement.dataset.tooltip = defaultTooltip; // Use the stored reference
+    }, 250);
+  };
+
+  onMount(() => {
+    if (id) {
+      loadFavoriteState();
+    }
+  });
 </script>
 
 {#if type == "template"}
-  <a href="/{type}/{id}" class="thumbnail" data-type={type}>
+  <a href="/{type}/{id}" class="thumbnail" data-type={type} data-id={id}>
     <h3>{name}</h3>
     <div class="content" data-show={$showContent}>
       {#if content}
@@ -138,31 +209,37 @@
           on:click={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            // Your button click logic here
+
+            toggleFavorite();
           }}
         >
           <span class="icon">
-            {#if 1 == 2}
-              <Star size="18" weight="fill" />
+            {#if isFavorite}
+              <Star size="18" weight="fill" color="var(--primary-darker)" />
             {:else}
               <Star size="18" />
             {/if}
           </span>
         </button>
-        <button
-          class="button basic"
-          data-flow="top"
-          data-tooltip="Mail kopiëren"
-          on:click={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            // Your button click logic here
-          }}
-        >
-          <span class="icon">
-            <CopySimple size="18" />
-          </span>
-        </button>
+        {#if templateContentHTML}
+          <button
+            class="button basic"
+            data-flow="top"
+            data-tooltip="Mail kopiëren"
+            data-default_tooltip="Mail kopiëren"
+            on:click={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              copyToClipboard(e);
+            }}
+            on:mouseleave={resetCopyTooltip}
+          >
+            <span class="icon">
+              <CopySimple size="18" />
+            </span>
+          </button>
+        {/if}
       </div>
       <button class="button basic link" data-flow="top" data-tooltip="Bekijken">
         <span class="icon">
@@ -172,7 +249,7 @@
     </div>
   </a>
 {:else}
-  <a href="/{type}/{id}" class="thumbnail" data-type={type}>
+  <a href="/{type}/{id}" class="thumbnail" data-type={type} data-id={id}>
     <h3>{name}<span>{countTemplatesInCategory($templatesStore, id)}</span></h3>
     <CaretRight size={14} />
   </a>
