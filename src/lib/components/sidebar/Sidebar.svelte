@@ -144,8 +144,8 @@
   };
 </script>
 
-<aside class="sidebar">
-  <a href="/" class="flex brand align-center gap-15">
+<div class="sidebar">
+  <a href="/" class="flex brand align-center gap-15 hide_mobile">
     <figure class="logo_outer">
       <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
     </figure>
@@ -183,7 +183,7 @@
       </button>
     </div>
   </div>
-  <div class="sidebar-bottom">
+  <div class="sidebar-bottom hide_mobile">
     <div class="user">
       <figure class="avatar">
         <img width="35px" height="35px" src="/img/placeholder.jpg" />
@@ -206,12 +206,21 @@
       <SignOut size={16} />
     </div>
   </div>
-</aside>
+</div>
 
 <style lang="scss">
   .sidebar {
     width: 100%;
     max-width: 360px;
+    @media (max-width: $lg) {
+      max-width: unset;
+      // height: 100%;
+      // height: 100vh;
+      // height: 100dvh;
+      .hide_mobile.hide_mobile {
+        display: none;
+      }
+    }
     background: var(--primary-darkest);
     background: linear-gradient(
       230deg,

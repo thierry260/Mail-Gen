@@ -47,6 +47,12 @@
     z-index: 1;
     gap: 20px;
 
+    @media (max-width: $lg) {
+      padding-block: 15px;
+      top: -30px;
+      margin-top: -30px;
+    }
+
     .title {
       overflow: hidden;
     }

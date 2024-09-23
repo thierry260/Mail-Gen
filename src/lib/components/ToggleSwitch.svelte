@@ -21,6 +21,7 @@
     display: inline-block;
     width: var(--width);
     height: 20px;
+    flex-shrink: 0;
   }
 
   .switch input {

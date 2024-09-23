@@ -232,6 +232,10 @@
         border-radius: 4px;
         font-size: 1.3rem;
         color: var(--gray-600);
+
+        @media (max-width: $lg) {
+          display: none;
+        }
       }
     }
 
@@ -326,7 +330,7 @@
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
         min-height: 44px;
         transition: outline-color 0.2s ease-out;
-        outline-width: 100vw;
+        outline-width: 100vmax;
         outline-color: rgba(0, 0, 0, 0);
         outline-style: solid;
         &:focus {
@@ -337,7 +341,7 @@
         border-radius: var(--border-radius-big, 10px);
 
         .search_result {
-          outline: 100vw solid rgba(0, 0, 0, 0);
+          outline: 100vmax solid rgba(0, 0, 0, 0);
           &:focus,
           &:focus-visible {
             outline-color: rgba(0, 0, 0, 0.2);
