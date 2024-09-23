@@ -54,6 +54,7 @@
     height: 100vh;
     height: 100dvh;
     grid-template-rows: minmax(0, 1fr) auto;
+
     @media (max-width: $lg) {
       display: grid;
       overflow: hidden;
@@ -61,10 +62,16 @@
       > * {
         grid-column: 1 / -1;
         grid-row: 1;
-        transition: transform 0.4s ease;
+        transition: transform 0s ease;
       }
       main {
         transform: translateX(100%);
+      }
+    }
+
+    @media (max-width: $md) {
+      > * {
+        transition-duration: 0.4s;
       }
     }
   }
@@ -164,20 +171,22 @@
   }
 
   :global(body .layout) {
-    &:has([name="nav"]#search:checked) {
-      > aside {
-        transform: translateX(0);
+    @media (max-width: $lg) {
+      &:has([name="nav"]#search:checked) {
+        > aside {
+          transform: translateX(0);
+        }
+        > main {
+          transform: translateX(100%);
+        }
       }
-      > main {
-        transform: translateX(100%);
-      }
-    }
-    &:has([name="nav"]#templates:checked) {
-      > aside {
-        transform: translateX(-100%);
-      }
-      > main {
-        transform: translateX(0);
+      &:has([name="nav"]#templates:checked) {
+        > aside {
+          transform: translateX(-100%);
+        }
+        > main {
+          transform: translateX(0);
+        }
       }
     }
   }
