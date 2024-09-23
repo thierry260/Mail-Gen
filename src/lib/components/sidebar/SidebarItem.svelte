@@ -1,5 +1,6 @@
 <!-- src/lib/components/sidebar/SidebarItem.svelte -->
 <script>
+  import { switchMobileNav } from "$lib/utils/utils.js";
   export let item;
   export let currentId;
   export let currentType;
@@ -24,10 +25,12 @@
   });
 
   const viewTemplate = (templateId) => {
+    switchMobileNav();
     goto(`/template/${templateId}`);
   };
 
   const viewCategory = (categoryId) => {
+    switchMobileNav();
     goto(`/category/${categoryId}`);
   };
 
@@ -99,7 +102,9 @@
     <button
       class="accordion_header {isActiveCategory ? 'active' : ''}"
       on:click={() => {
-        item.open = !item.open;
+        if (item.open === false) {
+          item.open;
+        }
         if (item.open || 1 == 1) {
           viewCategory(item.id);
         }
@@ -109,7 +114,13 @@
       }}
       class:open={item.open}
     >
-      <div class="dropdown_outer">
+      <div
+        class="dropdown_outer"
+        on:click={(e) => {
+          e.stopPropagation();
+          item.open = !item.open;
+        }}
+      >
         <CaretRight size={12} class="dropdown" />
       </div>
       <span class="name">{item.name}</span><span class="actions"

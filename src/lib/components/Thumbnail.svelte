@@ -7,6 +7,7 @@
   import Underline from "@tiptap/extension-underline";
   import { templatesStore } from "$lib/stores/templates";
   import { showContent } from "$lib/stores/showContent.js";
+  import { switchMobileNav } from "$lib/utils/utils.js";
 
   export let type = "template";
   export let id = null;
@@ -192,7 +193,13 @@
 </script>
 
 {#if type == "template"}
-  <a href="/{type}/{id}" class="thumbnail" data-type={type} data-id={id}>
+  <a
+    href="/{type}/{id}"
+    class="thumbnail"
+    data-type={type}
+    data-id={id}
+    on:click={switchMobileNav}
+  >
     <h3>{name}</h3>
     <div class="content" data-show={$showContent}>
       {#if content}
@@ -248,10 +255,21 @@
       </button>
     </div>
   </a>
-{:else}
+{:else if type == "category"}
   <a href="/{type}/{id}" class="thumbnail" data-type={type} data-id={id}>
     <h3>{name}<span>{countTemplatesInCategory($templatesStore, id)}</span></h3>
-    <CaretRight size={14} />
+    <span class="icon_outer"><CaretRight size={14} /></span>
+  </a>
+{:else}
+  <a
+    href="/template/{id}"
+    class="thumbnail"
+    data-type={type}
+    data-id={id}
+    on:click={(e) => switchMobileNav("browse")}
+  >
+    <h3>{name}<span></span></h3>
+    <span class="icon_outer"><CaretRight size={14} /></span>
   </a>
 {/if}
 
@@ -293,6 +311,11 @@
         font-size: 1.2rem;
         color: var(--gray-400);
       }
+    }
+
+    .icon_outer {
+      color: inherit;
+      display: flex;
     }
 
     &[data-type="template"] {

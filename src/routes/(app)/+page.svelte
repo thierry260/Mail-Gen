@@ -141,32 +141,6 @@
     flex-direction: column;
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
     gap: 30px;
-    .recent_template {
-      padding: 15px;
-      border-radius: var(--border-radius-small, 5px);
-      border: 1px solid var(--border);
-      background-color: #fff;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      cursor: pointer;
-      text-decoration: none;
-      transition:
-        background-color 0.2s ease-out,
-        border-color 0.2s ease-out;
-      &:hover {
-        // background-color: var(--gray-100);
-        border-color: var(--gray-400);
-      }
-      &:active {
-        color: inherit;
-      }
-      h3 {
-        font-size: 1.6rem;
-        flex-grow: 1;
-        margin-bottom: 0;
-      }
-    }
   }
 
   h2 {
