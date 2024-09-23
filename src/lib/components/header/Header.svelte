@@ -45,6 +45,11 @@
     top: -50px;
     margin-top: -50px;
     z-index: 1;
+    gap: 20px;
+
+    .title {
+      overflow: hidden;
+    }
 
     .actions {
       display: flex;

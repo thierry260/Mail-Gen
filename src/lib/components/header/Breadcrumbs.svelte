@@ -140,6 +140,7 @@
 <style lang="scss">
   .breadcrumbs {
     display: flex;
+    justify-content: flex-end;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -151,6 +152,7 @@
       display: inline-flex;
       align-items: center;
       gap: inherit;
+      white-space: nowrap;
 
       a {
         color: var(--blue); /* Customize link color */

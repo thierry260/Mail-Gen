@@ -525,3 +525,10 @@ body .mb-0.mb-0 {
 ::global(.templates_items > .accordion_item > .accordion_header > .name) {
   font-size: 1.5rem;
 }
+
+.hide_text_mobile.hide_text_mobile {
+  @media (max-width: $xlm) {
+    font-size: 0;
+    gap: 0;
+  }
+}

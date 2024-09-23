@@ -831,7 +831,7 @@
 </script>
 
 <Header type={"template"}>
-  <button class="button basic" on:click={toggleEditMode}>
+  <button class="button basic hide_text_mobile" on:click={toggleEditMode}>
     {#if isEditMode}
       <X size="18" />Annuleren
     {:else}
@@ -853,30 +853,6 @@
 </Header>
 
 {#if !isNextStage}
-  <!-- <div class="top">
-    <h1>
-      {templateData.name}
-    </h1>
-    <button class="button basic" on:click={toggleEditMode}>
-      {#if isEditMode}
-        <X size="18" />Annuleren
-      {:else}
-        <PencilSimple size="18" />Aanpassen
-      {/if}
-    </button>
-    {#if !isEditMode}
-      <button class="button basic" on:click={confirmAndDelete}>
-        <TrashSimple size="18" />
-      </button>
-      <button class="button basic favorite_button" on:click={toggleFavorite}>
-        {#if isFavorite}
-          <Star size="18" weight="fill" />
-        {:else}
-          <Star size="18" />
-        {/if}
-      </button>
-    {/if}
-  </div> -->
   {#if isEditMode}
     <div class="edit-template">
       <h2>Template naam</h2>

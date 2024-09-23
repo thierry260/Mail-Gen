@@ -212,13 +212,12 @@
   .sidebar {
     width: 100%;
     max-width: 360px;
+    background: var(--primary-darkest);
     background: linear-gradient(
       230deg,
-      hsl(from var(--primary) h s calc(l - 36)),
+      hsl(from var(--primary) h s calc(l - 32)),
       hsl(from var(--primary) h s calc(l - 44))
     );
-    background: #fff;
-    background: var(--primary-darkest);
     border-right: 1px solid var(--border);
     height: 100%;
     padding: 30px;
@@ -237,6 +236,11 @@
       .logo_outer {
         border-radius: var(--border-radius-big, 10px);
         background-color: var(--primary);
+        background: linear-gradient(
+          -45deg,
+          hsl(from var(--primary) h s calc(l - 8)),
+          hsl(from var(--primary) h s calc(l + 8))
+        );
         width: max-content;
         padding: 12px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
