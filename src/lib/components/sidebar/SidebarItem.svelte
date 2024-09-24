@@ -102,11 +102,10 @@
     <button
       class="accordion_header {isActiveCategory ? 'active' : ''}"
       on:click={() => {
-        if (item.open === false) {
-          item.open;
-        }
-        if (item.open || 1 == 1) {
-          viewCategory(item.id);
+        viewCategory(item.id);
+        console.warn("item.open, ", item.open);
+        if (!item.open) {
+          item.open = true;
         }
       }}
       on:mouseleave={() => {

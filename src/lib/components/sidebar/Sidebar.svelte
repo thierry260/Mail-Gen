@@ -212,15 +212,7 @@
   .sidebar {
     width: 100%;
     max-width: 360px;
-    @media (max-width: $lg) {
-      max-width: unset;
-      // height: 100%;
-      // height: 100vh;
-      // height: 100dvh;
-      .hide_mobile.hide_mobile {
-        display: none;
-      }
-    }
+
     background: var(--primary-darkest);
     background: linear-gradient(
       230deg,
@@ -482,6 +474,15 @@
           color: var(--primary);
           pointer-events: none;
         }
+      }
+    }
+
+    @media (max-width: $lg) {
+      max-width: unset;
+      border-right: 0;
+
+      .hide_mobile.hide_mobile {
+        display: none;
       }
     }
   }
