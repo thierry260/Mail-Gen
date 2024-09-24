@@ -831,7 +831,10 @@
 </script>
 
 <Header type={"template"}>
-  <button class="button basic hide_text_mobile" on:click={toggleEditMode}>
+  <button
+    class="button basic hide_text_mobile has_text"
+    on:click={toggleEditMode}
+  >
     {#if isEditMode}
       <X size="18" />Annuleren
     {:else}

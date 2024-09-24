@@ -170,6 +170,7 @@
         grid-row: 1;
         transition: transform 0s ease;
         will-change: transform;
+        width: 100vw;
       }
       aside {
         transform: translateX(100%);
@@ -325,6 +326,11 @@
     flex-direction: column;
     gap: 60px;
     background-color: var(--body-background);
+    overflow-y: auto;
+    @media (max-width: $lg) {
+      padding: 30px 30px 35px;
+      gap: 40px;
+    }
 
     h3 {
       margin-bottom: 0;
@@ -337,7 +343,7 @@
     .thumbnails {
       display: grid;
       flex-direction: column;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
       gap: 0;
     }
   }

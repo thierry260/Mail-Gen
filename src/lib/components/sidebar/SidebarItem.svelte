@@ -189,6 +189,9 @@
     display: flex;
     flex-direction: column;
     gap: inherit;
+    @media (max-width: $lg) {
+      gap: 10px;
+    }
     .accordion_header,
     .template {
       cursor: pointer;
@@ -282,6 +285,9 @@
       transition:
         transform 0.2s ease-out,
         background-color 0.2s ease-out;
+      @media (max-width: $lg) {
+        padding: 8px;
+      }
     }
 
     .accordion_templates {

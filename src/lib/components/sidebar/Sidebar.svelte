@@ -350,7 +350,7 @@
       background-color: transparent;
       border: 1px solid transparent;
       border-radius: 10px;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       width: 100%;
       text-align: left;
       display: flex;

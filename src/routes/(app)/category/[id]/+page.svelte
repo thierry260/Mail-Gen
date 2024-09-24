@@ -186,8 +186,9 @@
   <div class="categories">
     <div class="flex space-between flex-wrap gap-15 align-center mb-20">
       <h2 class="mb-0">Subcategorieën</h2>
-      <button class="button basic" on:click={handleAddCat}
-        ><Plus size={16} />Categorie toevoegen</button
+      <button
+        class="button basic hide_text_mobile has_text"
+        on:click={handleAddCat}><Plus size={16} />Categorie toevoegen</button
       >
     </div>
     {#if subcategories.length > 0}
@@ -211,7 +212,9 @@
   <div class="templates">
     <div class="flex space-between flex-wrap gap-15 align-center mb-20">
       <h2 class="mb-0">Templates</h2>
-      <button class="button basic" on:click={handleAddTemplate}
+      <button
+        class="button basic hide_text_mobile has_text"
+        on:click={handleAddTemplate}
         ><Plus size={16} />Template toevoegen</button
       >
     </div>
@@ -247,7 +250,7 @@
   .categories_grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 15px;
 
     .view_button {
       display: flex;
@@ -290,8 +293,8 @@
   .templates_list {
     display: grid;
     flex-direction: column;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+    gap: 20px;
     .template {
       padding: 15px;
       border-radius: var(--border-radius-small, 5px);
@@ -317,10 +320,6 @@
         margin-bottom: 0;
       }
     }
-  }
-
-  h2 {
-    font-size: 2.6rem;
   }
 
   .placeholder {

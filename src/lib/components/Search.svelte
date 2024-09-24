@@ -7,12 +7,14 @@
   let data = [];
   let searchInput = "";
   let searchValue = "";
+  let searchBubbleText = "/";
   let searchResults = [];
+  let lastClickedResults = []; // Store last clicked results
   let focusedResultIndex = -1; // Index of the currently focused result
 
   export let location = "flat";
 
-  let searchInputRef;
+  let searchInputRef = false;
 
   onMount(async () => {
     data = await fetchWorkspaceData("categories");
@@ -21,6 +23,12 @@
         ...category,
         open: false,
       }));
+    }
+
+    // Load last clicked results from localStorage
+    const savedResults = localStorage.getItem("lastClickedResults");
+    if (savedResults) {
+      lastClickedResults = JSON.parse(savedResults);
     }
 
     // Add keydown event listener to the window
@@ -34,21 +42,23 @@
       searchResults = searchItems(data, searchInput);
       focusedResultIndex = -1; // Reset focused result when search changes
     } else {
-      searchResults = [];
+      searchResults = []; // Clear search results if input is empty
     }
   };
 
-  const handleSearchInputblur = (event) => {
+  const handleSearchInputBlur = (event) => {
     // Delay hiding the results to check if focus moves to a search result
     setTimeout(() => {
       // Check if the new focus is still on a search result
       const activeElement = document.activeElement;
       if (!activeElement.classList.contains("search_result")) {
         searchResults = [];
+        searchBubbleText = "/";
         focusedResultIndex = -1; // Reset the focused index
       }
     }, 100);
   };
+
   // Recursive function to search through categories and templates
   const searchItems = (items, query) => {
     let results = [];
@@ -84,15 +94,42 @@
   };
 
   // Function to navigate based on suggestion type
-  const navigateTo = (type, id) => {
+  const navigateTo = (type, id, name) => {
     // Clear search results to hide the dropdown
     searchResults = [];
     searchValue = "";
+    searchBubbleText = "/";
+
+    // Add to last clicked results if not already there
+    const resultClicked = { type, id, name }; // Save name as well
+    if (
+      !lastClickedResults.some(
+        (result) => result.type === type && result.id === id
+      )
+    ) {
+      lastClickedResults.unshift(resultClicked); // Add to the start of the array
+      if (lastClickedResults.length > 5) {
+        lastClickedResults.pop(); // Remove the last item if there are more than 5
+      }
+      localStorage.setItem(
+        "lastClickedResults",
+        JSON.stringify(lastClickedResults)
+      ); // Save to localStorage
+    }
 
     if (type === "template") {
       goto(`/template/${id}`);
     } else if (type === "category") {
       goto(`/category/${id}`);
+    }
+  };
+
+  // Update the on:focus event to handle the shortcut bubble text
+  const handleInputFocus = () => {
+    searchBubbleText = "Esc"; // Change bubble text to Esc
+    if (!searchValue) {
+      // Show last clicked results if input is focused and empty
+      searchResults = lastClickedResults;
     }
   };
 
@@ -104,8 +141,11 @@
       event.target.tagName !== "TEXTAREA"
     ) {
       event.preventDefault(); // Prevent default action (like typing `/` in the input)
-      searchInputRef.focus();
-      searchInputRef.click();
+      if (searchInputRef) {
+        searchInputRef.focus();
+        searchInputRef.click();
+      }
+      focusedResultIndex = -1; // Reset focused index on input open
     }
 
     // Handle Enter key when the input is focused and there are search results
@@ -127,6 +167,7 @@
         document.activeElement.classList.contains("search_result") // If it's a search result
       ) {
         document.activeElement.blur(); // Blur the currently focused element
+        searchValue = "";
         searchResults = []; // Hide the search results
         focusedResultIndex = -1; // Reset focused result
       }
@@ -177,13 +218,13 @@
     <input
       type="text"
       placeholder="Zoeken"
-      on:blur={handleSearchInputblur}
-      on:input={handleSearchInputChange}
-      on:click={handleSearchInputChange}
-      bind:value={searchValue}
       bind:this={searchInputRef}
+      on:blur={handleSearchInputBlur}
+      on:input={handleSearchInputChange}
+      on:focus={handleInputFocus}
+      bind:value={searchValue}
     />
-    <div class="shortcut-bubble">/</div>
+    <div class="shortcut-bubble">{searchBubbleText}</div>
   </div>
   <!-- Display search results -->
   <div class="search_results" hidden={searchResults.length === 0}>
@@ -192,7 +233,7 @@
         href="#"
         class="search_result search_result_{i}"
         tabindex="-1"
-        on:click={() => navigateTo(result.type, result.id)}
+        on:click={() => navigateTo(result.type, result.id, result.name)}
         class:focused={i === focusedResultIndex}
       >
         <div>

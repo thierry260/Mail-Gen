@@ -102,7 +102,7 @@
   .categories_grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+    gap: 15px;
 
     .view_button {
       display: flex;
@@ -139,11 +139,7 @@
   .recent_templates {
     display: grid;
     flex-direction: column;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
-    gap: 30px;
-  }
-
-  h2 {
-    font-size: 2.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+    gap: 20px;
   }
 </style>
