@@ -344,7 +344,7 @@
     &[data-type="template"] {
       flex-direction: column;
       align-items: stretch;
-      padding: 30px;
+      padding: 25px;
       gap: 20px;
 
       h3 {
@@ -367,11 +367,12 @@
           max-height 0.3s ease-out,
           border-color 0.3s ease-out,
           margin-bottom 0.3s ease-out;
+        &:has(> p:first-child:last-child:empty),
         &:empty,
         &[data-show="false"] {
           max-height: 0;
           border-color: transparent;
-          margin-bottom: 20px;
+          margin-bottom: 30px;
         }
 
         &:empty {
@@ -431,7 +432,9 @@
       }
     }
 
-    &:not(:has(.content:empty)):not(:has(.content[data-show="false"]))
+    &:not(:has(.content:empty)):not(:has(.content[data-show="false"])):not(
+        :has(.content > p:first-child:last-child:empty)
+      )
       .actions {
       opacity: 0;
       pointer-events: none;
@@ -450,7 +453,9 @@
       // background-color: var(--gray-100);
       border-color: var(--gray-400);
 
-      &:not(:has(.content:empty)):not(:has(.content[data-show="false"]))
+      &:not(:has(.content:empty)):not(:has(.content[data-show="false"])):not(
+          :has(.content > p:first-child:last-child:empty)
+        )
         .actions {
         opacity: 1;
         pointer-events: auto;

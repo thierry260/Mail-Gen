@@ -24,7 +24,11 @@
       <slot></slot>
     {:else}
       <label class="action">
-        <span class="legend">Voorbeeld tonen</span>
+        <span class="legend toggle_label"
+          ><span class="desktop">Toon voorbeelden</span><span class="mobile"
+            >Voorbeelden</span
+          ></span
+        >
         <ToggleSwitch bind:checked on:change={handleToggleChange} />
       </label>
     {/if}
@@ -56,7 +60,21 @@
     .title {
       overflow: hidden;
       @media (max-width: $lg) {
-        overflow: unset;
+        // overflow: unset;
+      }
+    }
+
+    .toggle_label {
+      .mobile {
+        display: none;
+      }
+      @media (max-width: $xs) {
+        .mobile {
+          display: inline-block;
+        }
+        .desktop {
+          display: none;
+        }
       }
     }
 

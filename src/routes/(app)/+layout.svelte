@@ -94,13 +94,13 @@
     </label>
   </nav>
   <div class="mobile_home">
-    <h3>
+    <h1>
       Welkom terug{currentUser && currentUser.DisplayName
         ? ` ${currentUser.DisplayName}!`
         : "!"}
-    </h3>
+    </h1>
     <div class="favorite_templates">
-      <h6>Favoriete templates</h6>
+      <h2>Favoriete templates</h2>
       {#if favoriteTemplates.length === 0}
         <p class="empty">Je hebt nog geen favoriete templates</p>
       {:else}
@@ -118,7 +118,7 @@
     </div>
 
     <div class="recently_viewed">
-      <h6>Recent bekeken</h6>
+      <h2>Recent bekeken</h2>
       {#if recentlyViewed.length === 0}
         <p class="empty">Je hebt geen recent bekeken templates</p>
       {:else}
@@ -136,7 +136,7 @@
     </div>
 
     <div class="settings">
-      <h6>Voorkeuren</h6>
+      <h2>Voorkeuren</h2>
       <a
         href="/settings"
         class="mobile_menu_item"
@@ -146,10 +146,6 @@
         <h3>Instellingen</h3>
         <span class="icon_outer"><CaretRight size={14} /></span>
       </a>
-      <!-- <label class="action">
-        <span class="legend">Mail voorbeeld tonen</span>
-        <ToggleSwitch bind:checked on:change={handleToggleChange} />
-      </label> -->
     </div>
   </div>
 </div>
@@ -332,7 +328,7 @@
       gap: 40px;
     }
 
-    h3 {
+    h1 {
       margin-bottom: 0;
     }
 

@@ -547,3 +547,28 @@ body .mb-0.mb-0 {
 .mb-0 {
   margin-bottom: 0;
 }
+
+.categories_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 10px;
+
+  @media (max-width: $sm) {
+    gap: 0;
+  }
+}
+
+:global(.categories_grid.categories_grid > .thumbnail.thumbnail) {
+  @media (max-width: $sm) {
+    &:not(:last-child) {
+      border-bottom: 0;
+      margin-bottom: -1px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    &:not(:first-child) {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+  }
+}

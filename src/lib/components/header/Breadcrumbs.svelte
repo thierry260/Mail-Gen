@@ -218,6 +218,13 @@
       font-size: 1.4rem;
       color: var(--gray-800);
       text-decoration: none;
+
+      span {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
     }
   }
 

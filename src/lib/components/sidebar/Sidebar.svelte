@@ -210,7 +210,7 @@
 
 <style lang="scss">
   .sidebar {
-    width: 100%;
+    width: 360px;
     max-width: 360px;
 
     background: var(--primary-darkest);
@@ -478,6 +478,7 @@
     }
 
     @media (max-width: $lg) {
+      width: 100%;
       max-width: unset;
       border-right: 0;
 
