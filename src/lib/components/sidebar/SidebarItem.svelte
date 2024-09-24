@@ -103,7 +103,6 @@
       class="accordion_header {isActiveCategory ? 'active' : ''}"
       on:click={() => {
         viewCategory(item.id);
-        console.warn("item.open, ", item.open);
         if (!item.open) {
           item.open = true;
         }

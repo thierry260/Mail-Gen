@@ -24,7 +24,7 @@
       <slot></slot>
     {:else}
       <label class="action">
-        <span class="legend">Mail voorbeeld tonen</span>
+        <span class="legend">Voorbeeld tonen</span>
         <ToggleSwitch bind:checked on:change={handleToggleChange} />
       </label>
     {/if}
@@ -55,6 +55,9 @@
 
     .title {
       overflow: hidden;
+      @media (max-width: $lg) {
+        overflow: unset;
+      }
     }
 
     .actions {

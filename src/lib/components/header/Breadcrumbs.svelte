@@ -1,7 +1,7 @@
 <script>
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
-  import { Layout } from "phosphor-svelte";
+  import { CaretLeft, Layout } from "phosphor-svelte";
 
   let breadcrumbs = [];
   let fetchedData = [];
@@ -46,7 +46,6 @@
       if (item.sub) {
         for (const subItem of item.sub) {
           if (findPath(subItem)) {
-            // Add subcategory (subItem) only once
             if (!path.some((crumb) => crumb.id === subItem.id)) {
               path.unshift({
                 name: subItem.name,
@@ -54,12 +53,9 @@
                 id: subItem.id,
               });
             }
-
-            // Add parent category (item) only once
             if (!path.some((crumb) => crumb.id === item.id)) {
               path.unshift({ name: item.name, type: "category", id: item.id });
             }
-
             return true;
           }
         }
@@ -114,8 +110,9 @@
   }
 </script>
 
+<!-- Desktop Breadcrumbs -->
 <nav aria-label="Breadcrumb">
-  <ol class="breadcrumbs">
+  <ol class="breadcrumbs desktop-only">
     {#if breadcrumbs.length}
       {#each breadcrumbs as crumb, index (index)}
         <li>
@@ -130,11 +127,37 @@
             {/if}
           </a>
         </li>
-        {#if index !== breadcrumbs.length - 1}<span class="separator">/</span
-          >{/if}
+        {#if index !== breadcrumbs.length - 1}
+          <span class="separator">/</span>
+        {/if}
       {/each}
     {/if}
   </ol>
+</nav>
+
+<!-- Mobile Breadcrumb (visible on small screens) -->
+<nav class="mobile-breadcrumb mobile-only">
+  <a
+    href={breadcrumbUrl(
+      breadcrumbs[breadcrumbs.length - 2] || {
+        name: "Dashboard",
+        type: "dash",
+        id: null,
+      }
+    )}
+  >
+    {#if breadcrumbs.length}
+      {#if breadcrumbs[breadcrumbs.length - 1].name == "Dashboard"}
+        <div class="icon"><Layout size={16} /></div>
+      {:else}
+        <div class="icon"><CaretLeft size={16} /></div>
+      {/if}
+      <span>{breadcrumbs[breadcrumbs.length - 1].name}</span>
+    {:else}
+      <div class="icon"><Layout size={16} /></div>
+      <span>Dashboard</span>
+    {/if}
+  </a>
 </nav>
 
 <style lang="scss">
@@ -180,6 +203,31 @@
     }
     .separator {
       color: var(--gray-300); /* Customize arrow color */
+    }
+  }
+
+  .mobile-breadcrumb {
+    display: none;
+    .icon {
+      display: flex;
+    }
+    a {
+      display: flex;
+      // align-items: center;
+      gap: 5px;
+      font-size: 1.5rem;
+      color: var(--gray-800);
+      text-decoration: none;
+    }
+  }
+
+  // Media query for mobile devices
+  @media (max-width: $lg) {
+    .desktop-only {
+      display: none;
+    }
+    .mobile-breadcrumb {
+      display: block;
     }
   }
 </style>

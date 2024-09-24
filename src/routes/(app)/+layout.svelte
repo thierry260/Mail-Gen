@@ -1,4 +1,6 @@
 <script>
+  import { serialize } from "cookie";
+  import { user } from "$lib/stores/user";
   import { onMount } from "svelte";
   import { page } from "$app/stores";
   import { auth } from "$lib/firebase";
@@ -14,24 +16,25 @@
     EnvelopeSimple,
     Folders,
   } from "phosphor-svelte";
+  import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
+  import { showContent } from "$lib/stores/showContent.js";
+  import { get } from "svelte/store";
+  import { CaretRight } from "phosphor-svelte";
+  import { switchMobileNav } from "$lib/utils/utils.js";
 
-  let user = null;
   let url = "";
   let recentlyViewed = [];
   let favoriteTemplates = [];
 
+  // Get the initial value from the store
+  let checked = get(showContent);
+
+  $: currentUser = $user;
   $: {
     url = $page.url.href; // Update url whenever the page URL changes
   }
 
   onMount(() => {
-    onAuthStateChanged(auth, (currentUser) => {
-      user = currentUser;
-      if (!user) {
-        goto("/login");
-      }
-    });
-
     // Function to retrieve recently viewed templates from localStorage
     const getRecentlyViewed = () => {
       return JSON.parse(localStorage.getItem("recentlyViewed")) || [];
@@ -46,6 +49,11 @@
     recentlyViewed = getRecentlyViewed();
     favoriteTemplates = getFavoriteTemplates();
   });
+
+  // Update the store when the switch changes
+  function handleToggleChange(event) {
+    showContent.set(event.detail.checked);
+  }
 </script>
 
 <div class="layout" data-url={url}>
@@ -86,6 +94,11 @@
     </label>
   </nav>
   <div class="mobile_home">
+    <h3>
+      Welkom terug{currentUser && currentUser.DisplayName
+        ? ` ${currentUser.DisplayName}!`
+        : "!"}
+    </h3>
     <div class="favorite_templates">
       <h6>Favoriete templates</h6>
       {#if favoriteTemplates.length === 0}
@@ -120,6 +133,23 @@
           {/each}
         </div>
       {/if}
+    </div>
+
+    <div class="settings">
+      <h6>Voorkeuren</h6>
+      <a
+        href="/settings"
+        class="mobile_menu_item"
+        on:click={(e) => switchMobileNav("browse")}
+      >
+        <GearSix size={16} />
+        <h3>Instellingen</h3>
+        <span class="icon_outer"><CaretRight size={14} /></span>
+      </a>
+      <!-- <label class="action">
+        <span class="legend">Mail voorbeeld tonen</span>
+        <ToggleSwitch bind:checked on:change={handleToggleChange} />
+      </label> -->
     </div>
   </div>
 </div>
@@ -293,8 +323,12 @@
   .mobile_home.mobile_home {
     padding: 30px;
     flex-direction: column;
-    gap: 40px;
+    gap: 60px;
     background-color: var(--body-background);
+
+    h3 {
+      margin-bottom: 0;
+    }
 
     h6 {
       margin-bottom: 1em;
@@ -304,7 +338,20 @@
       display: grid;
       flex-direction: column;
       grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
-      gap: 15px;
+      gap: 0;
+    }
+  }
+
+  :global(.thumbnails .thumbnail.thumbnail) {
+    &:not(:last-child) {
+      margin-bottom: -1px;
+      border-bottom: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    &:not(:first-child) {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
     }
   }
 
@@ -371,6 +418,132 @@
       justify-content: center;
       align-items: center;
       gap: 20px 5px;
+    }
+  }
+
+  .mobile_menu_item {
+    padding: 15px;
+    position: relative;
+    border-radius: var(--border-radius-small, 5px);
+    border: 1px solid var(--border);
+    background-color: #fff;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease-out,
+      border-color 0.2s ease-out;
+    color: $black;
+    gap: 6px;
+    &:hover {
+      // background-color: var(--gray-100);
+      border-color: var(--gray-400);
+    }
+    &:active {
+      color: inherit;
+    }
+    h3 {
+      font-size: 1.6rem;
+      flex-grow: 1;
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: inherit;
+
+      span {
+        // background-color: var(--gray-200);
+        // display: inline-flex;
+        // border-radius: 5px;
+        // padding: 0 8px;
+        font-size: 1.2rem;
+        color: var(--gray-400);
+      }
+    }
+
+    .icon_outer {
+      color: inherit;
+      display: flex;
+    }
+
+    &[data-type="template"] {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 30px;
+      gap: 20px;
+
+      h3 {
+        font-size: 1.8rem;
+        font-weight: 600;
+        flex-grow: 0;
+      }
+
+      .content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25em;
+        margin-bottom: 30px;
+        border-top: 1px solid var(--gray-300);
+        padding-top: 20px;
+        overflow: hidden;
+        max-height: calc(4em * 2 + 40px);
+        transition:
+          max-height 0.3s ease-out,
+          border-color 0.3s ease-out;
+        &[data-show="false"] {
+          max-height: 0;
+          border-color: transparent;
+        }
+
+        &:empty {
+          border: none;
+        }
+      }
+      .actions {
+        position: absolute;
+        background: linear-gradient(
+          1deg,
+          rgba(255, 255, 255, 1) 0%,
+          rgba(255, 255, 255, 1) 65%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        border-bottom-left-radius: inherit;
+        border-bottom-right-radius: inherit;
+        width: 100%;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        padding: inherit;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+
+        > div {
+          display: flex;
+          gap: inherit;
+        }
+
+        .button {
+          overflow: unset;
+          border-radius: 25px;
+
+          &.link {
+            // background-color: hsl(from var(--primary) h s calc(l + 40));
+            // color: var(--primary);
+            // border-color: transparent;
+          }
+          .icon {
+            display: flex;
+          }
+
+          &:last-child {
+            align-self: flex-end;
+          }
+        }
+      }
     }
   }
 </style>

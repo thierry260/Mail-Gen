@@ -72,9 +72,9 @@
     },
   });
 
-  console.log("content: ", content);
-
   let templateContentHTML = "";
+
+  // console.log("content value: ", content);
 
   if (content && content.content) {
     try {
@@ -83,12 +83,23 @@
         Variable,
         Underline,
       ]);
-      console.log(templateContentHTML);
+      // console.log(templateContentHTML);
     } catch (error) {
-      console.error("Error generating HTML:", error);
+      // console.log("content:", content.content);
+      // console.error("content content.content: Error generating HTML:", error);
     }
-  } else {
-    console.error("Invalid content format:", content);
+  } else if (content) {
+    try {
+      templateContentHTML = generateHTML(content, [
+        StarterKit,
+        Variable,
+        Underline,
+      ]);
+      // console.log(templateContentHTML);
+    } catch (error) {
+      // console.log(content);
+      // console.error("content: Error generating HTML:", error);
+    }
   }
 
   function countTemplatesInCategory(categoryArray, targetId) {
@@ -133,12 +144,14 @@
       let favoriteTemplates =
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
-      const index = favoriteTemplates.findIndex(
-        (item) => item.id === templateData.id
-      );
+      const index = favoriteTemplates.findIndex((item) => item.id === id);
 
       if (isFavorite && index === -1) {
-        favoriteTemplates.unshift(templateData);
+        favoriteTemplates.unshift({
+          id: id,
+          name: name,
+          content: content.content,
+        });
       } else if (!isFavorite && index !== -1) {
         favoriteTemplates.splice(index, 1);
       }
@@ -288,6 +301,7 @@
     transition:
       background-color 0.2s ease-out,
       border-color 0.2s ease-out;
+    color: $black;
     &:hover {
       // background-color: var(--gray-100);
       border-color: var(--gray-400);
@@ -302,6 +316,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      color: inherit;
 
       span {
         // background-color: var(--gray-200);
@@ -392,6 +407,14 @@
           &:last-child {
             align-self: flex-end;
           }
+        }
+      }
+    }
+
+    &.thumbnail {
+      @media (max-width: $lg) {
+        &[data-type="template"] {
+          padding: 20px;
         }
       }
     }
