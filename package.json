@@ -8,13 +8,16 @@
 		"preview": "vite preview"
 	},
 	"devDependencies": {
+		"@stripe/stripe-js": "^4.5.0",
 		"@sveltejs/adapter-auto": "^3.0.0",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"phosphor-svelte": "^2.0.1",
 		"sass": "^1.77.8",
+		"stripe": "^16.12.0",
 		"svelte": "^4.2.7",
 		"svelte-preprocess": "^6.0.2",
+		"svelte-stripe": "^1.2.1",
 		"vite": "^5.0.3"
 	},
 	"type": "module",
@@ -32,7 +35,12 @@
 		"@tiptap/extension-underline": "^2.5.5",
 		"@tiptap/pm": "^2.5.5",
 		"@tiptap/starter-kit": "^2.5.5",
+		"body-parser": "^1.20.3",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.5",
+		"express": "^4.21.0",
 		"firebase": "^9.1.2",
+		"svelte-stripe-js": "^0.0.12",
 		"vite-plugin-pwa": "^0.20.5"
 	}
 }

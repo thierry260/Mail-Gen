@@ -11,6 +11,7 @@
   } from "firebase/auth";
   import { page } from "$app/stores";
   import { TrashSimple } from "phosphor-svelte";
+  import { loadStripe } from "@stripe/stripe-js";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
@@ -25,8 +26,9 @@
   let workspaceName = "";
   let workspaceNameError = writable("");
   let workspaceNameSuccess = writable("");
-
   let activeTab = "variables";
+  let stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+  let errorMessage = "";
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -161,9 +163,44 @@
     }
   };
 
-  onMount(() => {
+  onMount(async () => {
     fetchVariables();
   });
+
+  const subscribe = async () => {
+    console.log(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+    try {
+      const response = await fetch(
+        "http://localhost:3000/create-checkout-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe", // Your Price ID
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (data.sessionId) {
+        const stripe = await stripePromise;
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: data.sessionId,
+        });
+
+        if (error) {
+          errorMessage = error.message;
+        }
+      } else {
+        throw new Error("SessionId missing");
+      }
+    } catch (err) {
+      errorMessage = err.message;
+    }
+  };
 </script>
 
 <h1>Instellingen</h1>
@@ -181,6 +218,10 @@
   <button
     class:active={activeTab === "workspace"}
     on:click={() => (activeTab = "workspace")}>Workspace</button
+  >
+  <button
+    class:active={activeTab === "subscription"}
+    on:click={() => (activeTab = "subscription")}>Subscription</button
   >
 </div>
 
@@ -297,6 +338,14 @@
         Uitnodigingslink: <a href={$inviteLink} target="_blank">{$inviteLink}</a
         >
       </p>
+    {/if}
+  </div>
+{:else if activeTab === "subscription"}
+  <div class="tab-content">
+    <h2>Abonnement</h2>
+    <button on:click={subscribe}>Subscribe Now</button>
+    {#if errorMessage}
+      <p style="color: red;">{errorMessage}</p>
     {/if}
   </div>
 {/if}
