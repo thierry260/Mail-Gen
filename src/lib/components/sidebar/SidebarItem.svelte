@@ -25,12 +25,12 @@
   });
 
   const viewTemplate = (templateId) => {
-    switchMobileNav();
+    switchMobileNav("browse");
     goto(`/template/${templateId}`);
   };
 
   const viewCategory = (categoryId) => {
-    switchMobileNav();
+    switchMobileNav("browse");
     goto(`/category/${categoryId}`);
   };
 

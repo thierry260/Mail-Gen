@@ -23,6 +23,8 @@
     ListNumbers,
     ArrowUUpLeft,
     ArrowUUpRight,
+    FloppyDisk,
+    BracketsCurly,
   } from "phosphor-svelte";
   import { Editor, generateHTML, Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
@@ -34,6 +36,7 @@
   import Underline from "@tiptap/extension-underline";
   import Bold from "@tiptap/extension-bold";
   import Italic from "@tiptap/extension-italic";
+  import BubbleMenu from "@tiptap/extension-bubble-menu";
 
   let id;
   let templateData = {};
@@ -51,6 +54,12 @@
   let newVariable = { field_name: "", placeholder: "" };
   let variableInput;
   let showPlaceholderField = false; // State to control placeholder field visibility
+
+  let editorElement;
+  let editor;
+  let addVariableEl;
+  let shouldShow = false;
+  $: console.log("should show state: ", shouldShow);
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
@@ -204,7 +213,7 @@
         templateContentHTML = templateData.content;
       }
 
-      console.log(templateContentHTML);
+      // console.log(templateContentHTML);
 
       templateData.id = id;
 
@@ -226,9 +235,6 @@
       fetchWorkspaceAndTemplateData();
     }
   }
-
-  let editorElement;
-  let editor;
 
   // Initialize the editor when isEditMode becomes true
   $: if (editorElement) {
@@ -279,6 +285,8 @@
     const initialContent = templateContentHTML; // Fetch or define your initial content
     const parsedContent = parseVariables(initialContent);
 
+    shouldShow = false;
+
     editor = new Editor({
       content: templateData.content,
       element: editorElement,
@@ -301,10 +309,43 @@
         Bold,
         Italic,
         Underline,
+        BubbleMenu.configure({
+          element: addVariableEl, // Set the element for the bubble menu
+          tippyOptions: {
+            placement: "bottom", // Position the menu below the cursor\
+            animation: "shift-away",
+          },
+          shouldShow: ({ editor }) => {
+            // Only show the bubble menu if there's a selection or focus on the editor
+            return shouldShow;
+          },
+        }).extend({
+          addKeyboardShortcuts() {
+            return {
+              // ↓ your new keyboard shortcut
+              "Alt-[": (e) => {
+                shouldShow = true; // Show the bubble menu
+                editor
+                  .chain()
+                  .focus()
+                  .insertContent({
+                    type: "variable",
+                    attrs: {},
+                  })
+                  .run(); // Execute the selection
+              },
+            };
+          },
+        }),
       ],
       onTransaction: () => {
         editor = editor; // force re-render so `editor.isActive` works as expected
       },
+    });
+
+    // Add event listener to hide the bubble menu on click in the editor
+    editorElement.addEventListener("click", () => {
+      shouldShow = false; // Hide the bubble menu
     });
   };
 
@@ -565,8 +606,12 @@
   };
 
   const resetCopyTooltip = (e) => {
-    e.currentTarget.parentNode.dataset.tooltip =
-      e.currentTarget.parentNode.dataset.default_tooltip;
+    const tooltipElement = e.currentTarget.parentNode; // Store the reference before timeout
+    const defaultTooltip = tooltipElement.dataset.default_tooltip; // Store the necessary data
+
+    setTimeout(() => {
+      tooltipElement.dataset.tooltip = defaultTooltip; // Use the stored reference
+    }, 250);
   };
 
   // Function to save the recently viewed template to localStorage
@@ -885,16 +930,14 @@
 </script>
 
 <Header type={"template"}>
-  <button
-    class="button basic hide_text_mobile has_text"
-    on:click={toggleEditMode}
-  >
-    {#if isEditMode}
-      <X size="18" />Annuleren
-    {:else}
+  {#if !isEditMode}
+    <button
+      class="button basic hide_text_mobile has_text"
+      on:click={toggleEditMode}
+    >
       <PencilSimple size="18" />Aanpassen
-    {/if}
-  </button>
+    </button>
+  {/if}
   {#if !isEditMode}
     <button class="button basic" on:click={confirmAndDelete}>
       <TrashSimple size="18" />
@@ -922,6 +965,16 @@
       <div class="editor_outer">
         {#if editor}
           <div class="editor_buttons">
+            <button
+              class="button outline add_variable"
+              on:click={() => {
+                shouldShow = true; // Show the bubble menu
+                editor.chain().focus().run();
+              }}
+            >
+              <!-- <BracketsCurly size={16} /> -->
+              + Voeg variabele toe</button
+            >
             <div class="formatting">
               <button
                 on:click={() =>
@@ -970,11 +1023,6 @@
             </div>
             <div class="actions">
               <button
-                class="button outline add_variable"
-                on:click={() => (showVariablePopup = true)}
-                >+ Voeg variabele toe</button
-              >
-              <button
                 on:click={() => editor.chain().focus().undo().run()}
                 class:disabled={!editor.can().undo()}
                 ><ArrowUUpLeft size="18" /></button
@@ -989,52 +1037,54 @@
         {/if}
         <div class="editor" bind:this={editorElement}></div>
       </div>
-      <button class="button" on:click={saveTemplate}>Opslaan</button>
+      <div class="buttons edit_buttons">
+        <button class="button basic has_text" on:click={toggleEditMode}>
+          <X size="18" />Annuleren
+        </button>
+        <button class="button" on:click={saveTemplate}
+          ><FloppyDisk size={18} />Opslaan</button
+        >
+      </div>
     </div>
 
-    {#if showVariablePopup}
-      <div class="popup">
-        <h2>Voeg een variabele toe</h2>
+    <div class="popup" bind:this={addVariableEl}>
+      <input
+        type="text"
+        placeholder="Variabele toevoegen"
+        bind:value={variableSearchQuery}
+        on:input={handleVariableSearch}
+        on:keypress={handleKeyPress}
+      />
+      {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
+        <ul>
+          {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
+                .toLowerCase()
+                .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+            <li
+              on:click={() =>
+                insertVariable({
+                  id: id,
+                  variable: data.field_name,
+                  placeholder: data.placeholder,
+                })}
+            >
+              {data.field_name}
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if showPlaceholderField}
         <input
           type="text"
-          placeholder="Variabele naam"
-          bind:value={variableSearchQuery}
-          on:input={handleVariableSearch}
+          placeholder="Placeholder"
+          bind:value={newVariable.placeholder}
           on:keypress={handleKeyPress}
         />
-        {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
-          <ul>
-            {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
-                  .toLowerCase()
-                  .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
-              <li
-                on:click={() =>
-                  insertVariable({
-                    id: id,
-                    variable: data.field_name,
-                    placeholder: data.placeholder,
-                  })}
-              >
-                {data.field_name}
-              </li>
-            {/each}
-          </ul>
-        {/if}
-        {#if showPlaceholderField}
-          <input
-            type="text"
-            placeholder="Placeholder"
-            bind:value={newVariable.placeholder}
-            on:keypress={handleKeyPress}
-          />
-        {/if}
-        <button
-          class="button basic"
-          on:click={() => (showVariablePopup = false)}>Sluiten</button
-        >
-        <button class="button" on:click={addVariableAction}>+ Toevoegen</button>
-      </div>
-    {/if}
+      {/if}
+      <button class="button simple" on:click={addVariableAction}
+        >+ Toevoegen</button
+      >
+    </div>
   {:else}
     <div class="template">
       <div class="variables">
@@ -1061,6 +1111,7 @@
         {/each}
       </div>
 
+      <span class="label preview_label">Voorbeeld</span>
       <div class="preview">
         <div class="preview-content">
           {@html previewContent ||
@@ -1080,9 +1131,11 @@
           on:click={copyToClipboard}><CopySimple size="18" />Kopiëren</button
         >
       </span>
-      <button class="button outline" on:click={nextPage}
-        ><EnvelopeSimple size="18" />Mailen</button
-      >
+      <span data-flow="top" data-tooltip="Mail opstellen">
+        <button class="button outline" on:click={nextPage}
+          ><EnvelopeSimple size="18" />Mailen</button
+        >
+      </span>
     </div>
   {/if}
 {:else}
@@ -1177,6 +1230,11 @@
       }
     }
   }
+
+  .preview_label {
+    margin-top: 1em;
+    margin-bottom: 0;
+  }
   .preview {
     background-color: #fff;
     border: 1px solid var(--border);
@@ -1205,8 +1263,26 @@
   }
   .buttons {
     display: flex;
-    gap: 10px;
-    margin-top: 30px;
+    gap: 12px;
+    margin-top: 10px;
+    align-items: stretch;
+
+    position: sticky;
+    bottom: -50px;
+    padding: 30px 0px 30px;
+    background: linear-gradient(
+      1deg,
+      #f8f8f8 0%,
+      #f8f8f8a6 65%,
+      #f8f8f800 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @media (max-width: $lg) {
+      bottom: -30px;
+    }
   }
   .email-details {
     display: flex;
@@ -1234,6 +1310,23 @@
       align-items: center;
       gap: 5px;
       padding: 5px;
+
+      position: sticky;
+      top: 29px;
+      z-index: 9;
+
+      .add_variable {
+        padding: 10px 20px;
+        display: inline-flex;
+        font-size: 1.5rem;
+        font-family: inherit;
+        font-weight: 400;
+        margin: 4px 5px;
+        background-color: #fff;
+        @media (max-width: $md) {
+          display: none;
+        }
+      }
       .formatting {
         flex-grow: 1;
         display: flex;
@@ -1247,14 +1340,6 @@
         justify-content: center;
         button {
           display: flex;
-        }
-        .add_variable {
-          padding: 10px 20px;
-          display: inline-flex;
-          font-size: 1.5rem;
-          font-family: inherit;
-          font-weight: 400;
-          margin: 4px 5px;
         }
         .disabled {
           pointer-events: none;
@@ -1285,22 +1370,21 @@
   }
 
   .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    // position: fixed;
+    // top: 50%;
+    // left: 50%;
+    // transform: translate(-50%, -50%);
     background-color: white;
-    padding: 30px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    input {
-      margin-bottom: 10px;
-    }
-
-    button {
-      margin-right: 10px;
-    }
+    padding: 15px;
+    border-radius: var(--border-radius-biggest, 15px);
+    border: 1px solid var(--border);
+    // box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    max-width: 350px;
+    width: 70vw;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 
     ul {
       list-style-type: none;

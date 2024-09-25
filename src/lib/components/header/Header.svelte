@@ -55,6 +55,7 @@
       padding-block: 10px;
       top: -30px;
       margin-top: -30px;
+      min-height: 59px;
     }
 
     .title {

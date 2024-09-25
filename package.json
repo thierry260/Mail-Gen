@@ -25,6 +25,7 @@
 		"@sveltejs/adapter-static": "^3.0.5",
 		"@tiptap/core": "^2.5.5",
 		"@tiptap/extension-bold": "^2.5.5",
+		"@tiptap/extension-bubble-menu": "^2.7.2",
 		"@tiptap/extension-bullet-list": "^2.5.5",
 		"@tiptap/extension-history": "^2.5.5",
 		"@tiptap/extension-italic": "^2.5.5",

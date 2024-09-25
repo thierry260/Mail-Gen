@@ -25,6 +25,7 @@
   let url = "";
   let recentlyViewed = [];
   let favoriteTemplates = [];
+  let lastSelectedNav = "home"; // Default to home
 
   // Get the initial value from the store
   let checked = get(showContent);
@@ -35,6 +36,20 @@
   }
 
   onMount(() => {
+    const savedNav = localStorage.getItem("lastNav");
+    const lastNavTimestamp = localStorage.getItem("lastNavTimestamp");
+
+    // Check if localStorage is available and if data is not older than 1 hour
+    if (
+      savedNav &&
+      lastNavTimestamp &&
+      new Date().getTime() - Number(lastNavTimestamp) < 3600000
+    ) {
+      lastSelectedNav = savedNav;
+    } else {
+      lastSelectedNav = "home"; // Reset to home if data is older than 1 hour
+    }
+
     // Function to retrieve recently viewed templates from localStorage
     const getRecentlyViewed = () => {
       return JSON.parse(localStorage.getItem("recentlyViewed")) || [];
@@ -50,9 +65,11 @@
     favoriteTemplates = getFavoriteTemplates();
   });
 
-  // Update the store when the switch changes
-  function handleToggleChange(event) {
-    showContent.set(event.detail.checked);
+  function handleNavChange(event) {
+    const selectedNav = event.target.value;
+    lastSelectedNav = selectedNav;
+    localStorage.setItem("lastNav", selectedNav);
+    localStorage.setItem("lastNavTimestamp", new Date().getTime().toString());
   }
 </script>
 
@@ -63,7 +80,14 @@
   </main>
   <nav class="mobile_nav">
     <label>
-      <input type="radio" name="nav" id="home" value="home" checked />
+      <input
+        type="radio"
+        name="nav"
+        id="home"
+        value="home"
+        on:change={handleNavChange}
+        checked={lastSelectedNav === "home"}
+      />
       <div class="icon_outer">
         <div class="icon default"><House size={20} /></div>
         <div class="icon active">
@@ -73,7 +97,14 @@
       <span>Home</span>
     </label>
     <label>
-      <input type="radio" name="nav" id="browse" value="browse" />
+      <input
+        type="radio"
+        name="nav"
+        id="browse"
+        value="browse"
+        on:change={handleNavChange}
+        checked={lastSelectedNav === "browse"}
+      />
       <div class="icon_outer">
         <div class="icon default"><Folders size={20} /></div>
         <div class="icon active">
@@ -83,7 +114,14 @@
       <span>Bladeren</span>
     </label>
     <label>
-      <input type="radio" name="nav" id="search" value="search" />
+      <input
+        type="radio"
+        name="nav"
+        id="search"
+        value="search"
+        on:change={handleNavChange}
+        checked={lastSelectedNav === "search"}
+      />
       <div class="icon_outer">
         <div class="icon default"><ListMagnifyingGlass size={20} /></div>
         <div class="icon active">

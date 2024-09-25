@@ -13,6 +13,7 @@
   export let id = null;
   export let name = null;
   export let content = "";
+  let contentEl;
   let isFavorite = false;
 
   const Variable = Node.create({
@@ -176,14 +177,61 @@
     }
   };
 
+  function copyHtmlToClipboard(htmlElement) {
+    if (!htmlElement) {
+      console.error("htmlElement is null. Cannot copy.");
+      return;
+    }
+
+    // Clone the original element to manipulate safely
+    const clone = htmlElement.cloneNode(true);
+
+    // Strip out any <code> tags in the cloned element
+    clone.querySelectorAll("code").forEach((codeTag) => {
+      // Replace the <code> tag with its text content (stripping the tag itself)
+      const textNode = document.createTextNode(codeTag.innerText);
+      codeTag.replaceWith(textNode);
+    });
+
+    // Temporarily append the cloned element to the body (off-screen)
+    clone.style.position = "absolute";
+    clone.style.left = "-9999px";
+    clone.style.background = "#fff";
+    clone.style.color = "unset";
+    document.body.appendChild(clone);
+
+    // Create a range object to select the content of the modified clone
+    const range = document.createRange();
+    range.selectNodeContents(clone);
+
+    // Create a selection object and add the range to it
+    const selection = window.getSelection();
+    selection.removeAllRanges(); // Clear any existing selections
+    selection.addRange(range);
+
+    try {
+      // Execute the copy command to copy the selection to the clipboard
+      document.execCommand("copy");
+      console.log("Content copied to clipboard");
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+
+    // Clean up by removing the selection range and the temporary clone
+    selection.removeAllRanges();
+    document.body.removeChild(clone);
+  }
+
+  // Copy the generated content to clipboard
   const copyToClipboard = async (e) => {
     e.currentTarget.dataset.tooltip = "Gekopieerd";
-    const content = document.querySelector(
-      `.thumbnail[id="${id}"] .content`
-    ).innerText;
+
     try {
-      await navigator.clipboard.writeText(content);
-      console.log(`Copied to clipboard:\n\n${content}`);
+      const htmlElement = document.querySelector(
+        `.thumbnail[id="${id}"] .content`
+      );
+      copyHtmlToClipboard(contentEl);
+      // copyPlainTextToClipboard(htmlElement);
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
@@ -211,10 +259,10 @@
     class="thumbnail"
     data-type={type}
     data-id={id}
-    on:click={switchMobileNav}
+    on:click={(e) => switchMobileNav("browse")}
   >
     <h3>{name}</h3>
-    <div class="content" data-show={$showContent}>
+    <div class="content" data-show={$showContent} bind:this={contentEl}>
       {#if content}
         <!-- {content} -->
         {@html templateContentHTML}
@@ -289,8 +337,12 @@
 <style lang="scss">
   :global(.thumbnail .content *) {
     font-size: inherit;
-    &:empty {
-      display: none;
+    &:empty:last-child {
+      display: flex;
+      height: 1.5em;
+      &:last-child {
+        display: none;
+      }
     }
   }
   :global(.thumbnail .content code) {

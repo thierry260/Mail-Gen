@@ -17,7 +17,6 @@ export async function fetchWorkspaceData(fieldName = null) {
 
   if (cachedData && cacheExpiration && Date.now() < parseInt(cacheExpiration)) {
   } else {
-    console.log("Fetching fresh workspace data");
     try {
       if (!browser) {
         console.error("Not in a browser environment");

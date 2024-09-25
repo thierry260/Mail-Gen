@@ -276,7 +276,6 @@ select.wpcf7-not-valid {
   input[type=email],
   textarea,
   select {
-    height: 40px;
     border: 1px solid #e4e3e3;
   }
 }
