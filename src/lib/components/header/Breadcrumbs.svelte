@@ -148,13 +148,13 @@
   >
     {#if breadcrumbs.length}
       {#if breadcrumbs[breadcrumbs.length - 1].name == "Dashboard"}
-        <div class="icon"><Layout size={16} /></div>
+        <div class="icon"><Layout size={14} /></div>
       {:else}
-        <div class="icon"><CaretLeft size={16} /></div>
+        <div class="icon"><CaretLeft size={14} /></div>
       {/if}
       <span>{breadcrumbs[breadcrumbs.length - 1].name}</span>
     {:else}
-      <div class="icon"><Layout size={16} /></div>
+      <div class="icon"><Layout size={14} /></div>
       <span>Dashboard</span>
     {/if}
   </a>
@@ -213,11 +213,18 @@
     }
     a {
       display: flex;
-      // align-items: center;
+      align-items: center;
       gap: 5px;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       color: var(--gray-800);
       text-decoration: none;
+
+      span {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
     }
   }
 

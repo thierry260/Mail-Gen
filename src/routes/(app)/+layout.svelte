@@ -94,13 +94,13 @@
     </label>
   </nav>
   <div class="mobile_home">
-    <h3>
+    <h1>
       Welkom terug{currentUser && currentUser.DisplayName
         ? ` ${currentUser.DisplayName}!`
         : "!"}
-    </h3>
+    </h1>
     <div class="favorite_templates">
-      <h6>Favoriete templates</h6>
+      <h2>Favoriete templates</h2>
       {#if favoriteTemplates.length === 0}
         <p class="empty">Je hebt nog geen favoriete templates</p>
       {:else}
@@ -118,7 +118,7 @@
     </div>
 
     <div class="recently_viewed">
-      <h6>Recent bekeken</h6>
+      <h2>Recent bekeken</h2>
       {#if recentlyViewed.length === 0}
         <p class="empty">Je hebt geen recent bekeken templates</p>
       {:else}
@@ -136,7 +136,7 @@
     </div>
 
     <div class="settings">
-      <h6>Voorkeuren</h6>
+      <h2>Voorkeuren</h2>
       <a
         href="/settings"
         class="mobile_menu_item"
@@ -146,10 +146,6 @@
         <h3>Instellingen</h3>
         <span class="icon_outer"><CaretRight size={14} /></span>
       </a>
-      <!-- <label class="action">
-        <span class="legend">Mail voorbeeld tonen</span>
-        <ToggleSwitch bind:checked on:change={handleToggleChange} />
-      </label> -->
     </div>
   </div>
 </div>
@@ -170,6 +166,7 @@
         grid-row: 1;
         transition: transform 0s ease;
         will-change: transform;
+        width: 100vw;
       }
       aside {
         transform: translateX(100%);
@@ -325,8 +322,13 @@
     flex-direction: column;
     gap: 60px;
     background-color: var(--body-background);
+    overflow-y: auto;
+    @media (max-width: $lg) {
+      padding: 30px 30px 35px;
+      gap: 40px;
+    }
 
-    h3 {
+    h1 {
       margin-bottom: 0;
     }
 
@@ -337,7 +339,7 @@
     .thumbnails {
       display: grid;
       flex-direction: column;
-      grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
       gap: 0;
     }
   }

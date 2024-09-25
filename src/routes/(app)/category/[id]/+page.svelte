@@ -186,8 +186,9 @@
   <div class="categories">
     <div class="flex space-between flex-wrap gap-15 align-center mb-20">
       <h2 class="mb-0">Subcategorieën</h2>
-      <button class="button basic" on:click={handleAddCat}
-        ><Plus size={16} />Categorie toevoegen</button
+      <button
+        class="button basic hide_text_mobile has_text"
+        on:click={handleAddCat}><Plus size={16} />Categorie toevoegen</button
       >
     </div>
     {#if subcategories.length > 0}
@@ -203,7 +204,7 @@
     {:else}
       <p class="empty">
         Je hebt nog geen subcategorieën toegevoegd aan <u>{name}</u>. Voeg een
-        categorie toe via de + in het linker zijvenster
+        categorie toe via de knop hierboven
       </p>
     {/if}
   </div>
@@ -211,7 +212,9 @@
   <div class="templates">
     <div class="flex space-between flex-wrap gap-15 align-center mb-20">
       <h2 class="mb-0">Templates</h2>
-      <button class="button basic" on:click={handleAddTemplate}
+      <button
+        class="button basic hide_text_mobile has_text"
+        on:click={handleAddTemplate}
         ><Plus size={16} />Template toevoegen</button
       >
     </div>
@@ -231,7 +234,7 @@
     {:else}
       <p class="empty">
         Je hebt nog geen templates toegevoegd aan <u>{name}</u>. Voeg een
-        template toe via de + in het linker zijvenster
+        template toe via de knop hierboven
       </p>
     {/if}
   </div>
@@ -244,45 +247,6 @@
     gap: 20px;
   }
 
-  .categories_grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-
-    .view_button {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: var(--text);
-    }
-    .category {
-      background-color: #fff;
-      padding: 30px;
-      gap: 20px;
-      margin-bottom: 10px;
-      border-radius: var(--border-radius);
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-      text-decoration: none;
-      transition:
-        background-color 0.2s ease-out,
-        border-color 0.2s ease-out;
-      &:hover {
-        border-color: var(--gray-400);
-      }
-      &:active {
-        color: inherit;
-      }
-      h3 {
-        font-size: 1.8rem;
-        flex-grow: 1;
-        margin-bottom: 0;
-      }
-    }
-  }
-
   .templates {
     margin-top: 20px;
   }
@@ -290,8 +254,12 @@
   .templates_list {
     display: grid;
     flex-direction: column;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+    gap: 20px;
+
+    @media (max-width: $xs) {
+      gap: 15px;
+    }
     .template {
       padding: 15px;
       border-radius: var(--border-radius-small, 5px);
@@ -317,10 +285,6 @@
         margin-bottom: 0;
       }
     }
-  }
-
-  h2 {
-    font-size: 2.6rem;
   }
 
   .placeholder {

@@ -86,7 +86,7 @@ export async function fetchTemplateData(templateId) {
       return null;
     }
 
-    console.log(templateId);
+    // console.log(templateId);
     const templateDocRef = doc(
       db,
       "workspaces",

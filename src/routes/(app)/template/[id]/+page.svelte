@@ -83,8 +83,6 @@
     },
 
     renderHTML({ HTMLAttributes, node }) {
-      console.log("HTMLAttributes", HTMLAttributes);
-      console.log("node", node);
       return [
         "code",
         mergeAttributes(HTMLAttributes, {
@@ -106,8 +104,6 @@
         dom.setAttribute("contenteditable", "false");
         dom.textContent = `{{${node.attrs.placeholder || node.attrs.variable || ""}}}`;
 
-        console.log(view);
-
         dom.addEventListener("click", () => {
           if (!view) {
             console.error("Editor view is not available");
@@ -115,7 +111,6 @@
           }
           const variable = prompt("Edit variable", node.attrs.variable);
           if (variable) {
-            console.log(view);
             view.dispatch(
               view.state.tr.setNodeMarkup(getPos(), null, { variable })
             );
@@ -141,9 +136,7 @@
   // Fetch all data for the component
   const fetchWorkspaceAndTemplateData = async () => {
     try {
-      console.log(`fetching template data with ID ${id}`);
       templateData = await fetchTemplateData(id);
-      console.log("Template data fetched:", templateData);
 
       workspaceVariables = (await fetchWorkspaceData()) || { variables: {} }; // Ensure workspaceVariables is not null
 
@@ -159,7 +152,6 @@
           if (Array.isArray(items)) {
             // console.log("items is array");
             items.forEach((item) => {
-              console.log("looping through items");
               if (item.type === "variable" && item.attrs && item.attrs.id) {
                 // console.log("item with type variable found");
                 variableIds.push(item.attrs.id);
@@ -179,8 +171,6 @@
 
       const variableIds = extractVariableIds(templateData.content.content);
 
-      console.log(variableIds);
-
       // Initialize user input fields with placeholders
       if (variableIds.length > 0) {
         userInput = {};
@@ -192,8 +182,6 @@
         });
       }
 
-      console.log(templateData.content);
-
       if (
         templateData &&
         templateData.content &&
@@ -201,7 +189,6 @@
         !Array.isArray(templateData.content) &&
         templateData.content !== null
       ) {
-        console.log("json content");
         templateContentHTML = generateHTML(templateData.content, [
           StarterKit,
           BulletList,
@@ -214,7 +201,6 @@
           Underline,
         ]);
       } else {
-        console.log("html content");
         templateContentHTML = templateData.content;
       }
 
@@ -235,7 +221,7 @@
   $: {
     if (id) {
       isNextStage = false;
-      console.log("Fetching template details for template ID:", id);
+      // console.log("Fetching template details for template ID:", id);
       isEditMode = browser && window.location.hash.includes("#edit");
       fetchWorkspaceAndTemplateData();
     }
@@ -247,7 +233,6 @@
   // Initialize the editor when isEditMode becomes true
   $: if (editorElement) {
     initializeEditor();
-    console.log("init editor");
   }
 
   $: if (!isEditMode && editor) {
@@ -290,8 +275,6 @@
 
   const initializeEditor = () => {
     if (!editorElement) return;
-
-    console.log(editorElement);
 
     const initialContent = templateContentHTML; // Fetch or define your initial content
     const parsedContent = parseVariables(initialContent);
@@ -498,13 +481,84 @@
     }
   };
 
+  function copyPlainTextToClipboard(htmlElement) {
+    // Get the raw text content (without automatic line breaks)
+    let plainText = htmlElement.textContent;
+
+    // Optional: Remove any excessive blank lines or clean up line breaks
+    // Remove extra line breaks
+    plainText = plainText.replace(/\n{2,}/g, "\n\n"); // Converts multiple line breaks into a single double line break for paragraphs.
+
+    // Create a temporary textarea element to store the plain text
+    const textArea = document.createElement("textarea");
+    textArea.value = plainText;
+
+    // Temporarily add the textarea to the document body
+    document.body.appendChild(textArea);
+
+    // Select the text in the textarea
+    textArea.select();
+
+    try {
+      // Execute the copy command to copy the plain text to the clipboard
+      document.execCommand("copy");
+      console.log("Plain text content copied to clipboard");
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+
+    // Clean up by removing the temporary textarea from the document
+    document.body.removeChild(textArea);
+  }
+
+  function copyHtmlToClipboard(htmlElement) {
+    // Clone the original element to manipulate safely
+    const clone = htmlElement.cloneNode(true);
+
+    // Strip out any <code> tags in the cloned element
+    clone.querySelectorAll("code").forEach((codeTag) => {
+      // Replace the <code> tag with its text content (stripping the tag itself)
+      const textNode = document.createTextNode(codeTag.innerText);
+      codeTag.replaceWith(textNode);
+    });
+
+    // Temporarily append the cloned element to the body (off-screen)
+    clone.style.position = "absolute";
+    clone.style.left = "-9999px";
+    clone.style.background = "#fff";
+    clone.style.color = "unset";
+    document.body.appendChild(clone);
+
+    // Create a range object to select the content of the modified clone
+    const range = document.createRange();
+    range.selectNodeContents(clone);
+
+    // Create a selection object and add the range to it
+    const selection = window.getSelection();
+    selection.removeAllRanges(); // Clear any existing selections
+    selection.addRange(range);
+
+    try {
+      // Execute the copy command to copy the selection to the clipboard
+      document.execCommand("copy");
+      console.log("Content copied to clipboard");
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+
+    // Clean up by removing the selection range and the temporary clone
+    selection.removeAllRanges();
+    document.body.removeChild(clone);
+  }
+
   // Copy the generated content to clipboard
   const copyToClipboard = async (e) => {
     e.currentTarget.parentNode.dataset.tooltip = "Gekopieerd";
-    const content = document.querySelector(".preview-content").innerText;
+
     try {
-      await navigator.clipboard.writeText(content);
-      console.log(`Copied to clipboard:\n\n${content}`);
+      const htmlElement = document.querySelector(".preview-content");
+      copyHtmlToClipboard(htmlElement);
+      // copyPlainTextToClipboard(htmlElement);
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
@@ -547,10 +601,10 @@
   };
 
   function sendEmail() {
-    const content = document.querySelector(".preview-content").innerText;
     try {
-      navigator.clipboard.writeText(content);
-      console.log(`Copied to clipboard:\n\n${content}`);
+      const htmlElement = document.querySelector(".preview-content");
+      copyHtmlToClipboard(htmlElement);
+      // copyPlainTextToClipboard(htmlElement);
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
@@ -831,7 +885,10 @@
 </script>
 
 <Header type={"template"}>
-  <button class="button basic hide_text_mobile" on:click={toggleEditMode}>
+  <button
+    class="button basic hide_text_mobile has_text"
+    on:click={toggleEditMode}
+  >
     {#if isEditMode}
       <X size="18" />Annuleren
     {:else}
@@ -984,17 +1041,21 @@
         {#each Object.keys(userInput) as variableId}
           {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
             <div>
-              <label class="label" for={variableId}>
-                {workspaceVariables.variables[variableId].field_name}
+              <span class="label"
+                >{workspaceVariables.variables[variableId].field_name}</span
+              >
+              <label class="input_wrapper">
+                <input
+                  type="text"
+                  placeholder="&nbsp;"
+                  id={variableId}
+                  bind:value={userInput[variableId]}
+                  on:input={(e) => handleInputChange(variableId, e)}
+                />
+                <span
+                  >{workspaceVariables.variables[variableId].placeholder}</span
+                >
               </label>
-              <input
-                type="text"
-                id={variableId}
-                bind:value={userInput[variableId]}
-                placeholder={workspaceVariables.variables[variableId]
-                  .placeholder}
-                on:input={(e) => handleInputChange(variableId, e)}
-              />
             </div>
           {/if}
         {/each}
@@ -1006,22 +1067,22 @@
             "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
         </div>
       </div>
-      <div class="buttons">
-        <span
-          data-flow="top"
-          data-tooltip="Klik om te kopiëren"
-          data-default_tooltip="Klik om te kopiëren"
+    </div>
+    <div class="buttons">
+      <span
+        data-flow="top"
+        data-tooltip="Klik om te kopiëren"
+        data-default_tooltip="Klik om te kopiëren"
+      >
+        <button
+          class="button outline"
+          on:mouseleave={resetCopyTooltip}
+          on:click={copyToClipboard}><CopySimple size="18" />Kopiëren</button
         >
-          <button
-            class="button outline"
-            on:mouseleave={resetCopyTooltip}
-            on:click={copyToClipboard}><CopySimple size="18" />Kopiëren</button
-          >
-        </span>
-        <button class="button outline" on:click={nextPage}
-          ><EnvelopeSimple size="18" />Mailen</button
-        >
-      </div>
+      </span>
+      <button class="button outline" on:click={nextPage}
+        ><EnvelopeSimple size="18" />Mailen</button
+      >
     </div>
   {/if}
 {:else}
@@ -1098,6 +1159,23 @@
         gap: 0;
       }
     }
+
+    &.new_layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 30px;
+
+      .preview {
+        position: sticky;
+        bottom: 0;
+        margin-left: auto;
+        right: 0;
+        background-color: var(--background);
+        code {
+          color: #fff;
+        }
+      }
+    }
   }
   .preview {
     background-color: #fff;
@@ -1128,6 +1206,7 @@
   .buttons {
     display: flex;
     gap: 10px;
+    margin-top: 30px;
   }
   .email-details {
     display: flex;
@@ -1246,5 +1325,9 @@
       margin-bottom: 0.5em;
       font-size: 2rem;
     }
+  }
+
+  :global(.template.new_layout code) {
+    background-color: #fff;
   }
 </style>

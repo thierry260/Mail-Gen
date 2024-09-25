@@ -99,7 +99,7 @@ p {
   text-decoration: none;
   color: $white;
   background: var(--gradient, --primary);
-  border-radius: 8px;
+  border-radius: 25px;
   padding: 11px 18px;
   transition: all ease-out 0.2s;
 
@@ -125,6 +125,13 @@ p {
     box-shadow: 0 0 0 rgba(0, 0, 0, 0.08);
     background-color: #fff;
 
+    &.has_text {
+      padding-inline: 15px;
+      @media (max-width: $xlm) {
+        padding-inline: 10px;
+      }
+    }
+
     &:hover {
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     }
@@ -143,6 +150,10 @@ p {
       font-size: calc(20 / 16) * 1em;
       top: calc(50% - 10px);
     }
+  }
+
+  @media (max-width: $lg) {
+    font-size: 1.5rem;
   }
 }
 
@@ -535,4 +546,29 @@ body .mb-0.mb-0 {
 
 .mb-0 {
   margin-bottom: 0;
+}
+
+.categories_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 10px;
+
+  @media (max-width: $sm) {
+    gap: 0;
+  }
+}
+
+:global(.categories_grid.categories_grid > .thumbnail.thumbnail) {
+  @media (max-width: $sm) {
+    &:not(:last-child) {
+      border-bottom: 0;
+      margin-bottom: -1px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    &:not(:first-child) {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+  }
 }

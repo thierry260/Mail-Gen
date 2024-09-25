@@ -225,7 +225,7 @@
         <button
           class="button basic"
           data-flow="top"
-          data-tooltip="Toevoegen aan favorieten"
+          data-tooltip={isFavorite ? "Favoriet wissen" : "Favoriet maken"}
           on:click={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -235,9 +235,9 @@
         >
           <span class="icon">
             {#if isFavorite}
-              <Star size="18" weight="fill" color="var(--primary-darker)" />
+              <Star size={16} weight="fill" color="var(--primary-darker)" />
             {:else}
-              <Star size="18" />
+              <Star size={16} />
             {/if}
           </span>
         </button>
@@ -256,14 +256,14 @@
             on:mouseleave={resetCopyTooltip}
           >
             <span class="icon">
-              <CopySimple size="18" />
+              <CopySimple size={16} />
             </span>
           </button>
         {/if}
       </div>
       <button class="button basic link" data-flow="top" data-tooltip="Bekijken">
         <span class="icon">
-          <CaretRight size="18" />
+          <CaretRight size={16} />
         </span>
       </button>
     </div>
@@ -287,6 +287,17 @@
 {/if}
 
 <style lang="scss">
+  :global(.thumbnail .content *) {
+    font-size: inherit;
+    &:empty {
+      display: none;
+    }
+  }
+  :global(.thumbnail .content code) {
+    font-size: 1.3rem;
+    padding: 4px 4px;
+    line-height: 100%;
+  }
   .thumbnail {
     padding: 15px;
     position: relative;
@@ -302,10 +313,7 @@
       background-color 0.2s ease-out,
       border-color 0.2s ease-out;
     color: $black;
-    &:hover {
-      // background-color: var(--gray-100);
-      border-color: var(--gray-400);
-    }
+
     &:active {
       color: inherit;
     }
@@ -336,7 +344,7 @@
     &[data-type="template"] {
       flex-direction: column;
       align-items: stretch;
-      padding: 30px;
+      padding: 25px;
       gap: 20px;
 
       h3 {
@@ -348,18 +356,23 @@
       .content {
         display: flex;
         flex-direction: column;
-        gap: 0.25em;
-        margin-bottom: 30px;
+        gap: 0.5em;
         border-top: 1px solid var(--gray-300);
         padding-top: 20px;
         overflow: hidden;
-        max-height: calc(4em * 2 + 40px);
+        margin-bottom: 0;
+        max-height: calc(4em * 2.2 + 20px);
+        font-size: 1.4rem;
         transition:
           max-height 0.3s ease-out,
-          border-color 0.3s ease-out;
+          border-color 0.3s ease-out,
+          margin-bottom 0.3s ease-out;
+        &:has(> p:first-child:last-child:empty),
+        &:empty,
         &[data-show="false"] {
           max-height: 0;
           border-color: transparent;
+          margin-bottom: 30px;
         }
 
         &:empty {
@@ -416,6 +429,37 @@
         &[data-type="template"] {
           padding: 20px;
         }
+      }
+    }
+
+    &:not(:has(.content:empty)):not(:has(.content[data-show="false"])):not(
+        :has(.content > p:first-child:last-child:empty)
+      )
+      .actions {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(15px);
+      transition:
+        opacity 0.2s ease-out,
+        transform 0.2s ease-out;
+
+      @media (max-width: $lg) {
+        opacity: 1;
+        pointer-events: none;
+        transform: translateY(0);
+      }
+    }
+    &:hover {
+      // background-color: var(--gray-100);
+      border-color: var(--gray-400);
+
+      &:not(:has(.content:empty)):not(:has(.content[data-show="false"])):not(
+          :has(.content > p:first-child:last-child:empty)
+        )
+        .actions {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
       }
     }
   }

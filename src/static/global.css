@@ -75,10 +75,10 @@ h4,
 .h2,
 .h3,
 .h4 {
-  font-family: "Comfortaa", "Arial", sans-serif;
+  font-family: "Red Hat Display", "Arial", sans-serif;
   color: #14223b;
   margin: 0 0 20px 0;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 h1,
@@ -119,7 +119,7 @@ p {
   overflow: auto;
   flex-shrink: 0;
   justify-content: center;
-  font-family: "Comfortaa", "Arial", sans-serif;
+  font-family: "Red Hat Display", "Arial", sans-serif;
   font-weight: 600;
   font-size: 1.6rem;
   white-space: nowrap;
@@ -293,7 +293,7 @@ textarea {
 }
 
 legend {
-  font-family: "Comfortaa", "Arial", sans-serif;
+  font-family: "Red Hat Display", "Arial", sans-serif;
   padding-bottom: 1.25em;
   border-bottom: 1px solid #e4e3e3;
   margin-bottom: 1.5em;
