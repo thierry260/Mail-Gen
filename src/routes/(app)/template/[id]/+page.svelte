@@ -52,14 +52,37 @@
   let showVariablePopup = false; // State to control the popup visibility
   let variableSearchQuery = "";
   let newVariable = { field_name: "", placeholder: "" };
-  let variableInput;
+  let variableInput = false;
   let showPlaceholderField = false; // State to control placeholder field visibility
+  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
   let editorElement;
   let editor;
   let addVariableEl;
   let shouldShow = false;
+  let editingVariable = false;
   $: console.log("should show state: ", shouldShow);
+  $: {
+    if (!shouldShow) {
+      editingVariable = false;
+      setTimeout(() => {
+        const variableInputElement = document.querySelector(".popup input");
+        if (variableInputElement) {
+          variableInputElement.focus();
+        }
+      }, 150);
+    }
+    if (shouldShow) {
+      setTimeout(() => {
+        const variableInputElement = document.querySelector(".popup input");
+        console.log("variableInputElement: ", variableInputElement);
+        if (variableInputElement) {
+          variableInputElement.focus();
+          console.log("variableInputElement focused");
+        }
+      }, 150);
+    }
+  }
 
   // Subscribe to the page store to get the ID parameter
   $: id = $page.params.id;
@@ -118,12 +141,17 @@
             console.error("Editor view is not available");
             return;
           }
-          const variable = prompt("Edit variable", node.attrs.variable);
-          if (variable) {
-            view.dispatch(
-              view.state.tr.setNodeMarkup(getPos(), null, { variable })
-            );
+          editingVariable = true;
+          shouldShow = true;
+          if (editor) {
+            editor.chain().focus().run();
           }
+          // const variable = prompt("Edit variable", node.attrs.variable);
+          // if (variable) {
+          //   view.dispatch(
+          //     view.state.tr.setNodeMarkup(getPos(), null, { variable })
+          //   );
+          // }
         });
 
         return {
@@ -246,6 +274,7 @@
   }
 
   $: if (variableInput) {
+    console.log("variable input exists");
     variableInput.focus();
   }
 
@@ -314,6 +343,7 @@
           tippyOptions: {
             placement: "bottom", // Position the menu below the cursor\
             animation: "shift-away",
+            interactive: true,
           },
           shouldShow: ({ editor }) => {
             // Only show the bubble menu if there's a selection or focus on the editor
@@ -322,17 +352,10 @@
         }).extend({
           addKeyboardShortcuts() {
             return {
-              // ↓ your new keyboard shortcut
-              "Alt-[": (e) => {
+              "Mod-[": (e) => {
                 shouldShow = true; // Show the bubble menu
-                editor
-                  .chain()
-                  .focus()
-                  .insertContent({
-                    type: "variable",
-                    attrs: {},
-                  })
-                  .run(); // Execute the selection
+
+                triggerEditorChange();
               },
             };
           },
@@ -344,8 +367,12 @@
     });
 
     // Add event listener to hide the bubble menu on click in the editor
-    editorElement.addEventListener("click", () => {
+    editorElement.addEventListener("click", (e) => {
+      if (e.target.nodeName == "CODE" || e.target.nodeName == "BUTTON") return;
+      console.log(e);
+      console.log("clicked");
       shouldShow = false; // Hide the bubble menu
+      triggerEditorChange();
     });
   };
 
@@ -391,15 +418,32 @@
     }
   };
 
-  // Function to handle key combination
-  function addVariableShortcut(event) {
-    if (!isEditMode) return;
-    const isShift = event.shiftKey;
-    const isOpenBrace = event.key === "{";
+  const triggerEditorChange = () => {
+    const { state, view } = editor;
+    const { from } = state.selection; // Get the current cursor position
 
-    if (isShift && isOpenBrace) {
-      event.preventDefault(); // Prevent default action for this shortcut
-      showVariablePopup = true;
+    editor
+      .chain()
+      .focus()
+      .insertContent(" ") // Insert the space
+      .run();
+
+    editor
+      .chain()
+      .focus()
+      .deleteRange({ from: from, to: from + 1 }) // Delete the inserted space
+      .run(); // Execute the selection
+  };
+
+  // Function to handle key combination
+  function handleKeyDown(event) {
+    if (!isEditMode) return;
+
+    if (event.key === "Escape") {
+      if (shouldShow) {
+        shouldShow = false;
+        triggerEditorChange();
+      }
     }
   }
 
@@ -410,12 +454,12 @@
         updatePreviewContent();
       });
       fetchVariables();
-      document.addEventListener("keydown", addVariableShortcut);
+      document.addEventListener("keydown", handleKeyDown);
     }
   });
 
   onDestroy(() => {
-    document.removeEventListener("keydown", addVariableShortcut);
+    document.removeEventListener("keydown", handleKeyDown);
     if (editor) {
       editor.destroy();
     }
@@ -820,6 +864,8 @@
   const insertVariable = (variable) => {
     console.log("Inserting Variable:", variable);
 
+    shouldShow = false;
+
     editor
       .chain()
       .focus()
@@ -873,7 +919,8 @@
       addVariableAction();
     } else if (e.key === "Escape") {
       console.log("Escape clicked");
-      showVariablePopup = false;
+
+      shouldShow = false;
     }
   };
 
@@ -955,26 +1002,18 @@
 {#if !isNextStage}
   {#if isEditMode}
     <div class="edit-template">
-      <h2>Template naam</h2>
-      <input
-        type="text"
-        bind:value={templateData.name}
-        placeholder="Template naam"
-      />
-      <h2>Template inhoud</h2>
+      <label class="input_wrapper flex">
+        <input
+          type="text"
+          bind:value={templateData.name}
+          placeholder="&nbsp;"
+        />
+        <span>Template naam</span>
+      </label>
+
       <div class="editor_outer">
         {#if editor}
           <div class="editor_buttons">
-            <button
-              class="button outline add_variable"
-              on:click={() => {
-                shouldShow = true; // Show the bubble menu
-                editor.chain().focus().run();
-              }}
-            >
-              <!-- <BracketsCurly size={16} /> -->
-              + Voeg variabele toe</button
-            >
             <div class="formatting">
               <button
                 on:click={() =>
@@ -1035,7 +1074,24 @@
             </div>
           </div>
         {/if}
-        <div class="editor" bind:this={editorElement}></div>
+        <div class="editor" bind:this={editorElement}>
+          <button
+            class="button outline add_variable"
+            on:click={() => {
+              // shouldShow = true; // Show the bubble menu
+              if (editor) {
+                editor.chain().focus().run();
+              }
+              shouldShow = true; // Show the bubble menu
+            }}
+          >
+            <!-- <BracketsCurly size={16} /> -->
+            + Voeg variabele toe
+            <div class="shortcut-bubble">
+              {isMac ? "Cmd" : "Ctrl"}+[
+            </div></button
+          >
+        </div>
       </div>
       <div class="buttons edit_buttons">
         <button class="button basic has_text" on:click={toggleEditMode}>
@@ -1048,14 +1104,27 @@
     </div>
 
     <div class="popup" bind:this={addVariableEl}>
+      <span
+        class="close"
+        on:click={() => {
+          if (editor) {
+            editor.chain().focus().run();
+          }
+          shouldShow = false; // Show the bubble menu
+        }}><X size={10} /></span
+      >
       <input
         type="text"
-        placeholder="Variabele toevoegen"
+        placeholder={editingVariable
+          ? "Variabele vervangen"
+          : "Variabele toevoegen"}
         bind:value={variableSearchQuery}
+        bind:this={variableInput}
         on:input={handleVariableSearch}
         on:keypress={handleKeyPress}
       />
       {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
+        <span class="label">Zoekresultaten</span>
         <ul>
           {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                 .toLowerCase()
@@ -1081,9 +1150,9 @@
           on:keypress={handleKeyPress}
         />
       {/if}
-      <button class="button simple" on:click={addVariableAction}
+      <!-- <button class="button simple" on:click={addVariableAction}
         >+ Toevoegen</button
-      >
+      > -->
     </div>
   {:else}
     <div class="template">
@@ -1314,19 +1383,6 @@
       position: sticky;
       top: 29px;
       z-index: 9;
-
-      .add_variable {
-        padding: 10px 20px;
-        display: inline-flex;
-        font-size: 1.5rem;
-        font-family: inherit;
-        font-weight: 400;
-        margin: 4px 5px;
-        background-color: #fff;
-        @media (max-width: $md) {
-          display: none;
-        }
-      }
       .formatting {
         flex-grow: 1;
         display: flex;
@@ -1366,25 +1422,107 @@
     .editor {
       border-bottom-left-radius: inherit;
       border-bottom-right-radius: inherit;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      button {
+        order: 1;
+      }
+      .add_variable {
+        padding: 10px 15px;
+        display: inline-flex;
+        font-size: 1.4rem;
+        font-family: inherit;
+        font-weight: 400;
+        margin: 4px 5px;
+        background-color: #fff;
+        align-items: center;
+
+        margin: 0 12px 20px;
+        /* padding: 0; */
+        border: none;
+        box-shadow: none;
+        opacity: 1;
+        font-size: 1.4rem;
+        gap: 6px;
+        color: var(--gray-400);
+
+        // @media (max-width: $md) {
+        //   display: none;
+        // }
+        &:hover {
+          // box-shadow: inset 0 0 0 1px var(--border);
+          background-color: var(--gray-100);
+          color: var(--gray-600);
+        }
+
+        .shortcut-bubble {
+          background-color: #fff;
+          box-shadow: 0 0 0 1px var(--border);
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-size: 1.3rem;
+          color: var(--gray-600);
+          transform: translateY(1px);
+        }
+      }
     }
   }
 
   .popup {
-    // position: fixed;
-    // top: 50%;
-    // left: 50%;
-    // transform: translate(-50%, -50%);
     background-color: white;
-    padding: 15px;
-    border-radius: var(--border-radius-biggest, 15px);
+    padding: 10px;
+    border-radius: var(--border-radius-biggest, 12px);
     border: 1px solid var(--border);
     // box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 999;
-    max-width: 350px;
+    max-width: 320px;
     width: 70vw;
     display: flex;
     flex-direction: column;
     gap: 15px;
+    outline: 100vmax solid rgba(0, 0, 0, 0.1);
+    margin-left: -20px;
+
+    opacity: 0; /* Ensure it's initially hidden */
+    transform: translateY(-10px);
+    animation: popup-animation 0.2s ease-out forwards;
+
+    .close {
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      display: flex;
+      /* opacity: .3; */
+      transform: translate(50%, -50%);
+      background-color: var(--gray-500);
+      border-radius: 50%;
+      padding: 2px;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.2s ease-out;
+      &:hover {
+        background-color: var(--gray-700);
+      }
+    }
+
+    @keyframes popup-animation {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .label {
+      margin-bottom: -5px;
+      font-weight: 500;
+    }
 
     ul {
       list-style-type: none;
@@ -1401,9 +1539,58 @@
     li:hover {
       background: #e0e0e0;
     }
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -3px;
+      left: calc(50%);
+      transform: translate(-50%, calc(-100% + 3px));
+      // left: 14px;
+      // transform: translate(0, calc(-100% + 3px));
+      width: 0px;
+      height: 0px;
+      border-style: solid;
+      border-width: 0 6px 6px 6px;
+      border-color: transparent transparent var(--border) transparent;
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translate(-50%, calc(-100% + 3px));
+      // left: 15px;
+      // transform: translate(0, calc(-100% + 2px));
+      width: 0px;
+      height: 0px;
+      border-style: solid;
+      border-width: 0 6px 6px 6px;
+      border-color: transparent transparent #fff transparent;
+    }
+  }
+
+  :global([data-placement="top"] .popup.popup.popup) {
+    &::before {
+      top: unset;
+      bottom: -3px;
+      transform: translate(-50%, calc(100% - 3px));
+      border-width: 7px 7px 0 7px;
+      border-color: var(--border) transparent transparent transparent;
+    }
+    &::after {
+      top: unset;
+      bottom: -1px;
+      transform: translate(-50%, calc(100% - 2px));
+      border-width: 6px 6px 0 6px;
+      border-color: #fff transparent transparent transparent;
+    }
   }
 
   .edit-template {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
     h2 {
       margin-top: 1em;
       margin-bottom: 0.5em;
