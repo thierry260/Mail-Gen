@@ -12,6 +12,7 @@
   import { page } from "$app/stores";
   import { TrashSimple } from "phosphor-svelte";
   import { loadStripe } from "@stripe/stripe-js";
+  import Header from "$lib/components/header/Header.svelte";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
@@ -180,7 +181,7 @@
           body: JSON.stringify({
             priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe", // Your Price ID
           }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -203,7 +204,7 @@
   };
 </script>
 
-<h1>Instellingen</h1>
+<Header type={"settings"} />
 
 <!-- Tab Navigation -->
 <div class="tabs">
@@ -221,149 +222,179 @@
   >
   <button
     class:active={activeTab === "subscription"}
-    on:click={() => (activeTab = "subscription")}>Subscription</button
+    on:click={() => (activeTab = "subscription")}>Abonnement</button
   >
 </div>
 
 <!-- Tab Content -->
 {#if activeTab === "variables"}
   <div class="tab-content">
-    <h2>Variabelen managen</h2>
-    <input type="text" placeholder="Naam" bind:value={newVariable.field_name} />
-    <input
-      type="text"
-      placeholder="Placeholder"
-      bind:value={newVariable.placeholder}
-    />
-    <button class="button" on:click={addVariable}>+ Voeg toe</button>
+    <div class="card">
+      <h4>Toevoegen</h4>
+      <div class="form">
+        <input
+          type="text"
+          placeholder="Naam"
+          bind:value={newVariable.field_name}
+        />
+        <input
+          type="text"
+          placeholder="Placeholder"
+          bind:value={newVariable.placeholder}
+        />
+        <button class="button" on:click={addVariable}>+ Voeg toe</button>
+      </div>
+    </div>
+    <div class="card">
+      <h4>Beheren</h4>
 
-    {#if Object.keys(workspaceVariables).length > 0}
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Naam</th>
-            <th>Placeholder</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
+      {#if Object.keys(workspaceVariables).length > 0}
+        <ul class="manage_vars">
           {#each Object.entries(workspaceVariables) as [variableId, variableData]}
-            <tr>
-              <td>{variableId}</td>
-              <td>
+            <li>
+              <label class="input_wrapper">
                 <input
                   type="text"
                   value={variableData.field_name}
+                  placeholder="&nbsp;"
                   on:input={(e) =>
                     updateVariable(variableId, "field_name", e.target.value)}
                 />
-              </td>
-              <td>
+                <span>Naam</span>
+              </label>
+              <label class="input_wrapper">
                 <input
                   type="text"
                   value={variableData.placeholder}
+                  placeholder="&nbsp;"
                   on:input={(e) =>
                     updateVariable(variableId, "placeholder", e.target.value)}
                 />
-              </td>
-              <td>
-                <button
-                  class="button basic"
-                  on:click={() => removeVariable(variableId)}
-                  ><TrashSimple size="18" /></button
-                >
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    {:else}
-      <p>Loading variables...</p>
-    {/if}
+                <span>Placeholder</span>
+              </label>
+              <button
+                class="button basic"
+                data-tooltip="Verwijderen"
+                data-flow="top"
+                on:click={() => removeVariable(variableId)}
+                ><TrashSimple size="18" /></button
+              >
+            </li>{/each}
+        </ul>
+      {:else}
+        <p>Loading variables...</p>
+      {/if}
+    </div>
   </div>
 {:else if activeTab === "account"}
   <div class="tab-content">
-    <h2>Wachtwoord wijzigen</h2>
-    <input
-      type="password"
-      placeholder="Huidig wachtwoord"
-      bind:value={currentPassword}
-    />
-    <input
-      type="password"
-      placeholder="Nieuw wachtwoord"
-      bind:value={newPassword}
-    />
-    <button class="button" on:click={handleChangePassword}
-      >Wachtwoord wijzigen</button
-    >
-    {#if $passwordError}
-      <p style="color: red">{$passwordError}</p>
-    {/if}
-    {#if $passwordSuccess}
-      <p style="color: green">{$passwordSuccess}</p>
-    {/if}
+    <div class="card">
+      <h4>Wachtwoord wijzigen</h4>
+      <input
+        type="password"
+        placeholder="Huidig wachtwoord"
+        bind:value={currentPassword}
+      />
+      <input
+        type="password"
+        placeholder="Nieuw wachtwoord"
+        bind:value={newPassword}
+      />
+      <button class="button" on:click={handleChangePassword}
+        >Wachtwoord wijzigen</button
+      >
+      {#if $passwordError}
+        <p style="color: red">{$passwordError}</p>
+      {/if}
+      {#if $passwordSuccess}
+        <p style="color: green">{$passwordSuccess}</p>
+      {/if}
+    </div>
   </div>
 {:else if activeTab === "workspace"}
   <div class="tab-content">
-    <h2>Workspacenaam wijzigen</h2>
-    <input
-      type="text"
-      placeholder="Nieuwe workspacenaam"
-      bind:value={workspaceName}
-    />
-    <button class="button" on:click={handleChangeWorkspaceName}
-      >Workspacenaam wijzigen</button
-    >
-    {#if $workspaceNameError}
-      <p style="color: red">{$workspaceNameError}</p>
-    {/if}
-    {#if $workspaceNameSuccess}
-      <p style="color: green">{$workspaceNameSuccess}</p>
-    {/if}
-    <h2>Uitnodigen voor Workspace</h2>
-    <input type="email" placeholder="E-mailadres" bind:value={inviteEmail} />
-    <button class="button" on:click={generateInviteLink}
-      >Genereer uitnodigingslink</button
-    >
-    {#if $inviteError}
-      <p style="color: red">{$inviteError}</p>
-    {/if}
-    {#if $inviteSuccess}
-      <p style="color: green">{$inviteSuccess}</p>
-    {/if}
-    {#if $inviteLink}
-      <p>
-        Uitnodigingslink: <a href={$inviteLink} target="_blank">{$inviteLink}</a
-        >
-      </p>
-    {/if}
+    <div class="card">
+      <h4>Workspacenaam wijzigen</h4>
+      <input
+        type="text"
+        placeholder="Nieuwe workspacenaam"
+        bind:value={workspaceName}
+      />
+      <button class="button" on:click={handleChangeWorkspaceName}
+        >Workspacenaam wijzigen</button
+      >
+      {#if $workspaceNameError}
+        <p style="color: red">{$workspaceNameError}</p>
+      {/if}
+      {#if $workspaceNameSuccess}
+        <p style="color: green">{$workspaceNameSuccess}</p>
+      {/if}
+    </div>
+    <div class="card">
+      <h4>Uitnodigen voor Workspace</h4>
+      <input type="email" placeholder="E-mailadres" bind:value={inviteEmail} />
+      <button class="button" on:click={generateInviteLink}
+        >Genereer uitnodigingslink</button
+      >
+      {#if $inviteError}
+        <p style="color: red">{$inviteError}</p>
+      {/if}
+      {#if $inviteSuccess}
+        <p style="color: green">{$inviteSuccess}</p>
+      {/if}
+      {#if $inviteLink}
+        <p>
+          Uitnodigingslink: <a href={$inviteLink} target="_blank"
+            >{$inviteLink}</a
+          >
+        </p>
+      {/if}
+    </div>
   </div>
 {:else if activeTab === "subscription"}
   <div class="tab-content">
-    <h2>Abonnement</h2>
-    <button on:click={subscribe}>Subscribe Now</button>
-    {#if errorMessage}
-      <p style="color: red;">{errorMessage}</p>
-    {/if}
+    <div class="card">
+      <h4>Abonnement</h4>
+      <button class="button" on:click={subscribe}>Abonneer je nu</button>
+      {#if errorMessage}
+        <p style="color: red;">{errorMessage}</p>
+      {/if}
+    </div>
   </div>
 {/if}
 
-<style>
+<style lang="scss">
   .tabs {
     display: flex;
-    justify-content: center;
+    // justify-content: center;
     gap: 30px;
-    margin-bottom: 40px;
+    margin-top: 50px;
+    margin-bottom: 25px;
+    @media (max-width: $lg) {
+      margin-inline: -30px;
+      padding-inline: 30px;
+      overflow-x: auto;
+      gap: 20px;
+      margin-bottom: 25px;
+      margin-top: 30px;
+
+      -ms-overflow-style: none; /* Internet Explorer 10+ */
+      scrollbar-width: none; /* Firefox */
+
+      &::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
+      }
+    }
   }
 
   .tabs button {
     background: none;
     border: none;
-    padding: 6px 0;
+    padding: 4px 0;
     cursor: pointer;
+    color: var(--gray-400);
     font-size: 16px;
+    font-weight: 400;
     border-bottom: 2px solid transparent;
     transition: border-color 0.2s ease-out;
   }
@@ -378,9 +409,41 @@
   }
 
   .tab-content {
-    /* padding: 20px;
-    border: 1px solid #ddd;
-    border-top: none; */
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+
+    > .button {
+      align-items: flex-start;
+    }
+    .card {
+      padding: 20px;
+      background-color: #fff;
+      border-radius: var(--border-radius-big, 10px);
+      border: 1px solid var(--border);
+
+      button.button:not(.basic) {
+        margin-top: 15px;
+      }
+
+      .form {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 15px;
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+          margin: 0;
+          width: unset;
+          flex-grow: 1;
+        }
+        button.button:not(.basic) {
+          margin-top: 0;
+        }
+      }
+    }
   }
 
   table {
@@ -391,7 +454,7 @@
 
   th,
   td {
-    border: 1px solid #ddd;
+    // border: 1px solid #ddd;
     padding: 8px;
     text-align: left;
   }
@@ -408,13 +471,42 @@
     background-color: #f1f1f1;
   }
 
+  .manage_vars {
+    list-style-type: none;
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    gap: 5px;
+    width: 100%;
+    li {
+      display: flex;
+      flex-direction: row;
+      gap: 10px 12px;
+      align-items: center;
+      flex-grow: 1;
+      width: 100%;
+      padding: 15px;
+      border-radius: 5px;
+      flex-wrap: wrap;
+      &:nth-child(even) {
+        background-color: var(--gray-100);
+      }
+      &:hover {
+        background-color: var(--gray-200);
+      }
+      label {
+        flex-grow: 1;
+      }
+      button {
+        margin-right: 5px;
+      }
+    }
+  }
+
   h1 {
     text-align: center;
     margin-bottom: 20px;
-  }
-
-  h2 {
-    margin-top: 20px;
   }
 
   input[type="text"],
@@ -431,11 +523,19 @@
     cursor: pointer;
   } */
 
-  div {
-    margin-bottom: 20px;
-  }
-
   .invite-to-workspace p {
     margin-top: 10px;
+  }
+
+  .input_wrapper {
+    display: flex;
+
+    input:not(:is([type="checkbox"], [type="radio"])) {
+      padding: 22px 15px 6px;
+      margin: 0;
+      + span {
+        left: 16px;
+      }
+    }
   }
 </style>

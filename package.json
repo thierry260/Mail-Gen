@@ -41,6 +41,7 @@
 		"dotenv": "^16.4.5",
 		"express": "^4.21.0",
 		"firebase": "^9.1.2",
+		"sortablejs": "^1.15.3",
 		"svelte-stripe-js": "^0.0.12",
 		"vite-plugin-pwa": "^0.20.5"
 	}

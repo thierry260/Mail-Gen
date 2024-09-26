@@ -17,6 +17,8 @@
   import { createCategory } from "$lib/utils/create";
   import { templatesStore } from "$lib/stores/templates";
   import { getCategoriesAndCachedTemplates } from "$lib/utils/cache";
+  import Sortable from "sortablejs";
+  import { switchMobileNav } from "$lib/utils/utils.js";
 
   $: currentUser = $user;
 
@@ -26,6 +28,7 @@
   let isHomeActive = false;
   let isSettingsActive = false;
   let areAllOpen = false;
+  let sortableInstance; // Reference to the Sortable instance
 
   $: {
     currentId = $page.params.id;
@@ -91,6 +94,85 @@
       console.log("Categories not found");
       data = []; // Ensure data is an empty array if fetch fails
     }
+
+    // Select the main container that holds the top-level items
+    const el = document.querySelector(".templates_items");
+
+    if (el) {
+      sortableInstance = new Sortable(el, {
+        animation: 150, // Smooth animation
+        handle: ".accordion_header", // Restrict dragging to the header
+        group: {
+          name: "nested",
+          pull: true, // Allow items to be dragged out
+          put: true, // Allow items to be dropped in
+        },
+        onEnd: (event) => {
+          const oldIndex = event.oldIndex;
+          const newIndex = event.newIndex;
+
+          // Update the top-level `data` array order
+          const movedItem = data.splice(oldIndex, 1)[0];
+          data.splice(newIndex, 0, movedItem);
+
+          console.log("New top-level data order:", data);
+
+          // Update in your state or database if needed
+        },
+      });
+
+      // Initialize Sortable for each nested accordion content
+      const nestedElements = document.querySelectorAll(".accordion_content");
+
+      nestedElements.forEach((nestedEl) => {
+        new Sortable(nestedEl, {
+          animation: 150, // Smooth animations
+          group: {
+            name: "nested", // Allows nested drag-and-drop
+            pull: true,
+            put: true,
+          },
+          handle: ".accordion_header", // Only drag when header is clicked
+          onEnd: (event) => {
+            const parentId = nestedEl.closest(".accordion_item").id; // Get the parent category ID
+            const parentCategory = data.find((item) => item.id === parentId); // Find the correct parent in data
+            const oldIndex = event.oldIndex;
+            const newIndex = event.newIndex;
+
+            if (parentCategory) {
+              // Handle reordering inside subcategories or templates
+              const movedItem = parentCategory.subcategories.splice(
+                oldIndex,
+                1
+              )[0];
+              parentCategory.subcategories.splice(newIndex, 0, movedItem);
+
+              console.log(
+                `New order for ${parentCategory.name}:`,
+                parentCategory.subcategories
+              );
+
+              // Save this new order in the state or backend if needed
+            }
+          },
+        });
+      });
+    }
+
+    // Clean up when component unmounts
+    return () => {
+      if (sortableInstance) {
+        sortableInstance.destroy();
+      }
+
+      const nestedInstances = document.querySelectorAll(".accordion_content");
+      nestedInstances.forEach((nestedEl) => {
+        const instance = Sortable.get(nestedEl);
+        if (instance) {
+          instance.destroy();
+        }
+      });
+    };
   });
   const toggleAll = () => {
     areAllOpen = !areAllOpen;
@@ -146,7 +228,7 @@
 
 <div class="sidebar">
   <a href="/" class="flex brand align-center gap-15 hide_mobile">
-    <figure class="logo_outer">
+    <figure class="logo_outer" on:click={(e) => switchMobileNav("browse")}>
       <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
     </figure>
     <div>
@@ -155,10 +237,7 @@
     </div>
   </a>
   <Search location={"sidebar"} />
-  <!-- <a class="menu_item" href="/" class:active={isHomeActive}>
-    <div class="icon_outer"><Layout size={20} /></div>
-    Dashboard
-  </a> -->
+
   <div class="templates">
     <span class="label">
       Templates
@@ -199,7 +278,12 @@
         <span>{localStorage.getItem("workspace")}</span>
       </div>
     </div>
-    <a class="icon_button" href="/settings" class:active={isSettingsActive}>
+    <a
+      class="icon_button"
+      href="/settings"
+      class:active={isSettingsActive}
+      on:click={(e) => switchMobileNav("browse")}
+    >
       <Gear size={16} />
     </a>
     <div class="icon_button" on:click={logout}>

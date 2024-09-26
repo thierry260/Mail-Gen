@@ -126,7 +126,7 @@ p {
   text-decoration: none;
   color: #ffffff;
   background: var(--gradient, --primary);
-  border-radius: 8px;
+  border-radius: 25px;
   padding: 12px 20px;
   transition: all ease-out 0.2s;
 }

@@ -330,6 +330,7 @@ main:has(.settings) nav:first-child {
   position: relative;
   white-space: nowrap;
   cursor: pointer;
+  overflow: unset;
 
   &:before,
   &:after {
