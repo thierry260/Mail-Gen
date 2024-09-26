@@ -406,14 +406,16 @@
       }
 
       .content {
+        position: relative;
         display: flex;
         flex-direction: column;
+        flex-grow: 1;
         gap: 0.5em;
         border-top: 1px solid var(--gray-300);
         padding-top: 20px;
         overflow: hidden;
         margin-bottom: 0;
-        max-height: calc(4em * 2.2 + 20px);
+        max-height: calc(4em * 2.2 + 30px);
         font-size: 1.4rem;
         transition:
           max-height 0.3s ease-out,
@@ -430,11 +432,25 @@
         &:empty {
           border: none;
         }
+
+        &::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            1deg,
+            rgba(255, 255, 255, 1) 0%,
+            rgba(255, 255, 255, 1) 5%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          top: unset;
+          height: 30px;
+        }
       }
       .actions {
         position: absolute;
         background: linear-gradient(
-          1deg,
+          0deg,
           rgba(255, 255, 255, 1) 0%,
           rgba(255, 255, 255, 1) 65%,
           rgba(255, 255, 255, 0) 100%

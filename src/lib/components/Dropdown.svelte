@@ -67,7 +67,10 @@
         });
       }
     } else if (action === "cat_modify-name") {
-      const newName = prompt("Geef een nieuwe naam voor de categorie:");
+      const newName = prompt(
+        "Geef een nieuwe naam voor de categorie:",
+        item.name
+      );
       if (newName) {
         updateCategoryName(categoryId, newName).then(() => {
           item.name = newName;
