@@ -70,7 +70,7 @@
         if (variableInputElement) {
           variableInputElement.focus();
         }
-      }, 150);
+      }, 50);
     }
     if (shouldShow) {
       setTimeout(() => {
@@ -80,7 +80,7 @@
           variableInputElement.focus();
           console.log("variableInputElement focused");
         }
-      }, 150);
+      }, 50);
     }
   }
 
@@ -420,19 +420,15 @@
 
   const triggerEditorChange = () => {
     const { state, view } = editor;
-    const { from } = state.selection; // Get the current cursor position
+    const { from, to } = state.selection; // Get the current cursor position
 
     editor
       .chain()
       .focus()
       .insertContent(" ") // Insert the space
       .run();
-
-    editor
-      .chain()
-      .focus()
-      .deleteRange({ from: from, to: from + 1 }) // Delete the inserted space
-      .run(); // Execute the selection
+    document.execCommand("delete");
+    editor.chain().focus().run(); // Execute the selection
   };
 
   // Function to handle key combination
@@ -1425,7 +1421,6 @@
       background-color: #fff;
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
 
       button {
         order: 1;
@@ -1439,6 +1434,7 @@
         margin: 4px 5px;
         background-color: #fff;
         align-items: center;
+        align-self: flex-start;
 
         margin: 0 12px 20px;
         /* padding: 0; */

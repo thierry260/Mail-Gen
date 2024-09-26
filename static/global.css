@@ -328,7 +328,7 @@ main:has(.home) nav:first-child {
 
 .tiptap[contenteditable=true] {
   background-color: #fff;
-  min-height: 300px;
+  min-height: 240px;
   padding: 30px;
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
