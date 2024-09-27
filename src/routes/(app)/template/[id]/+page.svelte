@@ -257,10 +257,21 @@
 
   $: {
     if (id) {
+      // Clear the previous template content and data
+      templateData = {};
+      templateContentHTML = "";
+      userInput = {}; // Clear user inputs as well
+      updatePreviewContent(); // Clear preview content immediately
+
       isNextStage = false;
-      // console.log("Fetching template details for template ID:", id);
+
+      // Set whether the template is in edit mode
       isEditMode = browser && window.location.hash.includes("#edit");
-      fetchWorkspaceAndTemplateData();
+
+      // Fetch the template and update the UI
+      fetchWorkspaceAndTemplateData().then(() => {
+        updatePreviewContent();
+      });
     }
   }
 
@@ -387,7 +398,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       const index = favoriteTemplates.findIndex(
-        (item) => item.id === templateData.id
+        (item) => item.id === templateData.id,
       );
 
       if (isFavorite && index === -1) {
@@ -398,7 +409,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates)
+        JSON.stringify(favoriteTemplates),
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -411,7 +422,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       isFavorite = favoriteTemplates.some(
-        (item) => item.id === templateData.id
+        (item) => item.id === templateData.id,
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -469,7 +480,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id
+              (template) => template.id === id,
             );
             if (templateIndex !== -1) {
               item.templates[templateIndex].name = newName;
@@ -497,7 +508,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id
+              (template) => template.id === id,
             );
             if (templateIndex !== -1) {
               item.templates.splice(templateIndex, 1); // Remove the template
@@ -531,7 +542,7 @@
       const variable = Object.entries(workspaceVariables.variables).find(
         ([id, data]) => {
           return data.placeholder === p1.trim();
-        }
+        },
       );
       const value = variable ? variables[variable[0]] || match : match;
       return value;
@@ -548,7 +559,7 @@
     if (previewElement) {
       previewElement.innerHTML = replaceVariables(
         templateContentHTML,
-        userInput
+        userInput,
       );
     }
   };
@@ -732,7 +743,7 @@
 
   const confirmAndDelete = () => {
     const confirmDelete = window.confirm(
-      "Weet je zeker dat je deze template wilt verwijderen?"
+      "Weet je zeker dat je deze template wilt verwijderen?",
     );
     if (confirmDelete) {
       deleteTemplate(templateData.id)
@@ -757,7 +768,7 @@
       const docRef = doc(
         db,
         `workspaces/${localStorage.getItem("workspace")}/templates`,
-        id
+        id,
       );
       const docSnap = await getDoc(docRef);
 
@@ -794,7 +805,7 @@
     const workspaceRef = doc(
       db,
       "workspaces",
-      localStorage.getItem("workspace")
+      localStorage.getItem("workspace"),
     );
     const workspaceSnap = await getDoc(workspaceRef);
 
@@ -894,7 +905,7 @@
         ([id, data]) =>
           data.field_name
             .toLowerCase()
-            .includes(variableSearchQuery.toLowerCase())
+            .includes(variableSearchQuery.toLowerCase()),
       );
     }
 
@@ -1126,7 +1137,7 @@
         <ul>
           {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                 .toLowerCase()
-                .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+                .includes(variableSearchQuery.toLowerCase()), ) as [id, data]}
             <li
               on:click={() =>
                 insertVariable({

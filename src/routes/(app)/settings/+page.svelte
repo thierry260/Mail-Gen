@@ -230,7 +230,7 @@
             workspaceId: workspaceId, // Pass the workspaceId
             userId: userId, // Pass the userId
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -402,19 +402,21 @@
   </div>
 {:else if activeTab === "subscription"}
   <div class="tab-content">
-    <h2>Abonnement</h2>
-    {#if subscriptionActive}
-      <p>Je hebt nog {daysLeft} dagen in je abonnement.</p>
-      <button on:click={console.log("canceljemoeder")}
-        >Abonnement annuleren</button
-      >
-    {:else}
-      <button on:click={subscribe}>Subscribe Now</button>
-    {/if}
+    <div class="card">
+      <h2>Abonnement</h2>
+      {#if subscriptionActive}
+        <p>Je hebt nog {daysLeft} dagen in je abonnement.</p>
+        <button class="button" on:click={console.log("canceljemoeder")}
+          >Abonnement annuleren</button
+        >
+      {:else}
+        <button class="button" on:click={subscribe}>Subscribe Now</button>
+      {/if}
 
-    {#if errorMessage}
-      <p style="color: red;">{errorMessage}</p>
-    {/if}
+      {#if errorMessage}
+        <p style="color: red;">{errorMessage}</p>
+      {/if}
+    </div>
   </div>
 {/if}
 
