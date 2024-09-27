@@ -422,13 +422,15 @@
     const { state, view } = editor;
     const { from, to } = state.selection; // Get the current cursor position
 
-    editor
-      .chain()
-      .focus()
-      .insertContent(" ") // Insert the space
-      .run();
-    document.execCommand("delete");
-    editor.chain().focus().run(); // Execute the selection
+    if (from == to) {
+      editor
+        .chain()
+        .focus()
+        .insertContent(" ") // Insert the space
+        .run();
+      document.execCommand("delete");
+      editor.chain().focus().run(); // Execute the selection
+    }
   };
 
   // Function to handle key combination
@@ -1330,7 +1332,6 @@
     display: flex;
     gap: 12px;
     margin-top: 10px;
-    align-items: stretch;
 
     position: sticky;
     bottom: -50px;
@@ -1342,7 +1343,7 @@
       #f8f8f800 100%
     );
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
 
     @media (max-width: $lg) {

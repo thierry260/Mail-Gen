@@ -17,12 +17,12 @@
 
 <header>
   <div class="title">
-    <Breadcrumbs />
+    <Breadcrumbs type />
   </div>
   <div class="actions">
     {#if type == "template"}
       <slot></slot>
-    {:else}
+    {:else if type !== "settings"}
       <label class="action">
         <span class="legend toggle_label"
           ><span class="desktop">Toon voorbeelden</span><span class="mobile"

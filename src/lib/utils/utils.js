@@ -1,12 +1,16 @@
 export const switchMobileNav = (tab = "browse") => {
   const element = document.querySelector(`[name="nav"]#${tab}`);
 
-  // console.log("element", element);
-
   if (element) {
-    // console.log("element found");
-    // Element is visible if its offsetParent is not null
-    // console.log(`document.querySelector("[name='nav']#${tab}")`, "checked");
     element.checked = true;
+
+    // Create a new 'change' event
+    const event = new Event("change", {
+      bubbles: true, // allows the event to bubble up through the DOM
+      cancelable: true, // allows the event to be canceled
+    });
+
+    // Dispatch the event
+    element.dispatchEvent(event);
   }
 };

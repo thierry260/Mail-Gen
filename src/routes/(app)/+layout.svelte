@@ -66,6 +66,7 @@
   });
 
   function handleNavChange(event) {
+    console.log("handleNavChange fired");
     const selectedNav = event.target.value;
     lastSelectedNav = selectedNav;
     localStorage.setItem("lastNav", selectedNav);

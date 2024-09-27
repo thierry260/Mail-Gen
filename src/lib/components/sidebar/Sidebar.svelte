@@ -9,6 +9,7 @@
     ArrowsInLineVertical,
     ArrowsOutLineVertical,
     SignOut,
+    CaretLeft,
   } from "phosphor-svelte";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
@@ -17,6 +18,9 @@
   import { createCategory } from "$lib/utils/create";
   import { templatesStore } from "$lib/stores/templates";
   import { getCategoriesAndCachedTemplates } from "$lib/utils/cache";
+  import Sortable from "sortablejs";
+  import { switchMobileNav } from "$lib/utils/utils.js";
+  import { browser } from "$app/environment";
 
   $: currentUser = $user;
 
@@ -26,6 +30,8 @@
   let isHomeActive = false;
   let isSettingsActive = false;
   let areAllOpen = false;
+  let sortableInstance; // Reference to the Sortable instance
+  let isCompact = false;
 
   $: {
     currentId = $page.params.id;
@@ -39,30 +45,9 @@
 
   $: $templatesStore, console.log("templatesStore updated:", $templatesStore);
 
-  const expandParents = (item, currentId, currentType) => {
-    if (currentType === "category" && item.id === currentId) {
-      item.open = true;
-      return true;
-    }
-    if (currentType === "template" && item.templates) {
-      for (const template of item.templates) {
-        if (template.id === currentId) {
-          item.open = true;
-          return true;
-        }
-      }
-    }
-    if (item.sub) {
-      for (const subItem of item.sub) {
-        if (expandParents(subItem, currentId, currentType)) {
-          item.open = true;
-          return true;
-        }
-      }
-    }
-    return false;
-  };
   onMount(async () => {
+    checkSidebarState();
+
     let fetchedData = await fetchWorkspaceData("categories");
     console.log("categories: ", fetchedData);
     if (Array.isArray(fetchedData)) {
@@ -91,7 +76,125 @@
       console.log("Categories not found");
       data = []; // Ensure data is an empty array if fetch fails
     }
+
+    // Select the main container that holds the top-level items
+    const el = document.querySelector(".templates_items");
+
+    if (el) {
+      sortableInstance = new Sortable(el, {
+        animation: 150, // Smooth animation
+        handle: ".accordion_header", // Restrict dragging to the header
+        group: {
+          name: "nested",
+          pull: true, // Allow items to be dragged out
+          put: true, // Allow items to be dropped in
+        },
+        onEnd: (event) => {
+          const oldIndex = event.oldIndex;
+          const newIndex = event.newIndex;
+
+          // Update the top-level `data` array order
+          const movedItem = data.splice(oldIndex, 1)[0];
+          data.splice(newIndex, 0, movedItem);
+
+          console.log("New top-level data order:", data);
+
+          // Update in your state or database if needed
+        },
+      });
+
+      // Initialize Sortable for each nested accordion content
+      const nestedElements = document.querySelectorAll(".accordion_content");
+
+      nestedElements.forEach((nestedEl) => {
+        new Sortable(nestedEl, {
+          animation: 150, // Smooth animations
+          group: {
+            name: "nested", // Allows nested drag-and-drop
+            pull: true,
+            put: true,
+          },
+          handle: ".accordion_header", // Only drag when header is clicked
+          onEnd: (event) => {
+            const parentId = nestedEl.closest(".accordion_item").id; // Get the parent category ID
+            const parentCategory = data.find((item) => item.id === parentId); // Find the correct parent in data
+            const oldIndex = event.oldIndex;
+            const newIndex = event.newIndex;
+
+            if (parentCategory) {
+              // Handle reordering inside subcategories or templates
+              const movedItem = parentCategory.subcategories.splice(
+                oldIndex,
+                1
+              )[0];
+              parentCategory.subcategories.splice(newIndex, 0, movedItem);
+
+              console.log(
+                `New order for ${parentCategory.name}:`,
+                parentCategory.subcategories
+              );
+
+              // Save this new order in the state or backend if needed
+            }
+          },
+        });
+      });
+    }
+
+    // Clean up when component unmounts
+    return () => {
+      if (sortableInstance) {
+        sortableInstance.destroy();
+      }
+
+      const nestedInstances = document.querySelectorAll(".accordion_content");
+      nestedInstances.forEach((nestedEl) => {
+        const instance = Sortable.get(nestedEl);
+        if (instance) {
+          instance.destroy();
+        }
+      });
+    };
   });
+
+  const checkSidebarState = () => {
+    if (!browser) return;
+    const storedState = localStorage.getItem("sidebarState");
+    if (storedState) {
+      isCompact = storedState === "compact";
+    }
+  };
+
+  // Toggle sidebar between wide and compact mode
+  const toggleSidebar = () => {
+    isCompact = !isCompact;
+    localStorage.setItem("sidebarState", isCompact ? "compact" : "wide");
+  };
+
+  const expandParents = (item, currentId, currentType) => {
+    if (currentType === "category" && item.id === currentId) {
+      item.open = true;
+      return true;
+    }
+    if (currentType === "template" && item.templates) {
+      for (const template of item.templates) {
+        if (template.id === currentId) {
+          item.open = true;
+          return true;
+        }
+      }
+    }
+    if (item.sub) {
+      for (const subItem of item.sub) {
+        if (expandParents(subItem, currentId, currentType)) {
+          item.open = true;
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const toggleAll = () => {
     areAllOpen = !areAllOpen;
     data = data.map((category) => ({
@@ -144,22 +247,24 @@
   };
 </script>
 
-<div class="sidebar">
-  <a href="/" class="flex brand align-center gap-15 hide_mobile">
-    <figure class="logo_outer">
-      <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
-    </figure>
-    <div>
-      <h6>Mail Gen</h6>
-      <small>Early access</small>
-    </div>
-  </a>
+<div class="sidebar {isCompact ? 'compact' : 'wide'}">
+  <div class="brand_outer">
+    <a href="/" class="flex brand align-center gap-15 hide_mobile">
+      <figure class="logo_outer" on:click={(e) => switchMobileNav("browse")}>
+        <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+      </figure>
+      <div class="hide_on_compact">
+        <h6>Mail Gen</h6>
+        <small>Early access</small>
+      </div>
+    </a>
+    <span class="sidebar_toggle" on:click={toggleSidebar}>
+      <div class="icon_outer"><CaretLeft size={14} /></div>
+    </span>
+  </div>
   <Search location={"sidebar"} />
-  <!-- <a class="menu_item" href="/" class:active={isHomeActive}>
-    <div class="icon_outer"><Layout size={20} /></div>
-    Dashboard
-  </a> -->
-  <div class="templates">
+
+  <div class="templates hide_on_compact">
     <span class="label">
       Templates
       <button class="toggle-all-icon" on:click={toggleAll}>
@@ -188,7 +293,7 @@
       <figure class="avatar">
         <img width="35px" height="35px" src="/img/placeholder.jpg" />
       </figure>
-      <div class="info">
+      <div class="info hide_on_compact">
         <strong
           >{currentUser && currentUser.displayName
             ? currentUser.displayName
@@ -199,10 +304,15 @@
         <span>{localStorage.getItem("workspace")}</span>
       </div>
     </div>
-    <a class="icon_button" href="/settings" class:active={isSettingsActive}>
+    <a
+      class="icon_button hide_on_compact"
+      href="/settings"
+      class:active={isSettingsActive}
+      on:click={(e) => switchMobileNav("browse")}
+    >
       <Gear size={16} />
     </a>
-    <div class="icon_button" on:click={logout}>
+    <div class="icon_button hide_on_compact" on:click={logout}>
       <SignOut size={16} />
     </div>
   </div>
@@ -211,7 +321,6 @@
 <style lang="scss">
   .sidebar {
     width: 360px;
-    max-width: 360px;
 
     background: var(--primary-darkest);
     background: linear-gradient(
@@ -227,9 +336,18 @@
     justify-content: space-between;
     color: #fff;
     gap: 20px;
+    position: relative;
+    transition:
+      width 0.3s ease-out,
+      gap 0.3s ease-out,
+      padding 0.3s ease-out;
+    will-change: width;
     a {
       color: inherit;
       text-decoration: none;
+    }
+    .brand_outer {
+      position: relative;
     }
     .brand {
       margin-bottom: 10px;
@@ -477,13 +595,137 @@
       }
     }
 
-    @media (max-width: $lg) {
-      width: 100%;
-      max-width: unset;
-      border-right: 0;
+    .sidebar_toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      // bottom: 33px;
+      top: 50%;
+      right: -30px;
+      transform: translate(100%, -50%);
+      outline-color: transparent;
+      border-radius: 0 20px 20px 0;
+      aspect-ratio: 1;
+      width: 30px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-left: 0;
+      background-color: #fff;
+      cursor: pointer;
+      user-select: none;
+      z-index: 1;
+      transition:
+        transform 0.2s ease-out 0.1s,
+        right 0.3s ease-out,
+        background-color 0.3s ease-out;
+      .icon_outer {
+        transition: transform 0.25s ease-out;
+        display: flex;
+        color: var(--text);
+      }
 
-      .hide_mobile.hide_mobile {
-        display: none;
+      &:hover {
+        .icon_outer {
+          transform: translateX(-2px);
+        }
+      }
+    }
+
+    .hide_on_compact {
+      opacity: 1;
+      transition:
+        opacity 0.5s ease-out,
+        width 0.3s ease-out,
+        height 0.3s ease-out;
+    }
+
+    .brand {
+      .hide_on_compact {
+        overflow: hidden;
+      }
+    }
+
+    @media (min-width: calc(#{$lg} + 1px)) {
+      &.compact {
+        width: 70px; // Adjust based on your design
+        padding: 12px;
+        gap: 15px;
+
+        .brand {
+          gap: 0;
+          margin-bottom: 0;
+          .logo {
+            // max-width: unset;
+          }
+        }
+
+        .hide_on_compact {
+          overflow: hidden;
+          opacity: 0;
+          width: 0px;
+          height: 0px;
+        }
+        .sidebar_toggle {
+          right: -13px;
+          .icon_outer {
+            transform: rotate(180deg);
+          }
+          &:hover {
+            .icon_outer {
+              transform: rotate(180deg) translateX(-3px);
+            }
+          }
+        }
+        .sidebar-bottom {
+          gap: 0;
+          padding: 5px;
+        }
+
+        .user {
+          overflow: unset;
+        }
+      }
+    }
+
+    @media (max-width: $lg) {
+      &.sidebar {
+        width: 100%;
+        border-right: 0;
+
+        .hide_mobile.hide_mobile {
+          display: none;
+        }
+      }
+    }
+  }
+
+  :global(.sidebar.compact .search) {
+    input {
+      background-position: left 14px center;
+      padding-left: 25px;
+      transition:
+        min-width 0.2s ease-out,
+        padding-left 0.2s ease-out,
+        background-position 0.2s ease-out;
+
+      &::placeholder {
+        opacity: 0;
+        transition: opacity 0.2s ease-out;
+      }
+    }
+
+    &:has(input[type="text"]:focus),
+    &:has(input[type="text"]:focus),
+    &:has(.search_result:focus),
+    &:has(.search_result:focus-visible) {
+      input {
+        background-position: left 12px center;
+        padding-left: 35px;
+      }
+
+      &::placeholder {
+        opacity: 1;
       }
     }
   }

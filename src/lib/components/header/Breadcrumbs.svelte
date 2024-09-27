@@ -1,10 +1,11 @@
 <script>
   import { page } from "$app/stores";
   import { fetchWorkspaceData } from "$lib/utils/get";
-  import { CaretLeft, Layout } from "phosphor-svelte";
+  import { CaretLeft, Layout, GearSix } from "phosphor-svelte";
 
   let breadcrumbs = [];
   let fetchedData = [];
+  export let type;
 
   // Function to generate breadcrumb URL based on type
   const breadcrumbUrl = (breadcrumb) => {
@@ -101,6 +102,11 @@
         : "category";
     if (!currentId) {
       breadcrumbs = [{ name: "Dashboard", type: "dash", id: null }];
+
+      // Add "Settings" breadcrumb if the URL contains 'settings'
+      if ($page.route.id && $page.route.id.includes("settings")) {
+        breadcrumbs = [{ name: "Instellingen", type: "settings", id: null }];
+      }
     }
     if (currentId && currentType && fetchedData && fetchedData.length > 0) {
       breadcrumbs = generateBreadcrumbs(currentId, currentType, fetchedData);
@@ -122,6 +128,11 @@
               {#if breadcrumbs.length == 1}
                 Dashboard
               {/if}
+            {:else if crumb.type == "settings"}
+              <div class="icon"><GearSix size={18} /></div>
+              {#if breadcrumbs.length == 1}
+                Instellingen
+              {/if}
             {:else}
               {crumb.name}
             {/if}
@@ -137,27 +148,34 @@
 
 <!-- Mobile Breadcrumb (visible on small screens) -->
 <nav class="mobile-breadcrumb mobile-only">
-  <a
-    href={breadcrumbUrl(
-      breadcrumbs[breadcrumbs.length - 2] || {
-        name: "Dashboard",
-        type: "dash",
-        id: null,
-      }
-    )}
-  >
-    {#if breadcrumbs.length}
+  {#if breadcrumbs.length}
+    <a
+      href={breadcrumbs[breadcrumbs.length - 1].name == "Instellingen"
+        ? "/your-custom-url" // Set your desired URL for "Instellingen"
+        : breadcrumbUrl(
+            breadcrumbs[breadcrumbs.length - 2] || {
+              name: "Dashboard",
+              type: "dash",
+              id: null,
+            }
+          )}
+    >
       {#if breadcrumbs[breadcrumbs.length - 1].name == "Dashboard"}
         <div class="icon"><Layout size={14} /></div>
+      {:else if breadcrumbs[breadcrumbs.length - 1].name == "Instellingen"}
+        <div class="icon"><GearSix size={14} /></div>
       {:else}
         <div class="icon"><CaretLeft size={14} /></div>
       {/if}
       <span>{breadcrumbs[breadcrumbs.length - 1].name}</span>
-    {:else}
+    </a>
+  {:else}
+    <a href="/dashboard">
+      <!-- Fallback link or Dashboard URL -->
       <div class="icon"><Layout size={14} /></div>
       <span>Dashboard</span>
-    {/if}
-  </a>
+    </a>
+  {/if}
 </nav>
 
 <style lang="scss">
