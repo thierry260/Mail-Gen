@@ -29,6 +29,8 @@
   let activeTab = "variables";
   let stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   let errorMessage = "";
+  let subscriptionActive = false;
+  let daysLeft = 0;
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -108,7 +110,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword
+        currentPassword,
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -163,13 +165,42 @@
     }
   };
 
+  const checkSubscription = async () => {
+    const customerId = "cus_QvSrargE0AEThh";
+
+    try {
+      const response = await fetch("http://localhost:3000/check-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ customerId }),
+      });
+
+      const data = await response.json();
+
+      console.log(data);
+
+      if (data.active) {
+        subscriptionActive = true;
+        daysLeft = data.days_left;
+      } else {
+        subscriptionActive = false;
+      }
+    } catch (err) {
+      errorMessage = err.message;
+    }
+  };
+
   onMount(async () => {
     fetchVariables();
+    checkSubscription();
   });
 
   const subscribe = async () => {
-    console.log(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
     try {
+      const workspaceId = localStorage.getItem("workspace");
+      const userId = auth.currentUser.uid;
       const response = await fetch(
         "http://localhost:3000/create-checkout-session",
         {
@@ -179,6 +210,9 @@
           },
           body: JSON.stringify({
             priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe", // Your Price ID
+            email: auth.currentUser.email, // Pass the user's email
+            workspaceId: workspaceId, // Pass the workspaceId
+            userId: userId, // Pass the userId
           }),
         },
       );
@@ -343,7 +377,15 @@
 {:else if activeTab === "subscription"}
   <div class="tab-content">
     <h2>Abonnement</h2>
-    <button on:click={subscribe}>Subscribe Now</button>
+    {#if subscriptionActive}
+      <p>Je hebt nog {daysLeft} dagen in je abonnement.</p>
+      <button on:click={console.log("canceljemoeder")}
+        >Abonnement annuleren</button
+      >
+    {:else}
+      <button on:click={subscribe}>Subscribe Now</button>
+    {/if}
+
     {#if errorMessage}
       <p style="color: red;">{errorMessage}</p>
     {/if}
