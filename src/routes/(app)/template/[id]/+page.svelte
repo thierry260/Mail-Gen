@@ -1305,7 +1305,7 @@
   .preview {
     background-color: #fff;
     border: 1px solid var(--border);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-bigger, 10px);
     padding: 30px;
     h2 {
       border-bottom: 1px solid var(--border);

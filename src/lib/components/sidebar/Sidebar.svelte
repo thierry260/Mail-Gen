@@ -326,15 +326,18 @@
     background: linear-gradient(
       230deg,
       hsl(from var(--primary) h s calc(l - 32)),
-      hsl(from var(--primary) h s calc(l - 44))
+      hsl(from var(--primary) h s calc(l - 42))
     );
+    color: #fff;
+    // New styling
+    background: #fff;
+    color: var(--text);
     border-right: 1px solid var(--border);
     height: 100%;
     padding: 30px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    color: #fff;
     gap: 20px;
     position: relative;
     transition:
@@ -357,12 +360,13 @@
         background-color: var(--primary);
         background: linear-gradient(
           -45deg,
-          hsl(from var(--primary) h s calc(l - 8)),
+          hsl(from var(--primary) h s calc(l - 10)),
           hsl(from var(--primary) h s calc(l + 8))
         );
+        background: var(--primary);
         width: max-content;
         padding: 12px;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        // box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 
         .logo {
           max-width: 32px;
@@ -370,6 +374,8 @@
           object-fit: contain;
           width: 100%;
           display: block;
+          filter: brightness(0.1);
+          opacity: 0.85;
         }
       }
       div {
@@ -377,7 +383,7 @@
           font-size: 1.9rem;
         }
         small {
-          color: var(--gray-300);
+          color: var(--gray-400);
           font-size: 1.3rem;
         }
       }
@@ -484,8 +490,9 @@
         display: flex;
       }
       &.active {
-        background-color: hsl(from var(--primary) h s calc(l + 35));
-        background-color: rgba(255, 255, 255, 0.12);
+        // background-color: hsl(from var(--primary) h s calc(l + 35));
+        // background-color: rgba(255, 255, 255, 0.12);
+        background-color: hsl(from var(--primary) h s calc(l + 16));
         // color: var(--primary);
         .icon_outer {
           /* svelte-ignore unused-selector */
@@ -514,7 +521,6 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 10px;
       font-size: 1.6rem;
-      color: #fff;
       transition:
         border-color 0.2s ease-out,
         padding 0.25s ease-out;
@@ -526,7 +532,7 @@
       align-items: center;
 
       border: none;
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: rgba(0, 0, 0, 0.075);
       padding: 12px 15px;
 
       .user {
@@ -577,7 +583,7 @@
       }
       .icon_button {
         border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(0, 0, 0, 0.08);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -586,10 +592,17 @@
         transition: background-color 0.2s ease-out;
 
         &:hover {
-          background-color: rgba(255, 255, 255, 0.2);
+          background-color: rgba(0, 0, 0, 0.12);
         }
         &.active {
-          color: var(--primary);
+          background: linear-gradient(
+            -45deg,
+            hsl(from var(--primary) h s calc(l - 10)),
+            hsl(from var(--primary) h s calc(l + 8))
+          );
+          color: hsl(from var(--primary) h s calc(l - 70));
+          // outline: 3px solid var(--primary);
+          // outline-offset: -3px;
           pointer-events: none;
         }
       }
@@ -667,7 +680,7 @@
           height: 0px;
         }
         .sidebar_toggle {
-          right: -13px;
+          right: -12px;
           .icon_outer {
             transform: rotate(180deg);
           }

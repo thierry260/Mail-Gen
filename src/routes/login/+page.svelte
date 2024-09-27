@@ -1,6 +1,9 @@
 <script>
   import { auth, db } from "$lib/firebase";
-  import { signInWithEmailAndPassword } from "firebase/auth";
+  import {
+    signInWithEmailAndPassword,
+    sendPasswordResetEmail,
+  } from "firebase/auth";
   import { writable } from "svelte/store";
   import { goto } from "$app/navigation";
   import { doc, getDoc } from "firebase/firestore";
@@ -13,6 +16,7 @@
   let password = "";
   let errorMessage = writable("");
   let workspaceErrorMessage = writable("");
+  let resetMessage = writable(""); // For password reset feedback
 
   async function checkWorkspace() {
     try {
@@ -52,8 +56,29 @@
         errorMessage.set("Je account is geen onderdeel van deze workspace.");
       }
     } catch (error) {
-      // errorMessage.set(error.message);
       errorMessage.set("De inloggegevens zijn incorrect.");
+    }
+  }
+
+  async function resetPassword() {
+    // Prompt user for email with pre-filled value
+    const userEmail = window.prompt(
+      "Voer je e-mailadres in om je wachtwoord te resetten:",
+      email
+    );
+
+    // Check if user canceled the prompt or didn't provide an email
+    if (userEmail) {
+      try {
+        await sendPasswordResetEmail(auth, userEmail);
+        resetMessage.set(
+          "Een wachtwoord reset link is naar je e-mailadres gestuurd."
+        );
+      } catch (error) {
+        resetMessage.set("Er is iets fout gegaan. Controleer het e-mailadres.");
+      }
+    } else {
+      resetMessage.set("Wachtwoord reset geannuleerd.");
     }
   }
 </script>
@@ -113,9 +138,21 @@
       <span>Wachtwoord</span>
     </label>
     <button class="button" type="submit">Login</button>
+
+    <!-- Forgot password link -->
+    <button type="button" class="link-button" on:click={resetPassword}>
+      Wachtwoord vergeten?
+    </button>
+
+    <!-- Password reset feedback message -->
+    {#if $resetMessage}
+      <p style="color: green">{$resetMessage}</p>
+    {/if}
+
     {#if $errorMessage}
       <p style="color: red">{$errorMessage}</p>
     {/if}
+
     <button
       type="button"
       class="button outline back_button"
@@ -144,11 +181,16 @@
     flex-direction: column;
     gap: 5px;
     justify-content: stretch;
-    .label {
-      margin-bottom: 0;
-    }
   }
-  .back_button.back_button {
+  .link-button {
+    background: none;
+    border: none;
+    color: var(--text);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 1.4rem;
+  }
+  .back_button {
     font-size: 1.4rem;
     font-weight: 400;
   }

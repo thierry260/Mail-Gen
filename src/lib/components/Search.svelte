@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { fetchWorkspaceData } from "$lib/utils/get";
+  import { templatesStore } from "$lib/stores/templates";
   import { CaretRight } from "phosphor-svelte";
 
   let data = [];
@@ -15,9 +15,9 @@
   export let location = "flat";
 
   let searchInputRef = false;
+  $: data = $templatesStore;
 
   onMount(async () => {
-    data = await fetchWorkspaceData("categories");
     if (data) {
       data = data.map((category) => ({
         ...category,
@@ -224,6 +224,7 @@
       on:input={handleSearchInputChange}
       on:focus={handleInputFocus}
       bind:value={searchValue}
+      autocomplete="off"
     />
     <div class="shortcut-bubble">{searchBubbleText}</div>
   </div>
@@ -372,6 +373,7 @@
         border-radius: var(--border-radius-big, 10px);
         border: none;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0px 0px 2px rgba(0, 0, 0, 0.09);
         min-height: 44px;
         transition: outline-color 0.2s ease-out;
         outline-width: 200vmax;

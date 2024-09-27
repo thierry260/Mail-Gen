@@ -1,7 +1,6 @@
 <script>
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { fetchWorkspaceData } from "$lib/utils/get";
   import { CaretRight, Plus } from "phosphor-svelte";
   import { createCategory, createNewTemplate } from "$lib/utils/create";
   import { templatesStore } from "$lib/stores/templates";

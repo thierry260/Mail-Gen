@@ -18,7 +18,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     aside {
-      background: linear-gradient(230deg, var(--primary), var(--secondary));
+      background: linear-gradient(
+        230deg,
+        hsl(from var(--primary) h s calc(l - 50)),
+        hsl(from var(--primary) h s calc(l - 75))
+      );
+
       display: flex;
       align-items: center;
       justify-content: center;

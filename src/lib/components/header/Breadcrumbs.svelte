@@ -1,6 +1,6 @@
 <script>
   import { page } from "$app/stores";
-  import { fetchWorkspaceData } from "$lib/utils/get";
+  import { templatesStore } from "$lib/stores/templates";
   import { CaretLeft, Layout, GearSix } from "phosphor-svelte";
 
   let breadcrumbs = [];
@@ -79,19 +79,10 @@
     return path;
   };
 
-  // Fetch workspace data and update fetchedData
-  const fetchData = async () => {
-    try {
-      const data = await fetchWorkspaceData("categories");
-      fetchedData = Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error("Failed to fetch workspace data:", error);
-      fetchedData = [];
-    }
-  };
-
-  // Call fetchData initially
-  fetchData();
+  $: {
+    console.log("templatesStore: ", $templatesStore);
+    fetchedData = Array.isArray($templatesStore) ? $templatesStore : [];
+  }
 
   // Watch for changes in $page and update breadcrumbs accordingly
   $: {

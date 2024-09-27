@@ -97,11 +97,16 @@ p {
   font-size: 1.6rem;
   white-space: nowrap;
   text-decoration: none;
-  color: $white;
+  color: hsl(from var(--primary) h s calc(l - 70));
   background: var(--gradient, --primary);
+  background: var(--primary);
   border-radius: 25px;
   padding: 11px 18px;
   transition: all ease-out 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
 
   &.outline {
     background: $white;
@@ -126,7 +131,7 @@ p {
     background: none;
     background-color: transparent;
     padding: 10px;
-    color: var(--text);
+    color: var(--gray-800);
     border: 1px solid var(--border);
     font-size: 1.4rem;
     transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out;
@@ -226,7 +231,7 @@ select {
   color: $black;
   position: relative;
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 15px 20px;
   width: 100%;
   outline-style: solid;
@@ -290,6 +295,10 @@ code {
   color: var(--secondary);
   font-weight: 500;
   font-size: 1.4rem;
+
+  background-color: hsl(from var(--primary) h s calc(l + 20));
+  border-color: hsl(from var(--primary) h s calc(l - 10));
+  color: hsl(from var(--primary) h s calc(l - 90));
 }
 
 // main:has(.home) nav:first-child,
@@ -314,15 +323,15 @@ main:has(.settings) nav:first-child {
     pointer-events: none;
   }
 
-  code {
-    padding: 2px 6px;
-    border-radius: 5px;
-    border: 1px solid var(--border);
-    background-color: var(--gray-100);
-    margin-inline: 2px;
-    display: inline-block;
-    user-select: none;
-  }
+  // code {
+  //   padding: 2px 6px;
+  //   border-radius: 5px;
+  //   border: 1px solid var(--border);
+  //   background-color: var(--gray-100);
+  //   margin-inline: 2px;
+  //   display: inline-block;
+  //   user-select: none;
+  // }
 }
 
 // Tooltips
