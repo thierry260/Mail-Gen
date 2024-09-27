@@ -257,17 +257,19 @@
       }
       &.active {
         background-color: rgba(0, 0, 0, 0.12);
-        color: var(--primary);
+        background-color: hsl(from var(--primary) h s calc(l + 16));
+        color: hsl(from var(--primary) h s calc(l - 70));
 
         .dropdown_outer {
           background-color: transparent;
+          color: hsl(from var(--primary) h s calc(l - 70));
         }
         &::before {
-          // height: 34px;
+          height: 34px;
         }
       }
       &:not(.active):hover {
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(0, 0, 0, 0.1);
       }
     }
     .accordion_header .dropdown {

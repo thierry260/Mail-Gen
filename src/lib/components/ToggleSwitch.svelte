@@ -53,6 +53,7 @@
     left: 3px;
     bottom: 3px;
     background-color: white;
+    background-color: hsl(from var(--primary) h s calc(l - 55));
     -webkit-transition: 0.4s;
     transition: 0.4s;
   }

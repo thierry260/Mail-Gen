@@ -10,6 +10,7 @@
     updatePassword,
   } from "firebase/auth";
   import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
   import { TrashSimple } from "phosphor-svelte";
   import { loadStripe } from "@stripe/stripe-js";
   import Header from "$lib/components/header/Header.svelte";
@@ -30,6 +31,20 @@
   let activeTab = "variables";
   let stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   let errorMessage = "";
+
+  // Function to handle tab click and update URL
+  const setActiveTab = (tab) => {
+    activeTab = tab;
+    goto(`/settings?tab=${tab}`); // Update the URL with the active tab
+  };
+
+  // Handle URL query parameters on page load
+  $: if ($page.url.searchParams.get("tab")) {
+    const urlTab = $page.url.searchParams.get("tab");
+    if (urlTab) {
+      activeTab = urlTab; // Set activeTab based on URL param
+    }
+  }
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -210,19 +225,19 @@
 <div class="tabs">
   <button
     class:active={activeTab === "variables"}
-    on:click={() => (activeTab = "variables")}>Variabelen</button
+    on:click={() => setActiveTab("variables")}>Variabelen</button
   >
   <button
     class:active={activeTab === "account"}
-    on:click={() => (activeTab = "account")}>Account</button
+    on:click={() => setActiveTab("account")}>Account</button
   >
   <button
     class:active={activeTab === "workspace"}
-    on:click={() => (activeTab = "workspace")}>Workspace</button
+    on:click={() => setActiveTab("workspace")}>Workspace</button
   >
   <button
     class:active={activeTab === "subscription"}
-    on:click={() => (activeTab = "subscription")}>Abonnement</button
+    on:click={() => setActiveTab("subscription")}>Abonnement</button
   >
 </div>
 

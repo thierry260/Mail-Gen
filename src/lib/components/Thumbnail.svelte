@@ -84,9 +84,8 @@
         Variable,
         Underline,
       ]);
-      // console.log(templateContentHTML);
     } catch (error) {
-      // console.log("content:", content.content);
+      console.log("templateContentHTML - content.content:", content.content);
       // console.error("content content.content: Error generating HTML:", error);
     }
   } else if (content) {
@@ -98,10 +97,12 @@
       ]);
       // console.log(templateContentHTML);
     } catch (error) {
-      // console.log(content);
+      // console.log("templateContentHTML - content:", content);
       // console.error("content: Error generating HTML:", error);
     }
   }
+
+  // console.log("templateContentHTML: ", templateContentHTML);
 
   function countTemplatesInCategory(categoryArray, targetId) {
     let templateCount = 0;
@@ -353,7 +354,7 @@
   .thumbnail {
     padding: 15px;
     position: relative;
-    border-radius: var(--border-radius-small, 5px);
+    border-radius: var(--border-radius-medium, 12px);
     border: 1px solid var(--border);
     background-color: #fff;
     display: flex;
@@ -477,6 +478,12 @@
           border-radius: 25px;
 
           &.link {
+            @media (min-width: calc(#{$lg} + 1px)) {
+              color: hsl(from var(--primary) h s calc(l - 70));
+              background: var(--primary);
+              border-color: var(--primary);
+            }
+
             // background-color: hsl(from var(--primary) h s calc(l + 40));
             // color: var(--primary);
             // border-color: transparent;

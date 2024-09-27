@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
-  import { fetchWorkspaceData } from "$lib/utils/get";
   import { CaretRight, ArrowRight } from "phosphor-svelte";
+  import { templatesStore } from "$lib/stores/templates";
   import Search from "$lib/components/Search.svelte";
   import Thumbnail from "$lib/components/Thumbnail.svelte";
   import Header from "$lib/components/header/Header.svelte";
@@ -12,8 +12,9 @@
   let searchInput = "";
   let searchResults = [];
 
-  onMount(async () => {
-    data = await fetchWorkspaceData("categories");
+  $: {
+    data = $templatesStore;
+
     if (data) {
       data = data.map((category) => ({
         ...category,
@@ -23,7 +24,9 @@
     } else {
       console.log("Categories not found");
     }
+  }
 
+  onMount(async () => {
     // Function to retrieve recently viewed templates from localStorage
     const getRecentlyViewed = () => {
       return JSON.parse(localStorage.getItem("recentlyViewed")) || [];

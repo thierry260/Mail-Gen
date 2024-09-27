@@ -267,6 +267,9 @@
       &:has(input:checked) {
         background-color: var(--background);
         opacity: 1;
+
+        background-color: hsl(from var(--primary) h s calc(l + 16));
+        color: hsl(from var(--primary) h s calc(l - 55));
       }
 
       span {
@@ -465,7 +468,7 @@
   .mobile_menu_item {
     padding: 15px;
     position: relative;
-    border-radius: var(--border-radius-small, 5px);
+    border-radius: var(--border-radius-bigger, 15px);
     border: 1px solid var(--border);
     background-color: #fff;
     display: flex;
