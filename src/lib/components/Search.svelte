@@ -169,6 +169,7 @@
         document.activeElement.blur(); // Blur the currently focused element
         searchValue = "";
         searchResults = []; // Hide the search results
+        searchBubbleText = "/";
         focusedResultIndex = -1; // Reset focused result
       }
     }
@@ -273,6 +274,7 @@
         border-radius: 4px;
         font-size: 1.3rem;
         color: var(--gray-600);
+        pointer-events: none;
 
         @media (max-width: $lg) {
           display: none;
@@ -365,29 +367,41 @@
 
     &.sidebar {
       z-index: 10;
+      // width: min-content;
       input[type="text"] {
         border-radius: var(--border-radius-big, 10px);
         border: none;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
         min-height: 44px;
         transition: outline-color 0.2s ease-out;
-        outline-width: 100vmax;
+        outline-width: 200vmax;
         outline-color: rgba(0, 0, 0, 0);
         outline-style: solid;
+        transition: min-width 0.2s ease-out;
+        min-width: 0px;
+        width: 100%;
         &:focus {
           outline-color: rgba(0, 0, 0, 0.2);
+          min-width: 300px;
         }
       }
       .search_results {
         border-radius: var(--border-radius-big, 10px);
 
         .search_result {
-          outline: 100vmax solid rgba(0, 0, 0, 0);
+          outline: 200vmax solid rgba(0, 0, 0, 0);
           &:focus,
           &:focus-visible {
             outline-color: rgba(0, 0, 0, 0.2);
+            min-width: 300px;
           }
         }
+      }
+      &:has(input[type="text"]:focus),
+      &:has(input[type="text"]:focus),
+      &:has(.search_result:focus),
+      &:has(.search_result:focus-visible) {
+        min-width: 300px;
       }
     }
   }
