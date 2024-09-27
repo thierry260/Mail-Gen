@@ -216,7 +216,13 @@
     const auth = getAuth();
     try {
       await signOut(auth);
-      localStorage.clear();
+
+      Object.keys(localStorage).forEach((key) => {
+        if (key !== "favoriteTemplates" && key !== "recentlyViewed") {
+          localStorage.removeItem(key);
+        }
+      });
+
       goto("/login");
     } catch (error) {
       console.error("Logout failed", error);
@@ -533,6 +539,10 @@
 
       border: none;
       background-color: rgba(0, 0, 0, 0.075);
+
+      border: 1px solid var(--border);
+      background: #fff;
+
       padding: 12px 15px;
 
       .user {
