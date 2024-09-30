@@ -46,11 +46,37 @@
       );
       const user = userCredential.user;
 
+      // Fetch the user document
       const userRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userRef);
 
+      // Check if the user exists and belongs to the specified workspace
       if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
+        // Set the workspace in localStorage
         localStorage.setItem("workspace", workspace);
+
+        // Check the workspace document for the user's subscription info
+        const workspaceRef = doc(db, "workspaces", workspace);
+        const workspaceDoc = await getDoc(workspaceRef);
+
+        if (workspaceDoc.exists()) {
+          const workspaceData = workspaceDoc.data();
+
+          // Check if the user is in the workspace's users map
+          if (workspaceData.users && workspaceData.users[user.uid]) {
+            const userWorkspaceData = workspaceData.users[user.uid];
+
+            // Set the stripeCustomerId in localStorage if it exists
+            if (userWorkspaceData.stripeCustomerId) {
+              localStorage.setItem(
+                "stripeCustomerId",
+                userWorkspaceData.stripeCustomerId
+              );
+            }
+          }
+        }
+
+        // Redirect the user after a successful login
         goto("/");
       } else {
         errorMessage.set("Je account is geen onderdeel van deze workspace.");
