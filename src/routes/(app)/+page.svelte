@@ -17,10 +17,16 @@
     data = $templatesStore;
 
     if (data) {
+      console.log(data);
+
+      console.log("$templatesStore: ", $templatesStore);
+      allTemplates = [];
+      data.forEach((category) => {
+        allTemplates = extractTemplates(category, allTemplates);
+      });
       data = data.map((category) => ({
         ...category,
       }));
-      allTemplates = extractTemplates($templatesStore);
     } else {
       console.log("Categories not found");
     }
@@ -42,17 +48,16 @@
     favoriteTemplates = getFavoriteTemplates();
   });
 
-  const extractTemplates = (store, templates = []) => {
-    store.forEach((category) => {
-      if (category.templates) {
-        templates = templates.concat(category.templates);
-      }
-      if (category.sub) {
-        category.sub.forEach((subcategory) => {
-          templates = extractTemplates(subcategory, templates);
-        });
-      }
-    });
+  const extractTemplates = (category, templates = []) => {
+    if (category.templates) {
+      console.log("templates: ", templates);
+      templates = templates.concat(category.templates);
+    }
+    if (category.sub) {
+      category.sub.forEach((subcategory) => {
+        templates = extractTemplates(subcategory, templates);
+      });
+    }
     return templates;
   };
 </script>
@@ -136,6 +141,13 @@
   .recently_viewed {
     ~ .all_templates {
       display: none;
+    }
+
+    &:has(.recent_templates:empty) {
+      display: none;
+      ~ .all_templates {
+        display: block;
+      }
     }
   }
 

@@ -153,11 +153,13 @@
   </form>
 {:else}
   <form on:submit|preventDefault={login}>
-    <figure class="logo_outer">
-      <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
-    </figure>
+    <div class="heading">
+      <figure class="logo_outer">
+        <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+      </figure>
+      <h2>Je bent er bijna</h2>
+    </div>
     <div class="form_intro">
-      <h1>Je bent er bijna</h1>
       <p>Vul je gegevens in om in te loggen.</p>
     </div>
     <label class="input_wrapper">
