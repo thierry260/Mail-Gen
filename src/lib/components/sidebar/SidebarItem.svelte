@@ -256,13 +256,14 @@
         transition: height 0.2s ease-out;
       }
       &.active {
-        background-color: rgba(0, 0, 0, 0.12);
-        background-color: hsl(from var(--primary) h s calc(l + 16));
-        color: hsl(from var(--primary) h s calc(l - 70));
+        // background-color: rgba(0, 0, 0, 0.12);
+        border-color: var(--primary);
+        background-color: hsl(from var(--primary) h s calc(l + 25));
+        color: hsl(from var(--primary) h s calc(l - 60));
 
         .dropdown_outer {
           background-color: transparent;
-          color: hsl(from var(--primary) h s calc(l - 70));
+          // color: hsl(from var(--primary) h s calc(l - 70));
         }
         &::before {
           height: 34px;

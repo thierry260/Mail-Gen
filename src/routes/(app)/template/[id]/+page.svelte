@@ -409,6 +409,16 @@
 
     isFavorite = !isFavorite;
     saveFavoriteState();
+
+    if (isFavorite) {
+      toast.success("Favoriet toegevoegd", {
+        position: "bottom-right",
+      });
+    } else {
+      toast.success("Favoriet verwijderd", {
+        position: "bottom-right",
+      });
+    }
   };
 
   const saveFavoriteState = () => {
@@ -802,14 +812,20 @@
     if (confirmDelete) {
       deleteTemplate(templateData.id)
         .then(() => {
-          // Handle success, e.g., show success message or redirect
-          console.log("Template deleted successfully");
+          toast.success("Template verwijderd", {
+            position: "bottom-right",
+          });
+
           const templateCatId = removeTemplateFromStore(templateData.id);
           goto(`/category/${templateCatId}`);
         })
         .catch((error) => {
           // Handle error, e.g., show error message
           console.error("Error deleting template:", error);
+
+          toast.error(error.message, {
+            position: "bottom-right",
+          });
         });
     }
   };

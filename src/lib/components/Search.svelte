@@ -396,7 +396,8 @@
           &:focus,
           &:focus-visible {
             outline-color: rgba(0, 0, 0, 0.2);
-            min-width: 300px;
+            min-width: 298px;
+            border: none;
           }
         }
       }

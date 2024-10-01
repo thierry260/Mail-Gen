@@ -71,6 +71,9 @@
           templates: [...item.templates, newTemplate],
           open: true,
         };
+        toast.success("Template toegevoegd", {
+          position: "bottom-right",
+        });
         goto(`/template/${newTemplateId}#edit`);
       }
       closeDropdown();
@@ -82,6 +85,9 @@
       ) {
         deleteCategory(categoryId).then(() => {
           item = {};
+          toast.success("Categorie verwijderd", {
+            position: "bottom-right",
+          });
           closeDropdown();
         });
       }
@@ -93,6 +99,9 @@
       if (newName) {
         updateCategoryName(categoryId, newName).then(() => {
           item.name = newName;
+          toast.success("Categorienaam gewijzigd", {
+            position: "bottom-right",
+          });
           closeDropdown();
         });
       }
@@ -106,6 +115,9 @@
             ...item,
             sub: [...item.sub, newCategory],
           };
+          toast.success("Categorie toegevoegd", {
+            position: "bottom-right",
+          });
           closeDropdown();
         });
       }

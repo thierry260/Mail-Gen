@@ -69,7 +69,7 @@
             type={"template"}
             id={template.id}
             name={template.name}
-            content={template.content}
+            content={template}
           />
         {/each}
       </div>
@@ -87,7 +87,7 @@
             type={"template"}
             id={template.id}
             name={template.name}
-            content={template.content}
+            content={template}
           />
         {/each}
       </div>

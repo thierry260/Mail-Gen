@@ -259,7 +259,6 @@
     {#if templates.length > 0}
       <div class="templates_list">
         {#each templates as template}
-          <!-- {JSON.stringify(template)} -->
           <Thumbnail
             type={"template"}
             id={template.id}
