@@ -64,36 +64,18 @@
   let addVariableEl;
   let shouldShow = false;
   let editingVariable = false;
+  let focusedId = -1;
 
   $: {
     if (inputRefs[0]) {
-      inputRefs[0].focus();
-      inputRefs[0].select();
+      setTimeout(() => {
+        inputRefs[0].focus();
+        inputRefs[0].select();
+      }, 50);
     }
   }
 
   $: console.log("should show state: ", shouldShow);
-  $: {
-    if (!shouldShow) {
-      editingVariable = false;
-      setTimeout(() => {
-        const variableInputElement = document.querySelector(".popup input");
-        if (variableInputElement) {
-          variableInputElement.focus();
-        }
-      }, 50);
-    }
-    if (shouldShow) {
-      setTimeout(() => {
-        const variableInputElement = document.querySelector(".popup input");
-        console.log("variableInputElement: ", variableInputElement);
-        if (variableInputElement) {
-          variableInputElement.focus();
-          console.log("variableInputElement focused");
-        }
-      }, 50);
-    }
-  }
 
   let hasActiveSubscription = false;
   let currentUser;
@@ -305,9 +287,10 @@
     editor.destroy();
   }
 
-  $: if (variableInput) {
-    console.log("variable input exists");
-    variableInput.focus();
+  $: if (shouldShow && variableInput) {
+    setTimeout(() => {
+      variableInput.focus();
+    }, 251);
   }
 
   const parseVariables = (content) => {
@@ -590,6 +573,33 @@
   const handleInputChange = (variableId, event) => {
     userInput = { ...userInput, [variableId]: event.target.value };
     updatePreviewContent(); // Ensure the preview content updates
+
+    const id = event.target.id;
+    console.log("id: ", id);
+
+    document
+      .querySelectorAll(`.preview-content code[data-id="${id}"]`)
+      .forEach((el) => {
+        el.classList.add("active");
+      });
+  };
+
+  const handleInputFocus = (variableId, event) => {
+    const id = event.target.id;
+    console.log("id: ", id);
+
+    // Select all matching elements and loop through them to add the class
+    document
+      .querySelectorAll(`.preview-content code[data-id="${id}"]`)
+      .forEach((el) => {
+        el.classList.add("active");
+      });
+  };
+
+  const handleInputBlur = (variableId, event) => {
+    document.querySelectorAll(`.preview-content code.active`).forEach((el) => {
+      el.classList.remove("active");
+    });
   };
 
   const updatePreviewContent = () => {
@@ -1040,18 +1050,6 @@
     }
   };
 
-  // Set focus on the variable search input when the popup is shown
-  $: if (showVariablePopup) {
-    setTimeout(() => {
-      const variableInputElement = document.querySelector(".popup input");
-      if (variableInputElement) {
-        variableInputElement.focus();
-      }
-      document.addEventListener("keydown", handleKeyPress);
-    }, 0);
-  } else {
-    document.removeEventListener("keydown", handleKeyPress);
-  }
   // Fetch existing variables from the workspace
   const fetchVariables = async () => {
     if (!browser) return;
@@ -1269,6 +1267,8 @@
                   id={variableId}
                   bind:value={userInput[variableId]}
                   on:input={(e) => handleInputChange(variableId, e)}
+                  on:focus={(e) => handleInputFocus(variableId, e)}
+                  on:blur={(e) => handleInputBlur(variableId, e)}
                   bind:this={inputRefs[index]}
                 />
                 <span

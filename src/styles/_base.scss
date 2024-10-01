@@ -296,9 +296,14 @@ code {
   font-weight: 500;
   font-size: 1.4rem;
 
-  background-color: hsl(from var(--primary) h s calc(l + 20));
-  border-color: hsl(from var(--primary) h s calc(l - 10));
-  color: hsl(from var(--primary) h s calc(l - 90));
+  background-color: hsl(from var(--primary) h s calc(l + 25));
+  border-color: hsl(from var(--primary) h s calc(l - 0));
+  color: hsl(from var(--primary) h s calc(l - 60));
+  transition: border-color 0.2s ease-out;
+}
+
+code.active {
+  border-color: hsl(from var(--primary) h s calc(l - 40));
 }
 
 // main:has(.home) nav:first-child,

@@ -467,7 +467,7 @@
     display: flex;
   }
   :global(body .empty.empty.empty) {
-    --notice-hs: 214.29deg, 20%;
+    --notice-hs: 214.29deg, 10%;
     --response-color: var(--notice-hs); // Standaard response kleur voor notice
     background-color: hsl(var(--response-color), 98%);
     color: hsl(var(--response-color), 50%);
