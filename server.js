@@ -2,7 +2,7 @@ import express from 'express';
 import Stripe from 'stripe';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './src/lib/firebase.js'; // Adjust import based on your firebase configuration
 
 
@@ -35,9 +35,11 @@ app.post('/create-checkout-session', async (req, res) => {
 
         // Save customerId in Firebase under the correct user's record in the workspace
         try {
-            const userDocRef = doc(db, `workspaces/${workspaceId}/users/${userId}`);
-            await updateDoc(userDocRef, {
-                stripeCustomerId: customerId  // Save customerId under the user
+            const workspaceDocRef = doc(db, `workspaces/${workspaceId}`);
+            await updateDoc(workspaceDocRef, {
+                [`users.${userId}`]: {
+                    stripeCustomerId: customerId
+                }
             });
             console.log("Successfully saved customerId to Firebase.");
         } catch (firebaseError) {
@@ -51,12 +53,12 @@ app.post('/create-checkout-session', async (req, res) => {
             mode: 'subscription',
             line_items: [
                 {
-                    price: priceId, // Your Stripe Price ID
+                    price: priceId,
                     quantity: 1,
                 },
             ],
-            success_url: 'http://localhost:5173/success',  // Placeholder URL
-            cancel_url: 'http://localhost:5173/cancel',    // Placeholder URL
+            success_url: `http://localhost:5173/settings?tab=subscription&payment=success&cid=${customerId}`,  // Placeholder URL
+            cancel_url: `http://localhost:5173/settings?tab=subscription&payment=cancel&cid=${customerId}`,    // Placeholder URL
         });
 
         console.log("Session created:", session); // Log the entire session object
@@ -86,14 +88,64 @@ app.post('/check-subscription', async (req, res) => {
             const subscription = subscriptions.data[0];
             const remainingDays = Math.floor((new Date(subscription.current_period_end * 1000) - new Date()) / (1000 * 60 * 60 * 24));
 
-            res.json({
+            return res.json({
                 active: true,
                 days_left: remainingDays,
             });
         } else {
-            res.json({ active: false });
+            return res.json({ active: false });
         }
     } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/cancel-subscription', async (req, res) => {
+    const { workspaceId, userId, customerId } = req.body;
+
+    try {
+        // Retrieve customerId from Firebase
+        const userDocRef = doc(db, `workspaces/${workspaceId}`);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+            throw new Error('Workspace not found');
+        }
+
+        const userData = userDoc.data().users[userId];
+        // const customerId = userData?.stripeCustomerId;
+
+        if (!customerId) {
+            throw new Error('Customer ID not found');
+        }
+
+        console.log('Retrieved Customer ID:', customerId);
+
+        // Retrieve active subscriptions for the customer
+        const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            status: 'active',
+        });
+
+        if (subscriptions.data.length === 0) {
+            throw new Error('No active subscriptions found');
+        }
+
+        const subscriptionId = subscriptions.data[0].id; // Assuming one active subscription
+        console.log('Found subscription to cancel:', subscriptionId);
+
+        // Cancel the subscription
+        const canceledSubscription = await stripe.subscriptions.cancel(subscriptionId);
+        console.log('Subscription canceled:', canceledSubscription.id);
+
+        // Optionally update Firebase to remove or mark the stripeCustomerId as canceled
+        await updateDoc(userDocRef, {
+            [`users.${userId}.stripeCustomerId`]: null // Mark it as canceled or remove the field
+        });
+
+        res.json({ success: true, message: 'Subscription canceled successfully' });
+    } catch (error) {
+        console.error('Error canceling subscription:', error.message);
         res.status(500).json({ error: error.message });
     }
 });

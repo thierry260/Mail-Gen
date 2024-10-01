@@ -6,6 +6,18 @@
   import { createNewTemplate } from "$lib/utils/create";
   import { createCategory } from "$lib/utils/create";
   import { Plus, TrashSimple, PencilSimple, Star } from "phosphor-svelte";
+  import { user } from "$lib/stores/user";
+  import toast, { Toaster } from "svelte-french-toast";
+
+  let hasActiveSubscription = false;
+  let currentUser;
+  $: {
+    currentUser = $user;
+
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
+    }
+  }
 
   // Icons map for dynamic rendering
   const icons = {
@@ -31,17 +43,24 @@
 
   // Handle click events on dropdown items
   async function handleItemClick(action) {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     console.log(`Clicked item with action: ${action}`);
 
     if (action === "templ_add") {
       const newTemplateName = prompt(
-        "Geef een naam in voor de nieuwe template:"
+        "Geef een naam in voor de nieuwe template:",
       );
 
       if (!newTemplateName) return;
       const newTemplateId = await createNewTemplate(
         categoryId,
-        newTemplateName
+        newTemplateName,
       );
 
       console.log(newTemplateId);
@@ -58,7 +77,7 @@
     } else if (action === "cat_delete") {
       if (
         confirm(
-          "Weet je zeker dat je deze categorie wilt verwijderen? Alle subcategorieën en templates zullen tevens worden verwijderd."
+          "Weet je zeker dat je deze categorie wilt verwijderen? Alle subcategorieën en templates zullen tevens worden verwijderd.",
         )
       ) {
         deleteCategory(categoryId).then(() => {
@@ -69,7 +88,7 @@
     } else if (action === "cat_modify-name") {
       const newName = prompt(
         "Geef een nieuwe naam voor de categorie:",
-        item.name
+        item.name,
       );
       if (newName) {
         updateCategoryName(categoryId, newName).then(() => {
@@ -79,7 +98,7 @@
       }
     } else if (action === "cat_add") {
       const newCategoryName = prompt(
-        "Geef een naam in voor de nieuwe categorie:"
+        "Geef een naam in voor de nieuwe categorie:",
       );
       if (newCategoryName) {
         createCategory(categoryId, newCategoryName).then((newCategory) => {

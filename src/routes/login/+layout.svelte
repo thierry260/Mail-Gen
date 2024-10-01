@@ -17,6 +17,7 @@
     height: 100dvh;
     display: grid;
     grid-template-columns: 1fr 1fr;
+
     aside {
       background: linear-gradient(
         230deg,
@@ -40,6 +41,17 @@
       // align-items: center;
       justify-content: center;
       flex-direction: column;
+
+      @media (max-width: $lg) {
+        padding: 30px;
+      }
+    }
+
+    @media (max-width: $lg) {
+      grid-template-columns: 100%;
+      aside {
+        display: none;
+      }
     }
   }
 </style>

@@ -57,7 +57,7 @@
 
           if (usersCount >= parseInt(workspaceDoc.data().usersNo, 10)) {
             errorMessage.set(
-              "Maximum number of users reached for this workspace."
+              "Maximum number of users reached for this workspace.",
             );
             return;
           }
@@ -65,7 +65,7 @@
           await createAndRegisterUser(workspaceRef);
         } else {
           errorMessage.set(
-            "Workspace does not exist. Please check the invite link."
+            "Workspace does not exist. Please check the invite link.",
           );
         }
       } else {
@@ -92,7 +92,7 @@
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const userUID = user.uid;
 
@@ -105,7 +105,7 @@
 
       await setDoc(
         doc(db, "workspaces", workspaceId, "users", userUID),
-        userData
+        userData,
       );
 
       const userCommonData = {
@@ -132,6 +132,9 @@
 </script>
 
 <form on:submit|preventDefault={register}>
+  <figure class="logo_outer">
+    <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+  </figure>
   <h1>
     {isInvited ? `Join workspace: ${workspaceName}` : "Maak een workspace"}
   </h1>
@@ -211,7 +214,34 @@
   {/if}
 </form>
 
-<style>
+<style lang="scss">
+  .logo_outer {
+    display: none;
+    border-radius: var(--border-radius-big, 10px);
+    background-color: var(--primary);
+    background: linear-gradient(
+      -45deg,
+      hsl(from var(--primary) h s calc(l - 10)),
+      hsl(from var(--primary) h s calc(l + 8))
+    );
+    background: var(--primary);
+    width: max-content;
+    padding: 12px;
+
+    .logo {
+      max-width: 32px;
+      aspect-ratio: 1;
+      object-fit: contain;
+      width: 100%;
+      display: block;
+      filter: brightness(0.1);
+      opacity: 0.85;
+    }
+
+    @media (max-width: $lg) {
+      display: flex;
+    }
+  }
   form {
     display: flex;
     flex-direction: column;

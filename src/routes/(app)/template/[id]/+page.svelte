@@ -11,6 +11,8 @@
   import { updateDoc, doc, getDoc, setDoc } from "firebase/firestore"; // Import Firestore update function
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
   import Header from "$lib/components/header/Header.svelte";
+  import { user } from "$lib/stores/user";
+  import toast, { Toaster } from "svelte-french-toast";
 
   import {
     Star,
@@ -81,6 +83,16 @@
           console.log("variableInputElement focused");
         }
       }, 50);
+    }
+  }
+
+  let hasActiveSubscription = false;
+  let currentUser;
+  $: {
+    currentUser = $user;
+
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
     }
   }
 
@@ -388,6 +400,13 @@
   };
 
   const toggleFavorite = () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     isFavorite = !isFavorite;
     saveFavoriteState();
   };
@@ -647,6 +666,13 @@
 
   // Copy the generated content to clipboard
   const copyToClipboard = async (e) => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     e.currentTarget.parentNode.dataset.tooltip = "Gekopieerd";
 
     try {
@@ -695,10 +721,24 @@
 
   // Move to the next stage
   const nextPage = () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     isNextStage = true;
   };
 
   function sendEmail() {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     try {
       const htmlElement = document.querySelector(".preview-content");
       copyHtmlToClipboard(htmlElement);
@@ -738,10 +778,24 @@
 
   // Toggle edit mode
   const toggleEditMode = () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     isEditMode = !isEditMode;
   };
 
   const confirmAndDelete = () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     const confirmDelete = window.confirm(
       "Weet je zeker dat je deze template wilt verwijderen?",
     );
@@ -762,6 +816,13 @@
 
   // Handle save button click
   const saveTemplate = async () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     templateData.content = editor.getJSON();
     console.log(templateData.content);
     try {
@@ -1318,6 +1379,7 @@
     border: 1px solid var(--border);
     border-radius: var(--border-radius-bigger, 10px);
     padding: 30px;
+    user-select: none;
     h2 {
       border-bottom: 1px solid var(--border);
       padding-bottom: 0.5em;

@@ -6,6 +6,18 @@
   import { templatesStore } from "$lib/stores/templates";
   import Thumbnail from "$lib/components/Thumbnail.svelte";
   import Header from "$lib/components/header/Header.svelte";
+  import { user } from "$lib/stores/user";
+  import toast from "svelte-french-toast";
+
+  let hasActiveSubscription = false;
+  let currentUser;
+  $: {
+    currentUser = $user;
+
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
+    }
+  }
 
   let id;
   let name;
@@ -75,8 +87,15 @@
   };
 
   const handleAddCat = async () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     const newCategoryName = prompt(
-      "Geef een naam in voor de nieuwe categorie:"
+      "Geef een naam in voor de nieuwe categorie:",
     );
 
     if (newCategoryName) {
@@ -123,6 +142,13 @@
   };
 
   const handleAddTemplate = async () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     const newTemplateName = prompt("Geef een naam in voor de nieuwe template:");
     if (newTemplateName) {
       try {

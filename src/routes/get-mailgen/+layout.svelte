@@ -39,6 +39,17 @@
       // align-items: center;
       justify-content: center;
       flex-direction: column;
+
+      @media (max-width: $lg) {
+        padding: 30px;
+      }
+    }
+
+    @media (max-width: $lg) {
+      grid-template-columns: 100%;
+      aside {
+        display: none;
+      }
     }
   }
 </style>

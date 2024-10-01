@@ -8,6 +8,8 @@
   import { templatesStore } from "$lib/stores/templates";
   import { showContent } from "$lib/stores/showContent.js";
   import { switchMobileNav } from "$lib/utils/utils.js";
+  import { user } from "$lib/stores/user";
+  import toast, { Toaster } from "svelte-french-toast";
 
   export let type = "template";
   export let id = null;
@@ -15,6 +17,16 @@
   export let content = "";
   let contentEl;
   let isFavorite = false;
+
+  let hasActiveSubscription = false;
+  let currentUser;
+  $: {
+    currentUser = $user;
+
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
+    }
+  }
 
   const Variable = Node.create({
     name: "variable",
@@ -160,7 +172,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates)
+        JSON.stringify(favoriteTemplates),
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -229,7 +241,7 @@
 
     try {
       const htmlElement = document.querySelector(
-        `.thumbnail[id="${id}"] .content`
+        `.thumbnail[id="${id}"] .content`,
       );
       copyHtmlToClipboard(contentEl);
       // copyPlainTextToClipboard(htmlElement);
@@ -279,7 +291,13 @@
             e.preventDefault();
             e.stopPropagation();
 
-            toggleFavorite();
+            if (hasActiveSubscription) {
+              toggleFavorite();
+            } else {
+              toast.error("Actief abonnement vereist", {
+                position: "bottom-center",
+              });
+            }
           }}
         >
           <span class="icon">
@@ -300,7 +318,13 @@
               e.preventDefault();
               e.stopPropagation();
 
-              copyToClipboard(e);
+              if (hasActiveSubscription) {
+                copyToClipboard(e);
+              } else {
+                toast.error("Actief abonnement vereist", {
+                  position: "bottom-center",
+                });
+              }
             }}
             on:mouseleave={resetCopyTooltip}
           >
@@ -366,6 +390,7 @@
       background-color 0.2s ease-out,
       border-color 0.2s ease-out;
     color: $black;
+    user-select: none;
 
     &:active {
       color: inherit;

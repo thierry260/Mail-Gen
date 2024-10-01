@@ -55,10 +55,12 @@ self.addEventListener('fetch', (event) => {
             }
 
             return response;
-        } catch {
+        } catch (error) {
+            console.error('Fetch failed; returning cached item instead.', error);
             return cache.match(event.request);
         }
     }
 
+    // Pass the promise returned by `respond` to `respondWith`
     event.respondWith(respond());
 });

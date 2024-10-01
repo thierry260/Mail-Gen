@@ -21,6 +21,7 @@
   import { get } from "svelte/store";
   import { CaretRight } from "phosphor-svelte";
   import { switchMobileNav } from "$lib/utils/utils.js";
+  import toast, { Toaster } from "svelte-french-toast";
 
   let url = "";
   let recentlyViewed = [];
@@ -29,8 +30,18 @@
 
   // Get the initial value from the store
   let checked = get(showContent);
+  let hasActiveSubscription = false;
+  let currentUser;
 
-  $: currentUser = $user;
+  $: {
+    currentUser = $user;
+    console.log("currentUser: ", currentUser);
+
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
+    }
+  }
+
   $: {
     url = $page.url.href; // Update url whenever the page URL changes
   }
@@ -75,6 +86,17 @@
 </script>
 
 <div class="layout" data-url={url}>
+  {#if !hasActiveSubscription}
+    <div class="warning_bar">
+      <p>
+        Het lijkt erop dat je geen actief abonnement hebt. Schaf een abonnement
+        aan om van de functionaliteiten gebruik te kunnen maken. <a
+          href="/settings?tab=subscription">Naar instellingen</a
+        >
+      </p>
+    </div>
+  {/if}
+
   <aside><Sidebar /></aside>
   <main>
     <slot />
@@ -188,6 +210,8 @@
     </div>
   </div>
 </div>
+
+<Toaster />
 
 <style lang="scss">
   .layout {
@@ -589,5 +613,31 @@
         }
       }
     }
+  }
+  .warning_bar {
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-color: #e74c3c;
+    min-height: 30px;
+    padding: 3px 10px;
+    p {
+      font-size: 1.4rem;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.8);
+      a {
+        color: #fff;
+        display: inline-block;
+      }
+    }
+  }
+  .layout:has(.warning_bar) {
+    padding-top: 30px;
   }
 </style>

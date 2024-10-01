@@ -14,6 +14,7 @@
   import { TrashSimple } from "phosphor-svelte";
   import { loadStripe } from "@stripe/stripe-js";
   import Header from "$lib/components/header/Header.svelte";
+  import { user } from "$lib/stores/user";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
@@ -31,13 +32,15 @@
   let activeTab = "variables";
   let stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   let errorMessage = "";
-  let subscriptionActive = false;
-  let daysLeft = 0;
+  let successMessage = "";
+  let hasActiveSubscription = false;
+  let subscriptionDaysLeft = 0;
+  let currentUser;
 
   // Function to handle tab click and update URL
   const setActiveTab = (tab) => {
     activeTab = tab;
-    goto(`/settings?tab=${tab}`); // Update the URL with the active tab
+    // goto(`/settings?tab=${tab}`); // Update the URL with the active tab
   };
 
   // Handle URL query parameters on page load
@@ -45,6 +48,15 @@
     const urlTab = $page.url.searchParams.get("tab");
     if (urlTab) {
       activeTab = urlTab; // Set activeTab based on URL param
+    }
+  }
+
+  $: {
+    currentUser = $user;
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
+      subscriptionDaysLeft = currentUser.subscriptionDaysLeft;
+      console.log("Reactivestatement true");
     }
   }
 
@@ -90,6 +102,13 @@
   };
 
   const addVariable = () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     if (newVariable.field_name && newVariable.placeholder) {
       const id = generateUniqueId();
       workspaceVariables = {
@@ -110,6 +129,13 @@
   };
 
   const removeVariable = (id) => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-center",
+      });
+      return;
+    }
+
     if (confirm("Weet je zeker dat je deze variabele wilt verwijderen?")) {
       delete workspaceVariables[id];
       workspaceVariables = workspaceVariables;
@@ -181,27 +207,34 @@
     }
   };
 
-  const checkSubscription = async () => {
-    const customerId = "cus_QvSrargE0AEThh";
+  const cancelSubscription = async () => {
+    const customerId = localStorage.getItem("stripeCustomerId");
 
     try {
-      const response = await fetch("http://localhost:3000/check-subscription", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const workspaceId = localStorage.getItem("workspace");
+      const userId = auth.currentUser.uid;
+
+      const response = await fetch(
+        "http://localhost:3000/cancel-subscription",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            workspaceId: workspaceId,
+            userId: userId,
+            customerId: customerId,
+          }),
         },
-        body: JSON.stringify({ customerId }),
-      });
+      );
 
       const data = await response.json();
 
-      console.log(data);
-
-      if (data.active) {
-        subscriptionActive = true;
-        daysLeft = data.days_left;
+      if (data.success) {
+        successMessage = data.message;
       } else {
-        subscriptionActive = false;
+        throw new Error(data.error || "Failed to cancel subscription");
       }
     } catch (err) {
       errorMessage = err.message;
@@ -209,8 +242,23 @@
   };
 
   onMount(async () => {
+    if (!browser) return;
+
+    // Get the 'cid' parameter from the URL
+    const stripeCustomerId = $page.url.searchParams.get("cid");
+
+    // If 'cid' is present in the URL, set it to localStorage
+    if (stripeCustomerId) {
+      localStorage.setItem("stripeCustomerId", stripeCustomerId);
+      console.log(`stripeCustomerId set to ${stripeCustomerId}`);
+    }
+
+    const urlTab = $page.url.searchParams.get("tab");
+    if (urlTab) {
+      activeTab = urlTab;
+    }
+
     fetchVariables();
-    checkSubscription();
   });
 
   const subscribe = async () => {
@@ -404,9 +452,11 @@
   <div class="tab-content">
     <div class="card">
       <h2>Abonnement</h2>
-      {#if subscriptionActive}
-        <p>Je hebt nog {daysLeft} dagen in je abonnement.</p>
-        <button class="button" on:click={console.log("canceljemoeder")}
+      {#if hasActiveSubscription}
+        <p>
+          Je hebt nog {subscriptionDaysLeft} dagen in je abonnement.
+        </p>
+        <button class="button" on:click={cancelSubscription}
           >Abonnement annuleren</button
         >
       {:else}
@@ -415,6 +465,9 @@
 
       {#if errorMessage}
         <p style="color: red;">{errorMessage}</p>
+      {/if}
+      {#if successMessage}
+        <p style="color: green;">{successMessage}</p>
       {/if}
     </div>
   </div>

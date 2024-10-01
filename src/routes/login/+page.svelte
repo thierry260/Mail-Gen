@@ -29,7 +29,7 @@
         step = 2;
       } else {
         workspaceErrorMessage.set(
-          "Deze workspace is niet bij ons bekend. Probeer het nog een keer."
+          "Deze workspace is niet bij ons bekend. Probeer het nog een keer.",
         );
       }
     } catch (error) {
@@ -42,7 +42,7 @@
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const user = userCredential.user;
 
@@ -70,7 +70,7 @@
             if (userWorkspaceData.stripeCustomerId) {
               localStorage.setItem(
                 "stripeCustomerId",
-                userWorkspaceData.stripeCustomerId
+                userWorkspaceData.stripeCustomerId,
               );
             }
           }
@@ -90,7 +90,7 @@
     // Prompt user for email with pre-filled value
     const userEmail = window.prompt(
       "Voer je e-mailadres in om je wachtwoord te resetten:",
-      email
+      email,
     );
 
     // Check if user canceled the prompt or didn't provide an email
@@ -98,7 +98,7 @@
       try {
         await sendPasswordResetEmail(auth, userEmail);
         resetMessage.set(
-          "Een wachtwoord reset link is naar je e-mailadres gestuurd."
+          "Een wachtwoord reset link is naar je e-mailadres gestuurd.",
         );
       } catch (error) {
         resetMessage.set("Er is iets fout gegaan. Controleer het e-mailadres.");
@@ -111,6 +111,9 @@
 
 {#if step === 1}
   <form on:submit|preventDefault={checkWorkspace}>
+    <figure class="logo_outer">
+      <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+    </figure>
     <div class="form_intro">
       <h1>Welkom terug!</h1>
       <p>
@@ -139,6 +142,9 @@
   </form>
 {:else}
   <form on:submit|preventDefault={login}>
+    <figure class="logo_outer">
+      <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+    </figure>
     <div class="form_intro">
       <h1>Je bent er bijna</h1>
       <p>Vul je gegevens in om in te loggen.</p>
@@ -191,6 +197,33 @@
 {/if}
 
 <style lang="scss">
+  .logo_outer {
+    display: none;
+    border-radius: var(--border-radius-big, 10px);
+    background-color: var(--primary);
+    background: linear-gradient(
+      -45deg,
+      hsl(from var(--primary) h s calc(l - 10)),
+      hsl(from var(--primary) h s calc(l + 8))
+    );
+    background: var(--primary);
+    width: max-content;
+    padding: 12px;
+
+    .logo {
+      max-width: 32px;
+      aspect-ratio: 1;
+      object-fit: contain;
+      width: 100%;
+      display: block;
+      filter: brightness(0.1);
+      opacity: 0.85;
+    }
+
+    @media (max-width: $lg) {
+      display: flex;
+    }
+  }
   .form_intro {
     margin-bottom: 30px;
   }
