@@ -80,7 +80,6 @@
   };
 
   $: {
-    console.log("templatesStore: ", $templatesStore);
     fetchedData = Array.isArray($templatesStore) ? $templatesStore : [];
   }
 

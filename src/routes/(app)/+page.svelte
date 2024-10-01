@@ -9,6 +9,7 @@
   let data = [];
   let recentlyViewed = [];
   let favoriteTemplates = [];
+  let allTemplates = [];
   let searchInput = "";
   let searchResults = [];
 
@@ -18,9 +19,8 @@
     if (data) {
       data = data.map((category) => ({
         ...category,
-        open: false, // Add open property to handle accordion state
       }));
-      console.log(data);
+      allTemplates = extractTemplates($templatesStore);
     } else {
       console.log("Categories not found");
     }
@@ -41,6 +41,20 @@
     recentlyViewed = getRecentlyViewed();
     favoriteTemplates = getFavoriteTemplates();
   });
+
+  const extractTemplates = (store, templates = []) => {
+    store.forEach((category) => {
+      if (category.templates) {
+        templates = templates.concat(category.templates);
+      }
+      if (category.sub) {
+        category.sub.forEach((subcategory) => {
+          templates = extractTemplates(subcategory, templates);
+        });
+      }
+    });
+    return templates;
+  };
 </script>
 
 <Header />
@@ -58,11 +72,9 @@
     </div>
   </div>
 
-  <div class="favorite_templates">
-    <h2>Favoriete templates</h2>
-    {#if favoriteTemplates.length === 0}
-      <p class="empty">Je hebt nog geen favoriete templates</p>
-    {:else}
+  {#if favoriteTemplates && favoriteTemplates.length}
+    <div class="favorite_templates">
+      <h2>Favoriete templates</h2>
       <div class="recent_templates">
         {#each favoriteTemplates as template}
           {#if JSON.stringify($templatesStore).includes(template.id)}
@@ -75,14 +87,12 @@
           {/if}
         {/each}
       </div>
-    {/if}
-  </div>
+    </div>
+  {/if}
 
-  <div class="recently_viewed">
-    <h2>Recent bekeken</h2>
-    {#if recentlyViewed.length === 0}
-      <p class="empty">Je hebt geen recent bekeken templates</p>
-    {:else}
+  {#if recentlyViewed && recentlyViewed.length}
+    <div class="recently_viewed">
+      <h2>Recent bekeken</h2>
       <div class="recent_templates">
         {#each recentlyViewed as template}
           {#if JSON.stringify($templatesStore).includes(template.id)}
@@ -95,8 +105,24 @@
           {/if}
         {/each}
       </div>
-    {/if}
-  </div>
+    </div>
+  {/if}
+
+  {#if allTemplates && allTemplates.length}
+    <div class="all_templates">
+      <h2>Templates</h2>
+      <div class="recent_templates">
+        {#each allTemplates as template}
+          <Thumbnail
+            type={"template"}
+            id={template.id}
+            name={template.name}
+            content={template.content}
+          />
+        {/each}
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -104,6 +130,13 @@
     display: flex;
     flex-direction: column;
     gap: 40px;
+  }
+
+  .favorite_templates,
+  .recently_viewed {
+    ~ .all_templates {
+      display: none;
+    }
   }
 
   .recent_templates {

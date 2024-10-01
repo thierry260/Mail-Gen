@@ -120,11 +120,13 @@
 
 {#if step === 1}
   <form on:submit|preventDefault={checkWorkspace}>
-    <figure class="logo_outer">
-      <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
-    </figure>
+    <div class="heading">
+      <figure class="logo_outer">
+        <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+      </figure>
+      <h2>Welkom terug!</h2>
+    </div>
     <div class="form_intro">
-      <h1>Welkom terug!</h1>
       <p>
         Vul je bedrijfsnaam in om toegang te krijgen tot het inlogformulier.
       </p>
@@ -206,8 +208,17 @@
 {/if}
 
 <style lang="scss">
+  .heading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+    h2 {
+      margin-bottom: 0;
+    }
+  }
   .logo_outer {
-    display: none;
+    display: flex;
     border-radius: var(--border-radius-big, 10px);
     background-color: var(--primary);
     background: linear-gradient(

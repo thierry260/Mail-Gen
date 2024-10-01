@@ -57,7 +57,7 @@
 
           if (usersCount >= parseInt(workspaceDoc.data().usersNo, 10)) {
             errorMessage.set(
-              "Maximum number of users reached for this workspace.",
+              "Maximum number of users reached for this workspace."
             );
             return;
           }
@@ -65,16 +65,100 @@
           await createAndRegisterUser(workspaceRef);
         } else {
           errorMessage.set(
-            "Workspace does not exist. Please check the invite link.",
+            "Workspace does not exist. Please check the invite link."
           );
         }
       } else {
         if (!workspaceDoc.exists()) {
+          const variables = {};
+          variables[
+            Date.now().toString(36) + Math.random().toString(36).substr(2, 9)
+          ] = { field_name: "Voornaam", placeholder: "Voornaam" };
+          variables[
+            Date.now().toString(36) + Math.random().toString(36).substr(2, 9)
+          ] = { field_name: "Afzender", placeholder: "Afzender" };
+
+          const categories = [
+            {
+              id: "zcayp0fb",
+              name: "Algemeen",
+              sub: [],
+              templates: [
+                {
+                  id: "j63CPPKaTlOnPxxooJvu",
+                  name: "Je allereerste template",
+                  lastUpdated: new Date(),
+                },
+              ],
+            },
+          ];
+
           await setDoc(workspaceRef, {
             name: workspaceName,
             admin_uids: [],
             is_trial: true,
             created_at: Timestamp.fromDate(new Date()),
+            variables,
+            categories,
+          });
+
+          // Create a document in the templates collection with the specified ID and fields
+          const templateRef = doc(
+            workspaceRef,
+            "templates",
+            "j63CPPKaTlOnPxxooJvu"
+          );
+          await setDoc(templateRef, {
+            name: "Je allereerste template",
+            content: {
+              content: [
+                {
+                  type: "paragraph",
+                  content: [
+                    { type: "text", text: "Beste " },
+                    {
+                      type: "variable",
+                      attrs: {
+                        id: Object.keys(variables)[0],
+                        placeholder: "Voornaam",
+                        variable: null,
+                      },
+                    },
+                    { type: "text", text: "," },
+                  ],
+                },
+                { type: "paragraph" },
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Leuk dat je gebruik maakt van Mail Gen!",
+                    },
+                  ],
+                },
+                { type: "paragraph" },
+                {
+                  type: "paragraph",
+                  content: [{ type: "text", text: "Met vriendelijke groet," }],
+                },
+                { type: "paragraph" },
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: "variable",
+                      attrs: {
+                        id: Object.keys(variables)[1],
+                        placeholder: "Afzender",
+                        variable: null,
+                      },
+                    },
+                  ],
+                },
+              ],
+              type: "doc",
+            },
           });
         } else {
           workspaceName = workspaceDoc.data().name;
@@ -92,7 +176,7 @@
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
       const userUID = user.uid;
 
@@ -105,7 +189,7 @@
 
       await setDoc(
         doc(db, "workspaces", workspaceId, "users", userUID),
-        userData,
+        userData
       );
 
       const userCommonData = {
@@ -132,12 +216,15 @@
 </script>
 
 <form on:submit|preventDefault={register}>
-  <figure class="logo_outer">
-    <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
-  </figure>
-  <h1>
-    {isInvited ? `Join workspace: ${workspaceName}` : "Maak een workspace"}
-  </h1>
+  <div class="heading">
+    <figure class="logo_outer">
+      <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
+    </figure>
+    <h2>
+      {isInvited ? `Join workspace: ${workspaceName}` : "Maak een workspace"}
+    </h2>
+  </div>
+
   {#if !isInvited}
     <label class="input_wrapper">
       <input
@@ -215,8 +302,17 @@
 </form>
 
 <style lang="scss">
+  .heading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+    h2 {
+      margin-bottom: 0;
+    }
+  }
   .logo_outer {
-    display: none;
+    display: flex;
     border-radius: var(--border-radius-big, 10px);
     background-color: var(--primary);
     background: linear-gradient(

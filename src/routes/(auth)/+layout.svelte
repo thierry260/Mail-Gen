@@ -4,7 +4,7 @@
 
 <div class="layout">
   <aside>
-    <img class="logo" src="/img/MailGen-logo.svg" alt="MailGen logo" />
+    <img class="logo" src="/img/MailGen-visual.svg" alt="MailGen logo" />
   </aside>
   <main>
     <slot />
@@ -26,13 +26,15 @@
         hsl(from var(--primary) h s calc(l - 50)),
         hsl(from var(--primary) h s calc(l - 75))
       );
+      background: var(--gray-200);
+      background: #fff;
 
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 40px;
       img {
-        max-width: 300px;
+        max-width: 500px;
       }
     }
     main {
@@ -43,6 +45,8 @@
       // align-items: center;
       justify-content: center;
       flex-direction: column;
+      background: #fff;
+      background: var(--gray-100);
 
       @media (max-width: $lg) {
         padding: 30px;
