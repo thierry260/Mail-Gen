@@ -77,84 +77,84 @@
       data = []; // Ensure data is an empty array if fetch fails
     }
 
-    // Select the main container that holds the top-level items
-    const el = document.querySelector(".templates_items");
+    // // Select the main container that holds the top-level items
+    // const el = document.querySelector(".templates_items");
 
-    if (el) {
-      sortableInstance = new Sortable(el, {
-        animation: 150, // Smooth animation
-        handle: ".accordion_header", // Restrict dragging to the header
-        group: {
-          name: "nested",
-          pull: true, // Allow items to be dragged out
-          put: true, // Allow items to be dropped in
-        },
-        onEnd: (event) => {
-          const oldIndex = event.oldIndex;
-          const newIndex = event.newIndex;
+    // if (el) {
+    //   sortableInstance = new Sortable(el, {
+    //     animation: 150, // Smooth animation
+    //     handle: ".accordion_header", // Restrict dragging to the header
+    //     group: {
+    //       name: "nested",
+    //       pull: true, // Allow items to be dragged out
+    //       put: true, // Allow items to be dropped in
+    //     },
+    //     onEnd: (event) => {
+    //       const oldIndex = event.oldIndex;
+    //       const newIndex = event.newIndex;
 
-          // Update the top-level `data` array order
-          const movedItem = data.splice(oldIndex, 1)[0];
-          data.splice(newIndex, 0, movedItem);
+    //       // Update the top-level `data` array order
+    //       const movedItem = data.splice(oldIndex, 1)[0];
+    //       data.splice(newIndex, 0, movedItem);
 
-          console.log("New top-level data order:", data);
+    //       console.log("New top-level data order:", data);
 
-          // Update in your state or database if needed
-        },
-      });
+    //       // Update in your state or database if needed
+    //     },
+    //   });
 
-      // Initialize Sortable for each nested accordion content
-      const nestedElements = document.querySelectorAll(".accordion_content");
+    //   // Initialize Sortable for each nested accordion content
+    //   const nestedElements = document.querySelectorAll(".accordion_content");
 
-      nestedElements.forEach((nestedEl) => {
-        new Sortable(nestedEl, {
-          animation: 150, // Smooth animations
-          group: {
-            name: "nested", // Allows nested drag-and-drop
-            pull: true,
-            put: true,
-          },
-          handle: ".accordion_header", // Only drag when header is clicked
-          onEnd: (event) => {
-            const parentId = nestedEl.closest(".accordion_item").id; // Get the parent category ID
-            const parentCategory = data.find((item) => item.id === parentId); // Find the correct parent in data
-            const oldIndex = event.oldIndex;
-            const newIndex = event.newIndex;
+    //   nestedElements.forEach((nestedEl) => {
+    //     new Sortable(nestedEl, {
+    //       animation: 150, // Smooth animations
+    //       group: {
+    //         name: "nested", // Allows nested drag-and-drop
+    //         pull: true,
+    //         put: true,
+    //       },
+    //       handle: ".accordion_header", // Only drag when header is clicked
+    //       onEnd: (event) => {
+    //         const parentId = nestedEl.closest(".accordion_item").id; // Get the parent category ID
+    //         const parentCategory = data.find((item) => item.id === parentId); // Find the correct parent in data
+    //         const oldIndex = event.oldIndex;
+    //         const newIndex = event.newIndex;
 
-            if (parentCategory) {
-              // Handle reordering inside subcategories or templates
-              const movedItem = parentCategory.subcategories.splice(
-                oldIndex,
-                1
-              )[0];
-              parentCategory.subcategories.splice(newIndex, 0, movedItem);
+    //         if (parentCategory) {
+    //           // Handle reordering inside subcategories or templates
+    //           const movedItem = parentCategory.subcategories.splice(
+    //             oldIndex,
+    //             1
+    //           )[0];
+    //           parentCategory.subcategories.splice(newIndex, 0, movedItem);
 
-              console.log(
-                `New order for ${parentCategory.name}:`,
-                parentCategory.subcategories
-              );
+    //           console.log(
+    //             `New order for ${parentCategory.name}:`,
+    //             parentCategory.subcategories
+    //           );
 
-              // Save this new order in the state or backend if needed
-            }
-          },
-        });
-      });
-    }
+    //           // Save this new order in the state or backend if needed
+    //         }
+    //       },
+    //     });
+    //   });
+    // }
 
-    // Clean up when component unmounts
-    return () => {
-      if (sortableInstance) {
-        sortableInstance.destroy();
-      }
+    // // Clean up when component unmounts
+    // return () => {
+    //   if (sortableInstance) {
+    //     sortableInstance.destroy();
+    //   }
 
-      const nestedInstances = document.querySelectorAll(".accordion_content");
-      nestedInstances.forEach((nestedEl) => {
-        const instance = Sortable.get(nestedEl);
-        if (instance) {
-          instance.destroy();
-        }
-      });
-    };
+    //   const nestedInstances = document.querySelectorAll(".accordion_content");
+    //   nestedInstances.forEach((nestedEl) => {
+    //     const instance = Sortable.get(nestedEl);
+    //     if (instance) {
+    //       instance.destroy();
+    //     }
+    //   });
+    // };
   });
 
   const checkSidebarState = () => {

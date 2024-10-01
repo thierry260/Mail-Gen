@@ -33,13 +33,21 @@ export async function load({ url }) {
     let subscriptionActive = false;
     let subscriptionDaysLeft = 0;
 
-    const stripeCustomerId = localStorage.getItem("stripeCustomerId");
+    const testmode = true;
 
-    // If stripeCustomerId exists, check subscription status
-    if (stripeCustomerId) {
-      const subscriptionData = await checkSubscription(stripeCustomerId);
-      subscriptionActive = subscriptionData.active;
-      subscriptionDaysLeft = subscriptionData.daysLeft;
+    if (testmode) {
+      subscriptionActive = true;
+      subscriptionDaysLeft = 29;
+      console.log("access granted by test mode");
+    } else {
+      const stripeCustomerId = localStorage.getItem("stripeCustomerId");
+
+      // If stripeCustomerId exists, check subscription status
+      if (stripeCustomerId) {
+        const subscriptionData = await checkSubscription(stripeCustomerId);
+        subscriptionActive = subscriptionData.active;
+        subscriptionDaysLeft = subscriptionData.daysLeft;
+      }
     }
 
     // Ensure the auth state listener is set up
@@ -49,7 +57,7 @@ export async function load({ url }) {
         user.set({
           ...currentUser,
           subscriptionActive,
-          subscriptionDaysLeft
+          subscriptionDaysLeft,
         });
       } else {
         user.set(null);

@@ -218,6 +218,7 @@
   <div class="search_input">
     <input
       type="text"
+      name="search"
       placeholder="Zoeken"
       bind:this={searchInputRef}
       on:blur={handleSearchInputBlur}
