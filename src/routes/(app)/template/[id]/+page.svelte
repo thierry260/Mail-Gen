@@ -56,6 +56,7 @@
   let newVariable = { field_name: "", placeholder: "" };
   let variableInput = false;
   let showPlaceholderField = false; // State to control placeholder field visibility
+  let inputRefs = []; // Array to hold references to each input
   const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
   let editorElement;
@@ -63,6 +64,14 @@
   let addVariableEl;
   let shouldShow = false;
   let editingVariable = false;
+
+  $: {
+    if (inputRefs[0]) {
+      inputRefs[0].focus();
+      inputRefs[0].select();
+    }
+  }
+
   $: console.log("should show state: ", shouldShow);
   $: {
     if (!shouldShow) {
@@ -1247,7 +1256,7 @@
   {:else}
     <div class="template">
       <div class="variables">
-        {#each Object.keys(userInput) as variableId}
+        {#each Object.keys(userInput) as variableId, index}
           {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
             <div>
               <span class="label"
@@ -1260,6 +1269,7 @@
                   id={variableId}
                   bind:value={userInput[variableId]}
                   on:input={(e) => handleInputChange(variableId, e)}
+                  bind:this={inputRefs[index]}
                 />
                 <span
                   >{workspaceVariables.variables[variableId].placeholder}</span

@@ -265,10 +265,6 @@
             position: "bottom-right",
           });
         }
-      } else {
-        toast.error("Naam mag niet leeg zijn", {
-          position: "bottom-right",
-        });
       }
     } catch (error) {
       toast.error(error.message, {

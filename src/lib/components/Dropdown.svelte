@@ -1,11 +1,12 @@
 <!-- src/lib/components/Dropdown.svelte -->
 <script>
+  import { page } from "$app/stores";
   import { goto } from "$app/navigation";
-  import { deleteCategory } from "$lib/utils/delete";
+  import { deleteCategory, deleteTemplate } from "$lib/utils/delete";
+  import { createNewTemplate, createCategory } from "$lib/utils/create";
   import { updateCategoryName } from "$lib/utils/set";
-  import { createNewTemplate } from "$lib/utils/create";
-  import { createCategory } from "$lib/utils/create";
   import { Plus, TrashSimple, PencilSimple, Star } from "phosphor-svelte";
+  import { templatesStore } from "$lib/stores/templates";
   import { user } from "$lib/stores/user";
   import toast from "svelte-french-toast";
 
@@ -30,7 +31,7 @@
   export let item;
   export let items = [];
   export let id = ""; // Unique ID for the dropdown
-  export let categoryId = ""; // Unique ID for the category
+  export let contentId = ""; // Unique ID for the category
   export let open = false;
 
   const toggleDropdown = () => {
@@ -58,10 +59,7 @@
       );
 
       if (!newTemplateName) return;
-      const newTemplateId = await createNewTemplate(
-        categoryId,
-        newTemplateName
-      );
+      const newTemplateId = await createNewTemplate(contentId, newTemplateName);
 
       console.log(newTemplateId);
       if (newTemplateId) {
@@ -83,7 +81,7 @@
           "Weet je zeker dat je deze categorie wilt verwijderen? Alle subcategorieën en templates zullen tevens worden verwijderd."
         )
       ) {
-        deleteCategory(categoryId).then(() => {
+        deleteCategory(contentId).then(() => {
           item = {};
           toast.success("Categorie verwijderd", {
             position: "bottom-right",
@@ -97,7 +95,7 @@
         item.name
       );
       if (newName) {
-        updateCategoryName(categoryId, newName).then(() => {
+        updateCategoryName(contentId, newName).then(() => {
           item.name = newName;
           toast.success("Categorienaam gewijzigd", {
             position: "bottom-right",
@@ -110,7 +108,7 @@
         "Geef een naam in voor de nieuwe categorie:"
       );
       if (newCategoryName) {
-        createCategory(categoryId, newCategoryName).then((newCategory) => {
+        createCategory(contentId, newCategoryName).then((newCategory) => {
           item = {
             ...item,
             sub: [...item.sub, newCategory],
@@ -121,6 +119,33 @@
           closeDropdown();
         });
       }
+    } else if (action === "templ_edit") {
+      goto(`/template/${contentId}#edit`);
+    } else if (action === "templ_delete") {
+      const confirmDelete = window.confirm(
+        "Weet je zeker dat je deze template wilt verwijderen?"
+      );
+      if (confirmDelete) {
+        deleteTemplate(contentId)
+          .then(() => {
+            toast.success("Template verwijderd", {
+              position: "bottom-right",
+            });
+
+            const templateCatId = removeTemplateFromStore(contentId);
+
+            if ($page.params.id && $page.params.id == contentId) {
+              goto(`/category/${templateCatId}`);
+            }
+          })
+          .catch((error) => {
+            console.error("Error deleting template:", error);
+
+            toast.error(error.message, {
+              position: "bottom-right",
+            });
+          });
+      }
     }
   }
 
@@ -130,6 +155,37 @@
       toggleDropdown();
     }
   }
+
+  const removeTemplateFromStore = (id) => {
+    let categoryId = null;
+
+    templatesStore.update((categories) => {
+      const removeNestedTemplate = (items) => {
+        for (const item of items) {
+          if (item.templates) {
+            const templateIndex = item.templates.findIndex(
+              (template) => template.id === id
+            );
+            if (templateIndex !== -1) {
+              item.templates.splice(templateIndex, 1); // Remove the template
+              categoryId = item.id; // Store the category id
+              return true; // Exit after removing
+            }
+          }
+          if (item.sub) {
+            if (removeNestedTemplate(item.sub)) {
+              return true; // Exit after removing
+            }
+          }
+        }
+        return false;
+      };
+      removeNestedTemplate(categories);
+      return categories;
+    });
+
+    return categoryId;
+  };
 </script>
 
 <ul class="dropdown_list {open ? 'open' : ''}">

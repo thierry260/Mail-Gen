@@ -34,44 +34,6 @@
     goto(`/category/${categoryId}`);
   };
 
-  const addItems = [
-    {
-      label: "Voeg template toe",
-      class: "add_template",
-      action: "templ_add",
-      icon: "add",
-    },
-    { class: "separator" },
-    {
-      label: "Voeg categorie toe",
-      class: "add_category",
-      action: "cat_add",
-      icon: "add",
-    },
-  ];
-
-  const optionsItems = [
-    // {
-    //   label: "Aan favorieten toevoegen",
-    //   class: "",
-    //   action: "cat_favourite",
-    //   icon: "star",
-    // },
-    {
-      label: "Naam bewerken",
-      class: "",
-      action: "cat_modify-name",
-      icon: "edit",
-    },
-    { class: "separator" },
-    {
-      label: "Verwijderen",
-      class: "remove",
-      action: "cat_delete",
-      icon: "delete",
-    },
-  ];
-
   function closeDropdown() {
     const event = new CustomEvent("close-dropdown", {
       bubbles: true,
@@ -132,9 +94,23 @@
           <Dropdown
             bind:item
             open={dropdownState}
-            items={optionsItems}
+            items={[
+              {
+                label: "Naam bewerken",
+                class: "",
+                action: "cat_modify-name",
+                icon: "edit",
+              },
+              { class: "separator" },
+              {
+                label: "Verwijderen",
+                class: "remove",
+                action: "cat_delete",
+                icon: "delete",
+              },
+            ]}
             id={`options_${item.id}`}
-            categoryId={item.id}
+            contentId={item.id}
           />
         </button>
         <button
@@ -146,9 +122,23 @@
           <Plus size={16} data-action="add" />
           <Dropdown
             bind:item
-            items={addItems}
+            items={[
+              {
+                label: "Voeg template toe",
+                class: "add_template",
+                action: "templ_add",
+                icon: "add",
+              },
+              { class: "separator" },
+              {
+                label: "Voeg categorie toe",
+                class: "add_category",
+                action: "cat_add",
+                icon: "add",
+              },
+            ]}
             id={`add_${item.id}`}
-            categoryId={item.id}
+            contentId={item.id}
           />
         </button></span
       >
@@ -173,9 +163,43 @@
                 template.open = true;
                 viewTemplate(template.id);
               }}
+              on:mouseleave={() => {
+                closeDropdown();
+              }}
               class:open={template.open}
             >
-              {template.name}
+              <span class="name">{template.name}</span>
+              <span class="actions"
+                ><button
+                  on:click={(event) => {
+                    event.stopPropagation();
+                    dropdownState = !dropdownState;
+                  }}
+                >
+                  <DotsThreeVertical size={18} data-action="options" />
+                  <Dropdown
+                    bind:item
+                    open={dropdownState}
+                    items={[
+                      {
+                        label: "Template bewerken",
+                        class: "",
+                        action: "templ_edit",
+                        icon: "edit",
+                      },
+                      { class: "separator" },
+                      {
+                        label: "Verwijderen",
+                        class: "remove",
+                        action: "templ_delete",
+                        icon: "delete",
+                      },
+                    ]}
+                    id={`template_${template.id}`}
+                    contentId={template.id}
+                  />
+                </button></span
+              >
             </button>
           {/each}
         </div>
