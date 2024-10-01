@@ -152,7 +152,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword,
+        currentPassword
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -208,6 +208,8 @@
   };
 
   const cancelSubscription = async () => {
+    if (!confirm("Weet je zeker dat je je abonnement wilt annuleren?")) return;
+
     const customerId = localStorage.getItem("stripeCustomerId");
 
     try {
@@ -226,7 +228,7 @@
             userId: userId,
             customerId: customerId,
           }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -278,7 +280,7 @@
             workspaceId: workspaceId, // Pass the workspaceId
             userId: userId, // Pass the userId
           }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -387,17 +389,21 @@
   <div class="tab-content">
     <div class="card">
       <h4>Wachtwoord wijzigen</h4>
-      <input
-        type="password"
-        placeholder="Huidig wachtwoord"
-        bind:value={currentPassword}
-      />
-      <input
-        type="password"
-        placeholder="Nieuw wachtwoord"
-        bind:value={newPassword}
-      />
-      <button class="button" on:click={handleChangePassword}
+      <form>
+        <input
+          type="password"
+          placeholder="Huidig wachtwoord"
+          name="current_password"
+          bind:value={currentPassword}
+        />
+        <input
+          type="password"
+          placeholder="Nieuw wachtwoord"
+          name="new_password"
+          bind:value={newPassword}
+        />
+      </form>
+      <button type="button" class="button" on:click={handleChangePassword}
         >Wachtwoord wijzigen</button
       >
       {#if $passwordError}
@@ -451,16 +457,49 @@
 {:else if activeTab === "subscription"}
   <div class="tab-content">
     <div class="card">
-      <h2>Abonnement</h2>
       {#if hasActiveSubscription}
-        <p>
-          Je hebt nog {subscriptionDaysLeft} dagen in je abonnement.
+        <h2>Abonnement</h2>
+        <p class="mb-20">
+          Je abonnement is nog {subscriptionDaysLeft} dagen geldig.
         </p>
-        <button class="button" on:click={cancelSubscription}
+        <button class="button basic has_text" on:click={cancelSubscription}
           >Abonnement annuleren</button
         >
       {:else}
-        <button class="button" on:click={subscribe}>Subscribe Now</button>
+        <h2>Abonneer je nu</h2>
+        <div class="subscription_info">
+          <div>
+            <p>
+              Bespaar tijd en optimaliseer je klantcontact met onze
+              gebruiksvriendelijke tool voor het maken en hergebruiken van
+              professionele e-mailtemplates.
+            </p>
+            <br />
+            <p>
+              Personaliseer eenvoudig je berichten met variabelen en houd je
+              communicatie altijd consistent. MailGen helpt je om snel en
+              foutloos te werken, zodat jij je kunt concentreren op wat echt
+              belangrijk is.
+            </p>
+          </div>
+          <ul class="subscription_list">
+            <li>Bespaar kostbare tijd</li>
+            <li>Structureer je klantcontact</li>
+            <li>Houd je communicatie consistent</li>
+            <li>Verbeter je productiviteit</li>
+            <li>Verminder handmatige fouten</li>
+          </ul>
+        </div>
+        <div class="subscription_action">
+          <button class="button" on:click={subscribe}
+            >Abonnement aanschaffen</button
+          >
+          <small
+            ><i>€20,- per maand</i><i>Maandelijks opzegbaar</i><i
+              >Geen minimale looptijd</i
+            ></small
+          >
+        </div>
       {/if}
 
       {#if errorMessage}
@@ -474,6 +513,66 @@
 {/if}
 
 <style lang="scss">
+  .subscription_info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-bottom: 40px;
+  }
+  .subscription_list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    li {
+      display: flex;
+      align-items: center;
+      font-size: 1.5rem;
+
+      &::before {
+        content: "";
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        background-color: var(--primary);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23000000' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'%3E%3C/path%3E%3C/svg%3E");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 12px;
+        border-radius: 50%;
+        margin-right: 0.75rem;
+      }
+    }
+  }
+  .subscription_action {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    small {
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 5px;
+      opacity: 0.6;
+      text-align: center;
+      i {
+        &:not(:last-child)::after {
+          content: " • ";
+          opacity: 0.3;
+          @media (max-width: $md) {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
   .tabs {
     display: flex;
     // justify-content: center;

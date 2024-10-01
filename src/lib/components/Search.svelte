@@ -225,7 +225,7 @@
       on:input={handleSearchInputChange}
       on:focus={handleInputFocus}
       bind:value={searchValue}
-      autocomplete="off"
+      autocomplete="new-search"
     />
     <div class="shortcut-bubble">{searchBubbleText}</div>
   </div>
