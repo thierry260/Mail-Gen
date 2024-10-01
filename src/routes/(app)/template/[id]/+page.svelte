@@ -1114,8 +1114,8 @@
             <div class="formatting">
               <button
                 on:click={() =>
-                  editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                class:active={editor.isActive("heading", { level: 3 })}
+                  editor.chain().focus().toggleHeading({ level: 5 }).run()}
+                class:active={editor.isActive("heading", { level: 5 })}
               >
                 H
               </button>

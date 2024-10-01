@@ -1,4 +1,5 @@
 <script>
+  import { templatesStore } from "$lib/stores/templates";
   import { serialize } from "cookie";
   import { user } from "$lib/stores/user";
   import { onMount } from "svelte";
@@ -167,12 +168,14 @@
       {:else}
         <div class="thumbnails">
           {#each favoriteTemplates as template}
-            <Thumbnail
-              type={"basic"}
-              id={template.id}
-              name={template.name}
-              content={template.content}
-            />
+            {#if JSON.stringify($templatesStore).includes(template.id)}
+              <Thumbnail
+                type={"basic"}
+                id={template.id}
+                name={template.name}
+                content={template.content}
+              />
+            {/if}
           {/each}
         </div>
       {/if}
@@ -185,12 +188,14 @@
       {:else}
         <div class="thumbnails">
           {#each recentlyViewed as template}
-            <Thumbnail
-              type={"basic"}
-              id={template.id}
-              name={template.name}
-              content={template.content}
-            />
+            {#if JSON.stringify($templatesStore).includes(template.id)}
+              <Thumbnail
+                type={"basic"}
+                id={template.id}
+                name={template.name}
+                content={template.content}
+              />
+            {/if}
           {/each}
         </div>
       {/if}

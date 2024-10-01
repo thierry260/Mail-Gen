@@ -372,8 +372,8 @@
   }
   :global(.thumbnail .content code) {
     font-size: 1.3rem;
-    padding: 4px 4px;
-    line-height: 100%;
+    // padding: 4px 4px;
+    // line-height: 100%;
   }
   .thumbnail {
     padding: 15px;

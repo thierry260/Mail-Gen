@@ -65,12 +65,14 @@
     {:else}
       <div class="recent_templates">
         {#each favoriteTemplates as template}
-          <Thumbnail
-            type={"template"}
-            id={template.id}
-            name={template.name}
-            content={template}
-          />
+          {#if JSON.stringify($templatesStore).includes(template.id)}
+            <Thumbnail
+              type={"template"}
+              id={template.id}
+              name={template.name}
+              content={template}
+            />
+          {/if}
         {/each}
       </div>
     {/if}
@@ -83,12 +85,14 @@
     {:else}
       <div class="recent_templates">
         {#each recentlyViewed as template}
-          <Thumbnail
-            type={"template"}
-            id={template.id}
-            name={template.name}
-            content={template}
-          />
+          {#if JSON.stringify($templatesStore).includes(template.id)}
+            <Thumbnail
+              type={"template"}
+              id={template.id}
+              name={template.name}
+              content={template}
+            />
+          {/if}
         {/each}
       </div>
     {/if}
