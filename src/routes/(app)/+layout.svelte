@@ -21,7 +21,7 @@
   import { get } from "svelte/store";
   import { CaretRight } from "phosphor-svelte";
   import { switchMobileNav } from "$lib/utils/utils.js";
-  import toast, { Toaster } from "svelte-french-toast";
+  import { Toaster } from "svelte-french-toast";
 
   let url = "";
   let recentlyViewed = [];
@@ -627,6 +627,8 @@
     background-color: #e74c3c;
     min-height: 30px;
     padding: 3px 10px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-out 1s forwards; /* Animation with delay and forwards */
     p {
       font-size: 1.4rem;
       line-height: 1.4;
@@ -637,7 +639,27 @@
       }
     }
   }
+
   .layout:has(.warning_bar) {
-    padding-top: 30px;
+    padding-top: 0px;
+    animation: addTopPadding 0.5s ease-out 1s forwards; /* Animation with delay and forwards */
+  }
+
+  @keyframes addTopPadding {
+    0% {
+      padding-top: 0px;
+    }
+    100% {
+      padding-top: 30px;
+    }
+  }
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
   }
 </style>

@@ -15,6 +15,7 @@
   import { loadStripe } from "@stripe/stripe-js";
   import Header from "$lib/components/header/Header.svelte";
   import { user } from "$lib/stores/user";
+  import toast from "svelte-french-toast";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
@@ -104,7 +105,7 @@
   const addVariable = () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -120,6 +121,10 @@
       };
       newVariable = { field_name: "", placeholder: "" };
       saveVariables();
+
+      toast.success("Variabele toegevoegd", {
+        position: "bottom-right",
+      });
     }
   };
 
@@ -131,7 +136,7 @@
   const removeVariable = (id) => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -140,14 +145,15 @@
       delete workspaceVariables[id];
       workspaceVariables = workspaceVariables;
       saveVariables();
+
+      toast.success("Variabele verwijderd", {
+        position: "bottom-right",
+      });
     }
   };
 
   // Function to handle password change
   const handleChangePassword = async () => {
-    passwordError.set("");
-    passwordSuccess.set("");
-
     try {
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
@@ -158,20 +164,31 @@
       await reauthenticateWithCredential(user, credential);
 
       await updatePassword(user, newPassword);
-      passwordSuccess.set("Wachtwoord aangepast.");
+
+      toast.success("Wachtwoord aangepast", {
+        position: "bottom-right",
+      });
     } catch (error) {
       if (error.code === "auth/wrong-password") {
-        passwordError.set("Huidig wachtwoord onjuist");
+        toast.error("Onjuist wachtwoord", {
+          position: "bottom-right",
+        });
       } else {
-        passwordError.set(error.message);
+        toast.error(error.message, {
+          position: "bottom-right",
+        });
       }
     }
   };
 
   // Function to handle workspace name change
   const handleChangeWorkspaceName = async () => {
-    workspaceNameError.set("");
-    workspaceNameSuccess.set("");
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-right",
+      });
+      return;
+    }
 
     try {
       const workspaceId = localStorage.getItem("workspace");
@@ -181,16 +198,24 @@
 
       const docRef = doc(db, "workspaces", workspaceId);
       await updateDoc(docRef, { name: workspaceName });
-      workspaceNameSuccess.set("Workspacenaam aangepast.");
+      toast.success("Workspacenaam aangepast.", {
+        position: "bottom-right",
+      });
     } catch (error) {
-      workspaceNameError.set(error.message);
+      toast.error(error.message, {
+        position: "bottom-right",
+      });
     }
   };
 
   // Function to generate invite link
   const generateInviteLink = async () => {
-    inviteError.set("");
-    inviteSuccess.set("");
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-right",
+      });
+      return;
+    }
 
     try {
       const workspaceId = localStorage.getItem("workspace");
@@ -201,9 +226,13 @@
       const inviteId = btoa(`${workspaceId},${inviteEmail}`);
       const link = `${window.location.origin}/get-mailgen?id=${inviteId}`;
       inviteLink.set(link);
-      inviteSuccess.set("Uitnodigingslink gegenereerd.");
+      toast.success("Uitnodigingslink gegenereerd", {
+        position: "bottom-right",
+      });
     } catch (error) {
-      inviteError.set(error.message);
+      toast.error(error.message, {
+        position: "bottom-right",
+      });
     }
   };
 
@@ -446,7 +475,7 @@
         <p style="color: green">{$inviteSuccess}</p>
       {/if}
       {#if $inviteLink}
-        <p>
+        <p class="invite_link">
           Uitnodigingslink: <a href={$inviteLink} target="_blank"
             >{$inviteLink}</a
           >
@@ -633,6 +662,19 @@
 
       button.button:not(.basic) {
         margin-top: 15px;
+      }
+
+      .invite_link {
+        margin-top: 15px;
+        text-align: center;
+        background-color: var(--gray-100);
+        border-radius: 5px;
+        padding: 5px;
+        font-size: 1.4rem;
+        color: var(--gray-500);
+        a {
+          color: var(--gray-800);
+        }
       }
 
       .form {

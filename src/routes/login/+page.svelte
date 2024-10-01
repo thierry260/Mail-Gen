@@ -8,6 +8,7 @@
   import { goto } from "$app/navigation";
   import { doc, getDoc } from "firebase/firestore";
   import { CaretLeft } from "phosphor-svelte";
+  import toast from "svelte-french-toast";
 
   let step = 1; // Start with step 1
   let workspace = "";
@@ -28,12 +29,14 @@
         workspaceName.set(workspaceDoc.data().name);
         step = 2;
       } else {
-        workspaceErrorMessage.set(
-          "Deze workspace is niet bij ons bekend. Probeer het nog een keer.",
-        );
+        toast.error("Onbekende workspace", {
+          position: "bottom-right",
+        });
       }
     } catch (error) {
-      workspaceErrorMessage.set(error.message);
+      toast.error(error.message, {
+        position: "bottom-right",
+      });
     }
   }
 
@@ -42,7 +45,7 @@
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
       const user = userCredential.user;
 
@@ -70,7 +73,7 @@
             if (userWorkspaceData.stripeCustomerId) {
               localStorage.setItem(
                 "stripeCustomerId",
-                userWorkspaceData.stripeCustomerId,
+                userWorkspaceData.stripeCustomerId
               );
             }
           }
@@ -79,10 +82,14 @@
         // Redirect the user after a successful login
         goto("/");
       } else {
-        errorMessage.set("Je account is geen onderdeel van deze workspace.");
+        toast.error("Geen toegang tot workspace", {
+          position: "bottom-right",
+        });
       }
     } catch (error) {
-      errorMessage.set("De inloggegevens zijn incorrect.");
+      toast.error("Inloggevens incorrect", {
+        position: "bottom-right",
+      });
     }
   }
 
@@ -90,18 +97,20 @@
     // Prompt user for email with pre-filled value
     const userEmail = window.prompt(
       "Voer je e-mailadres in om je wachtwoord te resetten:",
-      email,
+      email
     );
 
     // Check if user canceled the prompt or didn't provide an email
     if (userEmail) {
       try {
         await sendPasswordResetEmail(auth, userEmail);
-        resetMessage.set(
-          "Een wachtwoord reset link is naar je e-mailadres gestuurd.",
-        );
+        toast.success("Reset link verstuurd", {
+          position: "bottom-right",
+        });
       } catch (error) {
-        resetMessage.set("Er is iets fout gegaan. Controleer het e-mailadres.");
+        toast.error("Er is iets fout gegaan. Controleer het e-mailadres.", {
+          position: "bottom-right",
+        });
       }
     } else {
       resetMessage.set("Wachtwoord reset geannuleerd.");

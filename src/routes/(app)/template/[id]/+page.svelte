@@ -12,7 +12,7 @@
   import { db } from "$lib/firebase"; // Adjust the import path if necessary
   import Header from "$lib/components/header/Header.svelte";
   import { user } from "$lib/stores/user";
-  import toast, { Toaster } from "svelte-french-toast";
+  import toast from "svelte-french-toast";
 
   import {
     Star,
@@ -402,7 +402,7 @@
   const toggleFavorite = () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -417,7 +417,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       const index = favoriteTemplates.findIndex(
-        (item) => item.id === templateData.id,
+        (item) => item.id === templateData.id
       );
 
       if (isFavorite && index === -1) {
@@ -428,7 +428,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates),
+        JSON.stringify(favoriteTemplates)
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -441,7 +441,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       isFavorite = favoriteTemplates.some(
-        (item) => item.id === templateData.id,
+        (item) => item.id === templateData.id
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -499,7 +499,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id,
+              (template) => template.id === id
             );
             if (templateIndex !== -1) {
               item.templates[templateIndex].name = newName;
@@ -527,7 +527,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id,
+              (template) => template.id === id
             );
             if (templateIndex !== -1) {
               item.templates.splice(templateIndex, 1); // Remove the template
@@ -561,7 +561,7 @@
       const variable = Object.entries(workspaceVariables.variables).find(
         ([id, data]) => {
           return data.placeholder === p1.trim();
-        },
+        }
       );
       const value = variable ? variables[variable[0]] || match : match;
       return value;
@@ -578,7 +578,7 @@
     if (previewElement) {
       previewElement.innerHTML = replaceVariables(
         templateContentHTML,
-        userInput,
+        userInput
       );
     }
   };
@@ -668,7 +668,7 @@
   const copyToClipboard = async (e) => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -723,7 +723,7 @@
   const nextPage = () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -734,7 +734,7 @@
   function sendEmail() {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -780,7 +780,7 @@
   const toggleEditMode = () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -791,13 +791,13 @@
   const confirmAndDelete = () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
 
     const confirmDelete = window.confirm(
-      "Weet je zeker dat je deze template wilt verwijderen?",
+      "Weet je zeker dat je deze template wilt verwijderen?"
     );
     if (confirmDelete) {
       deleteTemplate(templateData.id)
@@ -818,7 +818,7 @@
   const saveTemplate = async () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -829,7 +829,7 @@
       const docRef = doc(
         db,
         `workspaces/${localStorage.getItem("workspace")}/templates`,
-        id,
+        id
       );
       const docSnap = await getDoc(docRef);
 
@@ -856,6 +856,10 @@
       updateTemplateName(id, templateData.name);
       updateTemplateNameinDB(id, templateData.name);
       fetchWorkspaceAndTemplateData(); // Refresh the data
+
+      toast.success("Template opgeslagen", {
+        position: "bottom-right",
+      });
     } catch (e) {
       console.error("Error updating document: ", e);
     }
@@ -866,7 +870,7 @@
     const workspaceRef = doc(
       db,
       "workspaces",
-      localStorage.getItem("workspace"),
+      localStorage.getItem("workspace")
     );
     const workspaceSnap = await getDoc(workspaceRef);
 
@@ -966,7 +970,7 @@
         ([id, data]) =>
           data.field_name
             .toLowerCase()
-            .includes(variableSearchQuery.toLowerCase()),
+            .includes(variableSearchQuery.toLowerCase())
       );
     }
 
@@ -1198,7 +1202,7 @@
         <ul>
           {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
                 .toLowerCase()
-                .includes(variableSearchQuery.toLowerCase()), ) as [id, data]}
+                .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
             <li
               on:click={() =>
                 insertVariable({

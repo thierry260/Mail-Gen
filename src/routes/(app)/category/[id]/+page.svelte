@@ -89,13 +89,13 @@
   const handleAddCat = async () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
 
     const newCategoryName = prompt(
-      "Geef een naam in voor de nieuwe categorie:",
+      "Geef een naam in voor de nieuwe categorie:"
     );
 
     if (newCategoryName) {
@@ -132,11 +132,17 @@
           return addCategoryToParent(templates);
         });
 
+        toast.success("Categorie toegevoegd", {
+          position: "bottom-right",
+        });
+
         // On success, navigate to the new category page
         goto(`/category/${newCategory.id}`);
       } catch (error) {
         console.error("Error adding category:", error);
-        alert("Er is iets misgegaan bij het toevoegen van de categorie.");
+        toast.error(error.message, {
+          position: "bottom-right",
+        });
       }
     }
   };
@@ -144,7 +150,7 @@
   const handleAddTemplate = async () => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
-        position: "bottom-center",
+        position: "bottom-right",
       });
       return;
     }
@@ -186,10 +192,16 @@
           return addTemplateToParent(templates);
         });
 
+        toast.success("Template toegevoegd", {
+          position: "bottom-right",
+        });
+
         goto(`/template/${newTemplateId}#edit`);
       } catch (error) {
         console.error("Error adding category:", error);
-        alert("Er is iets misgegaan bij het toevoegen van de categorie.");
+        toast.error(error.message, {
+          position: "bottom-right",
+        });
       }
     }
   };

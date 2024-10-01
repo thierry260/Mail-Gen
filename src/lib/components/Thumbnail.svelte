@@ -9,7 +9,7 @@
   import { showContent } from "$lib/stores/showContent.js";
   import { switchMobileNav } from "$lib/utils/utils.js";
   import { user } from "$lib/stores/user";
-  import toast, { Toaster } from "svelte-french-toast";
+  import toast from "svelte-french-toast";
 
   export let type = "template";
   export let id = null;
@@ -172,7 +172,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates),
+        JSON.stringify(favoriteTemplates)
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -241,7 +241,7 @@
 
     try {
       const htmlElement = document.querySelector(
-        `.thumbnail[id="${id}"] .content`,
+        `.thumbnail[id="${id}"] .content`
       );
       copyHtmlToClipboard(contentEl);
       // copyPlainTextToClipboard(htmlElement);
@@ -295,7 +295,7 @@
               toggleFavorite();
             } else {
               toast.error("Actief abonnement vereist", {
-                position: "bottom-center",
+                position: "bottom-right",
               });
             }
           }}
@@ -322,7 +322,7 @@
                 copyToClipboard(e);
               } else {
                 toast.error("Actief abonnement vereist", {
-                  position: "bottom-center",
+                  position: "bottom-right",
                 });
               }
             }}

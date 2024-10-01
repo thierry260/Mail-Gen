@@ -1,4 +1,5 @@
 <script>
+  import { Toaster } from "svelte-french-toast";
 </script>
 
 <div class="layout">
@@ -8,6 +9,7 @@
   <main>
     <slot />
   </main>
+  <Toaster />
 </div>
 
 <style lang="scss">

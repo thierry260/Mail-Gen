@@ -21,8 +21,17 @@
   import Sortable from "sortablejs";
   import { switchMobileNav } from "$lib/utils/utils.js";
   import { browser } from "$app/environment";
+  import toast from "svelte-french-toast";
 
-  $: currentUser = $user;
+  let hasActiveSubscription = false;
+  let currentUser;
+  $: {
+    currentUser = $user;
+
+    if (currentUser && currentUser.subscriptionActive === true) {
+      hasActiveSubscription = true;
+    }
+  }
 
   let data = [];
   let currentId = "";
@@ -230,6 +239,13 @@
   };
 
   const addMainCat = async () => {
+    if (!hasActiveSubscription) {
+      toast.error("Actief abonnement vereist", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     try {
       const newCategoryName = prompt(
         "Geef een naam in voor de nieuwe categorie:"
@@ -241,14 +257,23 @@
         if (newCategory) {
           console.log(`New category created successfully:`, newCategory);
           data = [...data, newCategory];
+          toast.success("Hoofdcategorie toegevoegd", {
+            position: "bottom-right",
+          });
         } else {
-          console.log("Failed to create the new category.");
+          toast.error("Er is iets misgegaan", {
+            position: "bottom-right",
+          });
         }
       } else {
-        console.log("Category name cannot be empty.");
+        toast.error("Naam mag niet leeg zijn", {
+          position: "bottom-right",
+        });
       }
     } catch (error) {
-      console.error("Error creating category:", error);
+      toast.error(error.message, {
+        position: "bottom-right",
+      });
     }
   };
 </script>
@@ -512,7 +537,7 @@
     .add_main_cat {
       // border: 2px dashed rgba(255, 255, 255, 0.6);
       margin-top: 10px;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(0, 0, 0, 0.7);
       // text-align: center;
       // justify-content: center;
       // font-size: 1.4rem;
