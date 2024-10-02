@@ -248,7 +248,7 @@
     }
 
     @media (max-width: $md) {
-      > *:not(nav) {
+      &:not(.no_transition) > *:not(nav) {
         transition-duration: 0.4s;
       }
     }

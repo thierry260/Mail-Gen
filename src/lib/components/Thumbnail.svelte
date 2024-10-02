@@ -151,6 +151,16 @@
   const toggleFavorite = () => {
     isFavorite = !isFavorite;
     saveFavoriteState();
+
+    if (isFavorite) {
+      toast.success("Als favoriet toegevoegd", {
+        position: "bottom-right",
+      });
+    } else {
+      toast.success("Verwijderd uit favorieten", {
+        position: "bottom-right",
+      });
+    }
   };
 
   const saveFavoriteState = () => {
@@ -244,6 +254,11 @@
         `.thumbnail[id="${id}"] .content`
       );
       copyHtmlToClipboard(contentEl);
+
+      toast.success("Email gekopieerd!", {
+        position: "bottom-right",
+      });
+
       // copyPlainTextToClipboard(htmlElement);
     } catch (err) {
       console.error("Failed to copy: ", err);

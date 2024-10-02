@@ -566,7 +566,7 @@
       position: absolute;
       // bottom: 33px;
       top: 50%;
-      right: -30px;
+      right: -29.99px;
       transform: translate(100%, -50%);
       outline-color: transparent;
       border-radius: 0 20px 20px 0;
@@ -631,7 +631,7 @@
           height: 0px;
         }
         .sidebar_toggle {
-          right: -12px;
+          right: -11.99px;
           .icon_outer {
             transform: rotate(180deg);
           }

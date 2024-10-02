@@ -10,75 +10,6 @@ textarea {
   }
 }
 
-.input_wrapper {
-  position: relative;
-  font-size: 1.4rem;
-
-  input:not(:is([type="checkbox"], [type="radio"])),
-  select {
-    width: 100%;
-    padding: 26px 18px 10px;
-    border: none;
-    outline: none;
-    background-color: var(--input-background, #fff);
-    border-radius: 5px;
-    border: 1px solid var(--border);
-    max-width: 100%;
-    width: 100%;
-    font-size: inherit;
-
-    &[type="file"] {
-      border-style: dashed;
-      background: #fff;
-      cursor: pointer;
-    }
-
-    &:not([name="invite_url"])[disabled] {
-      background-color: var(--gray-200);
-      cursor: not-allowed;
-    }
-  }
-
-  input::placeholder {
-    opacity: 0;
-  }
-
-  select {
-    padding: 18px 18px;
-  }
-
-  input:not(:is([type="checkbox"], [type="radio"])) + span {
-    position: absolute;
-    top: 50%;
-    left: 20px;
-    transform: translateY(-50%);
-    transition-duration: 300ms;
-    font-size: inherit;
-    pointer-events: none;
-    color: var(--gray-500);
-  }
-
-  &:has(input:focus) > span,
-  &:focus-within > span,
-  input:not(:placeholder-shown) + span {
-    opacity: 0.9;
-    font-size: 1.2rem;
-    top: 1.5em;
-  }
-
-  input:is([type="checkbox"], [type="radio"]) {
-    width: 15px;
-    height: 15px;
-    vertical-align: middle;
-    margin-right: 2px;
-
-    + span {
-      opacity: 1;
-      vertical-align: middle;
-    }
-  }
-}
-
 .form_note {
   font-size: 1.4rem;
   line-height: 1.35;
@@ -113,6 +44,7 @@ textarea {
   position: relative;
   font-size: 1.4rem;
 
+  textarea,
   input:not(:is([type="checkbox"], [type="radio"])),
   select {
     width: 100%;
@@ -146,6 +78,7 @@ textarea {
     padding: 18px 18px;
   }
 
+  textarea + span,
   input:not(:is([type="checkbox"], [type="radio"])) + span {
     position: absolute;
     top: 50%;
@@ -155,6 +88,10 @@ textarea {
     font-size: inherit;
     pointer-events: none;
     color: var(--gray-500);
+  }
+
+  textarea + span {
+    top: 24px;
   }
 
   &:has(input:focus) > span,
@@ -176,4 +113,18 @@ textarea {
       vertical-align: middle;
     }
   }
+}
+
+select {
+  /** for the dropdown indicator */
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px;
+  padding-right: 30px;
+}
+
+select:invalid {
+  color: gray;
 }

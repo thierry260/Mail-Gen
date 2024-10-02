@@ -40,6 +40,10 @@
   import Italic from "@tiptap/extension-italic";
   import BubbleMenu from "@tiptap/extension-bubble-menu";
 
+  import "intro.js/introjs.css";
+  import "intro.js/introjs-cstm.css";
+  import introJs from "intro.js";
+
   let id;
   let templateData = {};
   let templateContentHTML = "";
@@ -367,7 +371,7 @@
         }).extend({
           addKeyboardShortcuts() {
             return {
-              "Mod-[": (e) => {
+              "Mod-Shift-[": (e) => {
                 shouldShow = true; // Show the bubble menu
 
                 triggerEditorChange();
@@ -486,6 +490,12 @@
       fetchVariables();
       document.addEventListener("keydown", handleKeyDown);
     }
+
+    if (!isEditMode) {
+      startTemplateTour();
+    } else {
+      startEditTemplateTour();
+    }
   });
 
   onDestroy(() => {
@@ -494,6 +504,148 @@
       editor.destroy();
     }
   });
+
+  const templateTour = introJs();
+  const startTemplateTour = () => {
+    if (!browser) return;
+
+    setTimeout(() => {
+      templateTour
+        .setOptions({
+          showProgress: true,
+          showBullets: false,
+          showStepNumbers: true,
+          dontShowAgain: true,
+          hidePrev: true,
+          exitOnOverlayClick: false,
+          dontShowAgainLabel: "Laat dit niet meer zien",
+          stepNumbersOfLabel: "van",
+          nextLabel: "Volgende",
+          prevLabel: "Vorige",
+          doneLabel: "Klaar",
+          buttonClass: "button",
+          dontShowAgainCookie: "template-dontShowAgain",
+          steps: [
+            {
+              title: "Template uitleg 👀",
+              intro: "We helpen je graag op weg met een korte uitleg.",
+            },
+            {
+              title: "Variabelen",
+              element: document.querySelector(".template > .variables"),
+              intro:
+                "Hier vind je de variabelen die zijn toegewezen aan deze template. Pas deze aan om de gewenste email voor te bereiden.",
+            },
+            {
+              title: "Voorbeeld",
+              element: document.querySelector(".template > .preview"),
+              intro:
+                "In het voorbeeld vind je de mail die is opgesteld op basis van de ingevoerde variabelen.",
+            },
+            {
+              title: "Actieknoppen",
+              element: document.querySelector("main > .buttons"),
+              intro:
+                "Wanneer je tevreden bent met de mail, kun je de mail met deze knoppen in gebruik nemen.",
+            },
+            {
+              title: "Kopiëren",
+              element: document.querySelector("main > .buttons .copy_mail"),
+              intro:
+                "Met deze knop kun je de email kopiëren. Je kunt de mail vervolgens plakken op een gewenste locatie.",
+            },
+            {
+              title: "Mailen",
+              element: document.querySelector("main > .buttons .mail_mail"),
+              intro:
+                "Met deze knop kun je direct je email programma openen. Het enige wat je nog hoeft te doen is te plakken.",
+            },
+            {
+              title: "Actieknoppen",
+              element: document.querySelector("header > .actions"),
+              intro:
+                "Deze knoppen maken het mogelijk om de template aan te passen, te verwijderen of op te slaan als favoriet.",
+            },
+          ],
+        })
+        .start();
+    }, 550);
+  };
+
+  const editTemplateTour = introJs();
+  const startEditTemplateTour = () => {
+    if (!browser) return;
+
+    setTimeout(() => {
+      editTemplateTour
+        .setOptions({
+          showProgress: true,
+          showBullets: false,
+          showStepNumbers: true,
+          dontShowAgain: true,
+          hidePrev: true,
+          exitOnOverlayClick: false,
+          dontShowAgainLabel: "Laat dit niet meer zien",
+          stepNumbersOfLabel: "van",
+          nextLabel: "Volgende",
+          prevLabel: "Vorige",
+          doneLabel: "Klaar",
+          buttonClass: "button",
+          dontShowAgainCookie: "templateEdit-dontShowAgain",
+          steps: [
+            {
+              title: "Template aanpassen ✏️",
+              intro: "We helpen je graag op weg met een korte uitleg.",
+            },
+            {
+              title: "Template naam",
+              element: document.querySelector("#editTemplateName"),
+              intro: "Hier kun je de naam van de template aanpassen.",
+            },
+            {
+              title: "Template inhoud",
+              element: document.querySelector(".editor_outer"),
+              intro: "Hier pas je de inhoud van de template aan.",
+            },
+            {
+              title: "Opmaak",
+              element: document.querySelector(
+                ".editor_outer .editor_buttons .formatting"
+              ),
+              intro: "Met deze knoppen kun je de opmaak van de selectie.",
+            },
+            {
+              title: "Aanpassingen beheren",
+              element: document.querySelector(
+                ".editor_outer .editor_buttons .actions"
+              ),
+              intro:
+                "Met deze knoppen kun je eenvoudig aanpassingen terugdraaien of opnieuw instellen.",
+            },
+            {
+              title: "Opmaak",
+              element: document.querySelector(".editor_outer .editor code"),
+              intro:
+                "Dit is een variabele. Een variabele kan worden ingevuld bij het gebruiken van een template. Tip: Je kunt een variabele vervangen door erop te klikken en te zoeken naar een alternatieve variabele.",
+            },
+            {
+              title: "Opmaak",
+              element: document.querySelector(
+                ".editor_outer button.add_variable"
+              ),
+              intro: `Via deze knop kun je variabelen toevoegen. Je kunt erop klikken of de toetsenbord shortcut ${isMac ? "Cmd" : "Ctrl"}+Shift+[ gebruiken.`,
+            },
+            {
+              title: "Acties",
+              element: document.querySelector(".edit-template .edit_buttons"),
+              intro:
+                "Via deze knoppen kun je de wijzigingen opslaan of annuleren.",
+            },
+          ],
+        })
+        .start();
+    }, 550);
+  };
 
   const updateTemplateName = (id, newName) => {
     templatesStore.update((categories) => {
@@ -693,8 +845,60 @@
     document.body.removeChild(clone);
   }
 
-  // Copy the generated content to clipboard
-  const copyToClipboard = async (e) => {
+  function copyHtmlToClipboardPromise(htmlElement) {
+    return new Promise((resolve, reject) => {
+      // Clone the original element to manipulate safely
+      const clone = htmlElement.cloneNode(true);
+
+      // Strip out any <code> tags in the cloned element
+      clone.querySelectorAll("code").forEach((codeTag) => {
+        // Replace the <code> tag with its text content (stripping the tag itself)
+        const textNode = document.createTextNode(codeTag.innerText);
+        codeTag.replaceWith(textNode);
+      });
+
+      // Temporarily append the cloned element to the body (off-screen)
+      clone.style.position = "absolute";
+      clone.style.left = "-9999px";
+      clone.style.background = "#fff";
+      clone.style.color = "unset";
+      document.body.appendChild(clone);
+
+      // Create a range object to select the content of the modified clone
+      const range = document.createRange();
+      range.selectNodeContents(clone);
+
+      // Create a selection object and add the range to it
+      const selection = window.getSelection();
+      selection.removeAllRanges(); // Clear any existing selections
+      selection.addRange(range);
+
+      try {
+        // Execute the copy command to copy the selection to the clipboard
+        const successful = document.execCommand("copy");
+        if (successful) {
+          console.log("Content copied to clipboard");
+
+          // Introduce a short delay before resolving
+          setTimeout(() => {
+            resolve("Content copied successfully");
+          }, 1000); // 1.5-second delay
+        } else {
+          reject("Copy command was not successful");
+        }
+      } catch (err) {
+        reject("Failed to copy: " + err.message);
+      }
+
+      // Clean up by removing the selection range and the temporary clone
+      selection.removeAllRanges();
+      document.body.removeChild(clone);
+    });
+  }
+
+  // Copy the generated content to clipboar
+
+  const copyToClipboard = async (openMail = false) => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
         position: "bottom-right",
@@ -702,24 +906,40 @@
       return;
     }
 
-    e.currentTarget.parentNode.dataset.tooltip = "Gekopieerd";
-
     try {
       const htmlElement = document.querySelector(".preview-content");
-      copyHtmlToClipboard(htmlElement);
-      // copyPlainTextToClipboard(htmlElement);
+      const copyPromise = copyHtmlToClipboardPromise(htmlElement);
+
+      const successMessage = openMail
+        ? "Email gekopieerd! Je kunt het nu plakken in je e-mail programma."
+        : "Email gekopieerd!";
+
+      toast.promise(
+        copyPromise,
+        {
+          loading: "Bezig met kopiëren...",
+          success: successMessage,
+          error: "Kopiëren mislukt. Probeer het opnieuw.",
+        },
+        {
+          position: "bottom-right",
+          duration: 8000, // Display the success/error message for 5 seconds
+        }
+      );
+
+      if (openMail) {
+        // Open the email client after copying
+        copyPromise.then(() => {
+          window.open("mailto:");
+        });
+      }
     } catch (err) {
+      toast.error("Er is een fout opgetreden bij het kopiëren.", {
+        position: "bottom-right",
+        duration: 5000,
+      });
       console.error("Failed to copy: ", err);
     }
-  };
-
-  const resetCopyTooltip = (e) => {
-    const tooltipElement = e.currentTarget.parentNode; // Store the reference before timeout
-    const defaultTooltip = tooltipElement.dataset.default_tooltip; // Store the necessary data
-
-    setTimeout(() => {
-      tooltipElement.dataset.tooltip = defaultTooltip; // Use the stored reference
-    }, 250);
   };
 
   // Function to save the recently viewed template to localStorage
@@ -815,6 +1035,15 @@
     }
 
     isEditMode = !isEditMode;
+
+    if (isEditMode) {
+      startEditTemplateTour();
+      // Add #edit to the current URL
+      goto(`${window.location.pathname}#edit`, { replaceState: true });
+    } else {
+      // Remove #edit from the URL
+      goto(window.location.pathname, { replaceState: true });
+    }
   };
 
   const confirmAndDelete = () => {
@@ -1102,6 +1331,7 @@
       <label class="input_wrapper flex">
         <input
           type="text"
+          id="editTemplateName"
           bind:value={templateData.name}
           placeholder="&nbsp;"
         />
@@ -1185,7 +1415,7 @@
             <!-- <BracketsCurly size={16} /> -->
             + Voeg variabele toe
             <div class="shortcut-bubble">
-              {isMac ? "Cmd" : "Ctrl"}+[
+              {isMac ? "Cmd" : "Ctrl"}+Shift+[
             </div></button
           >
         </div>
@@ -1295,13 +1525,15 @@
         data-default_tooltip="Klik om te kopiëren"
       >
         <button
-          class="button outline"
-          on:mouseleave={resetCopyTooltip}
-          on:click={copyToClipboard}><CopySimple size="18" />Kopiëren</button
+          class="button outline copy_mail"
+          on:click={() => copyToClipboard(false)}
+          ><CopySimple size="18" />Kopiëren</button
         >
       </span>
       <span data-flow="top" data-tooltip="Mail opstellen">
-        <button class="button outline" on:click={nextPage}
+        <button
+          class="button outline mail_mail"
+          on:click={() => copyToClipboard(true)}
           ><EnvelopeSimple size="18" />Mailen</button
         >
       </span>
