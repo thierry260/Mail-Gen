@@ -1,6 +1,7 @@
 <script>
   import { onMount, onDestroy } from "svelte";
   import { page } from "$app/stores";
+  import { writable } from "svelte/store";
   import { goto } from "$app/navigation";
   import { fetchWorkspaceData, fetchTemplateData } from "$lib/utils/get";
   import { updateTemplateNameinDB } from "$lib/utils/set";
@@ -13,6 +14,7 @@
   import Header from "$lib/components/header/Header.svelte";
   import { user } from "$lib/stores/user";
   import toast from "svelte-french-toast";
+  import Sortable from "sortablejs";
 
   import {
     Star,
@@ -27,6 +29,7 @@
     ArrowUUpRight,
     FloppyDisk,
     BracketsCurly,
+    DotsSixVertical,
   } from "phosphor-svelte";
   import { Editor, generateHTML, Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
@@ -297,6 +300,50 @@
     }, 251);
   }
 
+  // Store for the search query
+  const variablesListSearch = writable("");
+  let filteredVariables = [];
+
+  $: {
+    if (workspaceVariables.variables) {
+      // Reactive statement to filter variables based on the search query
+      filteredVariables = Object.entries(workspaceVariables.variables).filter(
+        ([id, data]) =>
+          data.field_name
+            .toLowerCase()
+            .includes($variablesListSearch.toLowerCase())
+      );
+
+      const list = document.getElementById("variables_list_ul");
+
+      if (list) {
+        // Initialize Sortable.js
+        Sortable.create(list, {
+          group: {
+            name: "variables",
+            pull: "clone",
+            put: false, // prevents items from being moved within the list itself
+          },
+          sort: false, // Disable sorting within the list
+          animation: 150,
+          draggable: "li", // Draggable items are <li> elements
+          onEnd(evt) {
+            // This gets triggered when an item is dropped into another container
+            const item = evt.item;
+            const id = item.getAttribute("data-id");
+            const variable = item.getAttribute("data-variable");
+            const placeholder = item.getAttribute("data-placeholder");
+
+            console.log(evt);
+
+            // Insert the variable into the tiptap editor
+            insertVariable({ id, variable, placeholder });
+          },
+        });
+      }
+    }
+  }
+
   const parseVariables = (content) => {
     const regex = /{{(.*?)}}/g;
     let match;
@@ -334,6 +381,7 @@
     const parsedContent = parseVariables(initialContent);
 
     shouldShow = false;
+    editingVariable = false;
 
     editor = new Editor({
       content: templateData.content,
@@ -391,6 +439,7 @@
       console.log(e);
       console.log("clicked");
       shouldShow = false; // Hide the bubble menu
+      editingVariable = false;
       triggerEditorChange();
     });
   };
@@ -476,6 +525,7 @@
     if (event.key === "Escape") {
       if (shouldShow) {
         shouldShow = false;
+        editingVariable = false;
         triggerEditorChange();
       }
     }
@@ -637,7 +687,7 @@
             },
             {
               title: "Acties",
-              element: document.querySelector(".edit-template .edit_buttons"),
+              element: document.querySelector(".edit_template .edit_buttons"),
               intro:
                 "Via deze knoppen kun je de wijzigingen opslaan of annuleren.",
             },
@@ -1203,6 +1253,7 @@
     console.log("Inserting Variable:", variable);
 
     shouldShow = false;
+    editingVariable = false;
 
     editor
       .chain()
@@ -1220,8 +1271,6 @@
     showVariablePopup = false;
     variableSearchQuery = "";
     showPlaceholderField = false;
-
-    console.log("Inserted Variable:", variable);
   };
 
   const handleVariableSearch = (e) => {
@@ -1259,6 +1308,7 @@
       console.log("Escape clicked");
 
       shouldShow = false;
+      editingVariable = false;
     }
   };
 
@@ -1327,7 +1377,7 @@
 
 {#if !isNextStage}
   {#if isEditMode}
-    <div class="edit-template">
+    <div class="edit_template">
       <label class="input_wrapper flex">
         <input
           type="text"
@@ -1338,87 +1388,125 @@
         <span>Template naam</span>
       </label>
 
-      <div class="editor_outer">
-        {#if editor}
-          <div class="editor_buttons">
-            <div class="formatting">
-              <button
-                on:click={() =>
-                  editor.chain().focus().toggleHeading({ level: 5 }).run()}
-                class:active={editor.isActive("heading", { level: 5 })}
-              >
-                H
-              </button>
-              <button
-                on:click={() => editor.chain().focus().setParagraph().run()}
-                class:active={editor.isActive("paragraph")}
-              >
-                P
-              </button>
-              <button
-                on:click={() => editor.chain().focus().toggleBold().run()}
-                class:active={editor.isActive("bold")}
-              >
-                B
-              </button>
-              <button
-                on:click={() => editor.chain().focus().toggleItalic().run()}
-                class:active={editor.isActive("italic")}
-              >
-                I
-              </button>
-              <button
-                on:click={() => editor.chain().focus().toggleUnderline().run()}
-                class:active={editor.isActive("underline")}
-              >
-                U
-              </button>
-              <button
-                on:click={() => editor.chain().focus().toggleBulletList().run()}
-                class:active={editor.isActive("bulletList")}
-              >
-                <ListBullets size="14" />
-              </button>
-              <button
-                on:click={() =>
-                  editor.chain().focus().toggleOrderedList().run()}
-                class:active={editor.isActive("orderedList")}
-              >
-                <ListNumbers size="14" />
-              </button>
+      <div class="edit_template_main">
+        <div class="editor_outer">
+          {#if editor}
+            <div class="editor_buttons">
+              <div class="formatting">
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleHeading({ level: 5 }).run()}
+                  class:active={editor.isActive("heading", { level: 5 })}
+                >
+                  H
+                </button>
+                <button
+                  on:click={() => editor.chain().focus().setParagraph().run()}
+                  class:active={editor.isActive("paragraph")}
+                >
+                  P
+                </button>
+                <button
+                  on:click={() => editor.chain().focus().toggleBold().run()}
+                  class:active={editor.isActive("bold")}
+                >
+                  B
+                </button>
+                <button
+                  on:click={() => editor.chain().focus().toggleItalic().run()}
+                  class:active={editor.isActive("italic")}
+                >
+                  I
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleUnderline().run()}
+                  class:active={editor.isActive("underline")}
+                >
+                  U
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleBulletList().run()}
+                  class:active={editor.isActive("bulletList")}
+                >
+                  <ListBullets size="14" />
+                </button>
+                <button
+                  on:click={() =>
+                    editor.chain().focus().toggleOrderedList().run()}
+                  class:active={editor.isActive("orderedList")}
+                >
+                  <ListNumbers size="14" />
+                </button>
+              </div>
+              <div class="actions">
+                <button
+                  on:click={() => editor.chain().focus().undo().run()}
+                  class:disabled={!editor.can().undo()}
+                  ><ArrowUUpLeft size="18" /></button
+                >
+                <button
+                  on:click={() => editor.chain().focus().redo().run()}
+                  class:disabled={!editor.can().redo()}
+                  ><ArrowUUpRight size="18" /></button
+                >
+              </div>
             </div>
-            <div class="actions">
-              <button
-                on:click={() => editor.chain().focus().undo().run()}
-                class:disabled={!editor.can().undo()}
-                ><ArrowUUpLeft size="18" /></button
-              >
-              <button
-                on:click={() => editor.chain().focus().redo().run()}
-                class:disabled={!editor.can().redo()}
-                ><ArrowUUpRight size="18" /></button
-              >
-            </div>
+          {/if}
+          <div class="editor" bind:this={editorElement}>
+            <button
+              class="button outline add_variable"
+              on:click={() => {
+                // shouldShow = true; // Show the bubble menu
+                if (editor) {
+                  editor.chain().focus().run();
+                }
+                shouldShow = true; // Show the bubble menu
+              }}
+            >
+              <!-- <BracketsCurly size={16} /> -->
+              + Voeg variabele toe
+              <div class="shortcut-bubble">
+                {isMac ? "Cmd" : "Ctrl"}+Shift+[
+              </div></button
+            >
+          </div>
+        </div>
+        {#if workspaceVariables.variables}
+          <div class="variables_list">
+            <span class="label">Beschikbare variabelen</span>
+            <input
+              type="text"
+              placeholder="Zoek variabelen"
+              bind:value={$variablesListSearch}
+              class="search-input"
+            />
+            <ul id="variables_list_ul">
+              {#if filteredVariables.length}
+                {#each filteredVariables as [id, data]}
+                  <li
+                    class="variable draggable"
+                    data-id={id}
+                    data-variable={data.field_name}
+                    data-placeholder={data.placeholder}
+                    on:click={() =>
+                      insertVariable({
+                        id: id,
+                        variable: data.field_name,
+                        placeholder: data.placeholder,
+                      })}
+                  >
+                    <span class="flex"><DotsSixVertical size={16} /></span>
+                    {data.field_name}
+                  </li>
+                {/each}
+              {:else}
+                <p class="empty">Geen variabelen gevonden</p>
+              {/if}
+            </ul>
           </div>
         {/if}
-        <div class="editor" bind:this={editorElement}>
-          <button
-            class="button outline add_variable"
-            on:click={() => {
-              // shouldShow = true; // Show the bubble menu
-              if (editor) {
-                editor.chain().focus().run();
-              }
-              shouldShow = true; // Show the bubble menu
-            }}
-          >
-            <!-- <BracketsCurly size={16} /> -->
-            + Voeg variabele toe
-            <div class="shortcut-bubble">
-              {isMac ? "Cmd" : "Ctrl"}+Shift+[
-            </div></button
-          >
-        </div>
       </div>
       <div class="buttons edit_buttons">
         <button class="button basic has_text" on:click={toggleEditMode}>
@@ -1438,6 +1526,7 @@
             editor.chain().focus().run();
           }
           shouldShow = false; // Show the bubble menu
+          editingVariable = false;
         }}><X size={10} /></span
       >
       <input
@@ -1697,10 +1786,19 @@
     }
   }
 
+  .edit_template_main {
+    display: flex;
+    flex-direction: row;
+    gap: inherit;
+    align-items: stretch;
+  }
+
   .editor_outer {
     border: 1px solid var(--border);
     border-radius: var(--border-radius);
-    margin-bottom: 10px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
     .editor_buttons {
       border-bottom: 1px solid var(--border);
       background-color: var(--gray-100);
@@ -1757,6 +1855,7 @@
       background-color: #fff;
       display: flex;
       flex-direction: column;
+      flex-grow: 1;
 
       button {
         order: 1;
@@ -1801,6 +1900,105 @@
         }
       }
     }
+  }
+
+  .variables_list {
+    --padding: 20px;
+    padding-inline: var(--padding, 30px);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    background-color: #fff;
+    background-color: var(--gray-800);
+    width: 300px;
+    max-height: 500px;
+    height: 100vh;
+    overflow-y: auto;
+
+    /* ===== Scrollbar CSS ===== */
+    scrollbar-width: auto;
+    // scrollbar-color: #ebebeb #ffffff;
+
+    /* Chrome, Edge, and Safari */
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.25);
+      border-radius: 10px;
+      border: px solid transparent;
+    }
+
+    .label {
+      padding-block: var(--padding, 30px) calc(var(--padding, 30px) - 5px);
+      margin-bottom: 0;
+      position: sticky;
+      top: 0;
+      background-color: inherit;
+      z-index: 1;
+    }
+    .search-input.search-input {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234a4a4a' viewBox='0 0 256 256'%3E%3Cpath d='M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z'%3E%3C/path%3E%3C/svg%3E");
+      background-position: left 10px center;
+      font-size: 1.5rem;
+      background-repeat: no-repeat;
+      background-size: 16px;
+      // margin-top: 10px;
+      margin-bottom: 10px;
+      padding: 8px;
+      padding-left: 30px;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 5px;
+    }
+    .empty {
+      background-color: var(--gray-700);
+      border: none;
+      line-height: 1.2;
+      padding: 15px;
+      color: hsl(var(--response-color), 60%);
+      font-size: 1.3rem;
+    }
+    ul {
+      padding-bottom: var(--padding, 30px);
+      margin-bottom: 10px;
+      list-style: none;
+      padding-left: 0;
+      margin-left: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      li {
+        .variable {
+        }
+      }
+    }
+
+    @media (max-width: $xl) {
+      display: none;
+    }
+  }
+
+  :global(.variable.variable.draggable.draggable) {
+    border: 1px solid var(--border);
+    background-color: var(--gray-100);
+    padding: 8px 6px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    margin: 0;
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
   }
 
   .popup {
@@ -1919,7 +2117,7 @@
     }
   }
 
-  .edit-template {
+  .edit_template {
     display: flex;
     flex-direction: column;
     gap: 30px;

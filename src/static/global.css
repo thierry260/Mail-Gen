@@ -337,11 +337,12 @@ main:has(.home) nav:first-child {
 
 .tiptap[contenteditable=true] {
   background-color: #fff;
-  min-height: 240px;
+  min-height: 280px;
   padding: 30px;
   border-bottom-left-radius: inherit;
   border-bottom-right-radius: inherit;
   outline: none;
+  flex-grow: 1;
 }
 .tiptap[contenteditable=true] p.is-editor-empty:first-child::before {
   color: #adb5bd;
