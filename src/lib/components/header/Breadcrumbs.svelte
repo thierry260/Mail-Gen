@@ -96,6 +96,13 @@
       // Add "Settings" breadcrumb if the URL contains 'settings'
       if ($page.route.id && $page.route.id.includes("settings")) {
         breadcrumbs = [{ name: "Instellingen", type: "settings", id: null }];
+      } else if (
+        $page.route.id &&
+        $page.route.id.includes("manage-templates")
+      ) {
+        breadcrumbs = [
+          { name: "Beheer templates", type: "manage-templates", id: null },
+        ];
       }
     }
     if (currentId && currentType && fetchedData && fetchedData.length > 0) {
@@ -122,6 +129,11 @@
               <div class="icon"><GearSix size={18} /></div>
               {#if breadcrumbs.length == 1}
                 Instellingen
+              {/if}
+            {:else if crumb.type == "manage-templates"}
+              <div class="icon"><GearSix size={18} /></div>
+              {#if breadcrumbs.length == 1}
+                Templates beheren
               {/if}
             {:else}
               {crumb.name}

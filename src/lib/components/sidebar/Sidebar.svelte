@@ -10,6 +10,7 @@
     ArrowsOutLineVertical,
     SignOut,
     CaretLeft,
+    GearSix,
   } from "phosphor-svelte";
   import { getAuth, signOut } from "firebase/auth";
   import { goto } from "$app/navigation";
@@ -214,13 +215,18 @@
   <div class="templates hide_on_compact">
     <span class="label">
       Templates
-      <button class="toggle-all-icon" on:click={toggleAll}>
-        {#if areAllOpen}
-          <ArrowsInLineVertical size={15} />
-        {:else}
-          <ArrowsOutLineVertical size={15} />
-        {/if}
-      </button>
+      <div class="flex actions">
+        <button class="toggle-all-icon" on:click={toggleAll}>
+          {#if areAllOpen}
+            <ArrowsInLineVertical size={15} />
+          {:else}
+            <ArrowsOutLineVertical size={15} />
+          {/if}
+        </button>
+        <a href="/manage-templates" class="toggle-all-icon">
+          <GearSix size={15} />
+        </a>
+      </div>
     </span>
     <div class="templates_items">
       {#if Array.isArray(data)}
@@ -357,6 +363,14 @@
         margin: 0;
         color: inherit;
         font-weight: 500;
+        justify-content: space-between;
+
+        .actions {
+          align-items: center;
+          gap: 5px;
+          flex-grow: 1;
+          justify-content: space-between;
+        }
 
         button {
           font-size: 0.5rem;

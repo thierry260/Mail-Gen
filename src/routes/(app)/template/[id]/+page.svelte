@@ -30,6 +30,8 @@
     FloppyDisk,
     BracketsCurly,
     DotsSixVertical,
+    GearSix,
+    CaretRight,
   } from "phosphor-svelte";
   import { Editor, generateHTML, Node, mergeAttributes } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
@@ -144,6 +146,7 @@
         dom.setAttribute("data-variable", node.attrs.variable || "");
         dom.setAttribute("data-placeholder", node.attrs.placeholder || "");
         dom.setAttribute("contenteditable", "false");
+        // dom.textContent = `{{${node.attrs.variable || node.attrs.placeholder || ""}}}`; // Discuss
         dom.textContent = `{{${node.attrs.placeholder || node.attrs.variable || ""}}}`;
 
         dom.addEventListener("click", () => {
@@ -285,11 +288,6 @@
     }
   }
 
-  // Initialize the editor when isEditMode becomes true
-  $: if (editorElement) {
-    initializeEditor();
-  }
-
   $: if (!isEditMode && editor) {
     editor.destroy();
   }
@@ -300,12 +298,20 @@
     }, 251);
   }
 
+  // Initialize the editor when isEditMode becomes true
+  $: if (editorElement) {
+    fetchWorkspaceAndTemplateData().then(() => {
+      initializeEditor();
+    });
+  }
+
   // Store for the search query
   const variablesListSearch = writable("");
   let filteredVariables = [];
 
   $: {
-    if (workspaceVariables.variables) {
+    if (isEditMode && workspaceVariables.variables) {
+      console.log("init sortable");
       // Reactive statement to filter variables based on the search query
       filteredVariables = Object.entries(workspaceVariables.variables).filter(
         ([id, data]) =>
@@ -314,33 +320,35 @@
             .includes($variablesListSearch.toLowerCase())
       );
 
-      const list = document.getElementById("variables_list_ul");
+      setTimeout(() => {
+        const list = document.getElementById("variables_list_ul");
 
-      if (list) {
-        // Initialize Sortable.js
-        Sortable.create(list, {
-          group: {
-            name: "variables",
-            pull: "clone",
-            put: false, // prevents items from being moved within the list itself
-          },
-          sort: false, // Disable sorting within the list
-          animation: 150,
-          draggable: "li", // Draggable items are <li> elements
-          onEnd(evt) {
-            // This gets triggered when an item is dropped into another container
-            const item = evt.item;
-            const id = item.getAttribute("data-id");
-            const variable = item.getAttribute("data-variable");
-            const placeholder = item.getAttribute("data-placeholder");
+        if (list) {
+          // Initialize Sortable.js
+          Sortable.create(list, {
+            group: {
+              name: "variables",
+              pull: "clone",
+              put: false, // prevents items from being moved within the list itself
+            },
+            sort: false, // Disable sorting within the list
+            animation: 150,
+            draggable: "li", // Draggable items are <li> elements
+            onEnd(evt) {
+              // This gets triggered when an item is dropped into another container
+              const item = evt.item;
+              const id = item.getAttribute("data-id");
+              const variable = item.getAttribute("data-variable");
+              const placeholder = item.getAttribute("data-placeholder");
 
-            console.log(evt);
+              console.log(evt);
 
-            // Insert the variable into the tiptap editor
-            insertVariable({ id, variable, placeholder });
-          },
-        });
-      }
+              // Insert the variable into the tiptap editor
+              insertVariable({ id, variable, placeholder });
+            },
+          });
+        }
+      }, 20);
     }
   }
 
@@ -1262,7 +1270,7 @@
         type: "variable",
         attrs: {
           id: variable.id,
-          variable: variable.field_name,
+          variable: variable.variable,
           placeholder: variable.placeholder,
         },
       })
@@ -1475,36 +1483,49 @@
         </div>
         {#if workspaceVariables.variables}
           <div class="variables_list">
-            <span class="label">Beschikbare variabelen</span>
-            <input
-              type="text"
-              placeholder="Zoek variabelen"
-              bind:value={$variablesListSearch}
-              class="search-input"
-            />
-            <ul id="variables_list_ul">
-              {#if filteredVariables.length}
-                {#each filteredVariables as [id, data]}
-                  <li
-                    class="variable draggable"
-                    data-id={id}
-                    data-variable={data.field_name}
-                    data-placeholder={data.placeholder}
-                    on:click={() =>
-                      insertVariable({
-                        id: id,
-                        variable: data.field_name,
-                        placeholder: data.placeholder,
-                      })}
-                  >
-                    <span class="flex"><DotsSixVertical size={16} /></span>
-                    {data.field_name}
-                  </li>
-                {/each}
-              {:else}
-                <p class="empty">Geen variabelen gevonden</p>
-              {/if}
-            </ul>
+            <label class="variables_list_top">
+              <input
+                type="checkbox"
+                name="toggle_variables_list"
+                id="toggle_variables_list"
+              />
+              <span class="flex caret"><CaretRight size={16} /></span>
+              <span class="label">Beschikbare variabelen</span>
+              <a href="/settings" target="_blank" class="flex"
+                ><GearSix size={16} /></a
+              >
+            </label>
+            <div class="variables_list_content">
+              <input
+                type="text"
+                placeholder="Zoek variabelen"
+                bind:value={$variablesListSearch}
+                class="search-input"
+              />
+              <ul id="variables_list_ul">
+                {#if filteredVariables.length}
+                  {#each filteredVariables as [id, data]}
+                    <li
+                      class="variable draggable"
+                      data-id={id}
+                      data-variable={data.field_name}
+                      data-placeholder={data.placeholder}
+                      on:click={() =>
+                        insertVariable({
+                          id: id,
+                          variable: data.field_name,
+                          placeholder: data.placeholder,
+                        })}
+                    >
+                      <span class="flex"><DotsSixVertical size={16} /></span>
+                      {data.field_name}
+                    </li>
+                  {/each}
+                {:else}
+                  <p class="empty">Geen variabelen gevonden</p>
+                {/if}
+              </ul>
+            </div>
           </div>
         {/if}
       </div>
@@ -1572,13 +1593,14 @@
     </div>
   {:else}
     <div class="template">
+      <span class="label var_label">Variabelen</span>
       <div class="variables">
         {#each Object.keys(userInput) as variableId, index}
           {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
             <div>
-              <span class="label"
+              <!-- <span class="label"
                 >{workspaceVariables.variables[variableId].field_name}</span
-              >
+              > -->
               <label class="input_wrapper">
                 <input
                   type="text"
@@ -1591,7 +1613,7 @@
                   bind:this={inputRefs[index]}
                 />
                 <span
-                  >{workspaceVariables.variables[variableId].placeholder}</span
+                  >{workspaceVariables.variables[variableId].field_name}</span
                 >
               </label>
             </div>
@@ -1721,6 +1743,9 @@
     }
   }
 
+  .var_label {
+    margin-bottom: 0;
+  }
   .preview_label {
     margin-top: 1em;
     margin-bottom: 0;
@@ -1769,6 +1794,7 @@
     display: flex;
     align-items: stretch;
     justify-content: center;
+    z-index: 5;
 
     @media (max-width: $lg) {
       bottom: -30px;
@@ -1791,6 +1817,10 @@
     flex-direction: row;
     gap: inherit;
     align-items: stretch;
+
+    @media (max-width: $xl) {
+      flex-direction: column;
+    }
   }
 
   .editor_outer {
@@ -1824,6 +1854,10 @@
         align-items: center;
         gap: 5px;
         justify-content: center;
+
+        @media (max-width: $xs) {
+          display: none;
+        }
         button {
           display: flex;
         }
@@ -1934,13 +1968,32 @@
       border: px solid transparent;
     }
 
-    .label {
+    .variables_list_top {
       padding-block: var(--padding, 30px) calc(var(--padding, 30px) - 5px);
-      margin-bottom: 0;
       position: sticky;
       top: 0;
       background-color: inherit;
       z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      justify-content: space-between;
+
+      input {
+        display: none;
+      }
+
+      .label {
+        margin-bottom: 0;
+        flex-grow: 1;
+      }
+      .caret {
+        color: rgba(255, 255, 255, 0.6);
+        display: none;
+      }
+      a {
+        color: rgba(255, 255, 255, 0.6);
+      }
     }
     .search-input.search-input {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234a4a4a' viewBox='0 0 256 256'%3E%3Cpath d='M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z'%3E%3C/path%3E%3C/svg%3E");
@@ -1980,7 +2033,72 @@
     }
 
     @media (max-width: $xl) {
-      display: none;
+      // display: none;
+      width: 100%;
+      display: grid;
+      grid-template-rows: max-content 0fr;
+      width: 100%;
+      height: max-content;
+      padding: 0;
+      transition: grid-template-rows 0.6s ease;
+      .variables_list_top {
+        padding: calc(var(--padding, 30px) - 5px) 20px;
+        cursor: pointer;
+        .caret {
+          display: flex;
+          transition: rotate 0.4s ease;
+        }
+      }
+      .variables_list_content {
+        // mask-image: linear-gradient(
+        //   180deg,
+        //   rgb(0, 0, 0),
+        //   rgb(0, 0, 0) 95%,
+        //   rgba(0, 0, 0, 0) 100%
+        // );
+        overflow: hidden;
+        opacity: 0;
+        transition: opacity 0.6s ease;
+
+        /* ===== Scrollbar CSS ===== */
+        scrollbar-width: auto;
+        // scrollbar-color: #ebebeb #ffffff;
+
+        /* Chrome, Edge, and Safari */
+        &::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background-color: rgba(255, 255, 255, 0.25);
+          border-radius: 10px;
+          border: px solid transparent;
+        }
+
+        > * {
+          max-width: calc(100% - 40px);
+          margin-inline: auto;
+          display: flex;
+        }
+      }
+
+      &:has(input:checked) {
+        grid-template-rows: max-content 1fr;
+
+        .variables_list_content {
+          overflow-y: auto;
+          opacity: 1;
+        }
+
+        .caret {
+          rotate: 90deg;
+        }
+      }
     }
   }
 
@@ -1999,6 +2117,10 @@
     background-color: rgba(255, 255, 255, 0.1);
     color: rgba(255, 255, 255, 0.9);
     font-weight: 400;
+
+    .flex {
+      cursor: move;
+    }
   }
 
   .popup {
@@ -2100,6 +2222,10 @@
     }
   }
 
+  :global(main > .popup.popup.popup.popup) {
+    display: none;
+  }
+
   :global([data-placement="top"] .popup.popup.popup) {
     &::before {
       top: unset;
@@ -2121,6 +2247,9 @@
     display: flex;
     flex-direction: column;
     gap: 30px;
+    @media (max-width: $xl) {
+      gap: 20px;
+    }
     h2 {
       margin-top: 1em;
       margin-bottom: 0.5em;
