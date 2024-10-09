@@ -42,6 +42,7 @@
   let areAllOpen = false;
   let sortableInstance; // Reference to the Sortable instance
   let isCompact = false;
+  let storeLoaded = false;
 
   $: {
     currentId = $page.params.id;
@@ -54,6 +55,15 @@
   }
 
   $: $templatesStore, console.log("templatesStore updated:", $templatesStore);
+
+  // $: {
+  //   if (storeLoaded) {
+  //     data = $templatesStore.map((category) => ({
+  //       ...category,
+  //       open: category.open ? false : true, // Toggle or initialize to true/false based on previous value
+  //     }));
+  //   }
+  // }
 
   onMount(async () => {
     checkSidebarState();
@@ -81,6 +91,7 @@
       }));
       data.forEach((item) => expandParents(item, currentId, currentType));
       templatesStore.set(data); // Initialize the store with the data
+      storeLoaded = true;
     } else {
       console.log("Categories not found");
       data = []; // Ensure data is an empty array if fetch fails

@@ -22,6 +22,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@sveltejs/adapter-node": "^5.2.5",
 		"@sveltejs/adapter-static": "^3.0.5",
 		"@tiptap/core": "^2.5.5",
 		"@tiptap/extension-bold": "^2.5.5",

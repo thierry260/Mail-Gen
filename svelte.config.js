@@ -1,21 +1,18 @@
-import preprocess from 'svelte-preprocess';
-import adapter from '@sveltejs/adapter-static';
-import path from 'path';
+import preprocess from "svelte-preprocess";
+import adapter from "@sveltejs/adapter-node"; // Change to Node adapter
+import path from "path";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   kit: {
     adapter: adapter({
-      // default options are shown
-      pages: 'build',
-      assets: 'build',
-      fallback: 'index.html',
-      precompress: false
+      // options for Node adapter
+      out: "build", // specify build output directory if needed
     }),
   },
   preprocess: preprocess({
     scss: {
-      includePaths: ['src/styles'],
+      includePaths: ["src/styles"],
       prependData: `@import 'global.scss';`, // Ensure this is correct
     },
   }),

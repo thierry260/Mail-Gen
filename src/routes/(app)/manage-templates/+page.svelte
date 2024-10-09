@@ -31,11 +31,9 @@
     console.log("Moving item", item, "from", fromCategory, "to", toCategory);
   };
 
-  const onRename = (category) => {
+  const onRename = (item, type = "category") => {
     // Set the category name as editable and select its text
-    const nameElement = document.querySelector(
-      `.category-${category.id} .name`
-    );
+    const nameElement = document.querySelector(`.${type}-${item.id} .name`);
     if (nameElement) {
       nameElement.setAttribute("contenteditable", true);
       nameElement.focus();
@@ -59,15 +57,20 @@
     }
   };
 
-  const onRemove = (category) => {
+  const onRemove = (item, type = "category") => {
+    const typeFormatted = type == "category" ? "categorie" : "template";
     if (
       confirm(
-        `Are you sure you want to remove the category "${category.name}" and all its subcategories?`
+        `Weet je zeker dat je ${typeFormatted} "${item.name}" wilt verwijderen?`
       )
     ) {
-      console.log(`Category ${category.name} removed`);
       // Logic to remove the category and its subcategories from the store
-      removeCategoryAndSubcategories(category);
+      if (type == "template") {
+      } else {
+        removeCategoryAndSubcategories(item);
+      }
+
+      console.log(`Item ${item.name} removed`);
     }
   };
 
@@ -135,6 +138,7 @@
   {#each selectedCategories as selectedCategory, index}
     <Column
       categories={selectedCategory.sub}
+      templates={selectedCategory.templates}
       level={index + 1}
       onSelect={selectCategory}
       onMove={moveItem}
@@ -147,7 +151,7 @@
 
 <style lang="scss">
   .breadcrumb {
-    margin-bottom: 1rem;
+    margin-bottom: -30px;
     min-height: 30px;
 
     ul {
@@ -176,6 +180,7 @@
     --gap: 2rem;
     display: grid;
     overflow-x: auto;
+    padding-top: 40px;
     grid-auto-columns: calc((100% / 3) - (var(--gap, 2rem) * 2 / 3));
     grid-auto-flow: column;
     grid-column-gap: var(--gap, 2rem);
