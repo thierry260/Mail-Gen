@@ -72,13 +72,13 @@ export async function load({ url }) {
         window.location.href = "/login";
       }
 
-      if (
-        currentUser &&
-        (url.pathname.startsWith("/login") ||
-          url.pathname.startsWith("/get-mailgen"))
-      ) {
-        window.location.href = "/";
-      }
+      // if (
+      //   currentUser &&
+      //   (url.pathname.startsWith("/login") ||
+      //     url.pathname.startsWith("/get-mailgen"))
+      // ) {
+      //   window.location.href = "/";
+      // }
     });
   }
 
