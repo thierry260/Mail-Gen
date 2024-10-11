@@ -5,8 +5,6 @@ import dotenv from 'dotenv';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './src/lib/firebase.js'; // Adjust import based on your firebase configuration
 
-
-
 dotenv.config(); // Load environment variables
 
 const app = express();
@@ -57,8 +55,8 @@ app.post('/create-checkout-session', async (req, res) => {
                     quantity: 1,
                 },
             ],
-            success_url: `http://localhost:5173/settings?tab=subscription&payment=success&cid=${customerId}`,  // Placeholder URL
-            cancel_url: `http://localhost:5173/settings?tab=subscription&payment=cancel&cid=${customerId}`,    // Placeholder URL
+            success_url: `https://app.mailgen.nl/settings?tab=subscription&cid=${customerId}`,
+            cancel_url: `https://app.mailgen.nl/settings?tab=subscription`,
         });
 
         console.log("Session created:", session); // Log the entire session object
@@ -67,7 +65,7 @@ app.post('/create-checkout-session', async (req, res) => {
             throw new Error('Failed to create session or session ID is missing');
         }
 
-        res.json({ sessionId: session.id, customerId: customerId });
+        res.json({ sessionId: session.id, customerId });
     } catch (error) {
         console.error("Error during session creation:", error.message);
         res.status(500).json({ error: error.message });
@@ -76,6 +74,8 @@ app.post('/create-checkout-session', async (req, res) => {
 
 app.post('/check-subscription', async (req, res) => {
     const { customerId } = req.body;
+
+    console.log("check sub", customerId);
 
     try {
         // Fetch active subscriptions for the customer

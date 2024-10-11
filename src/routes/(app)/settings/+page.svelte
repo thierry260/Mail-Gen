@@ -52,6 +52,28 @@
     }
   }
 
+  $: if ($page.url.searchParams.get("cid")) {
+    const stripeCustomerId = $page.url.searchParams.get("cid");
+
+    if (stripeCustomerId) {
+      setTimeout(() => {
+        localStorage.setItem("stripeCustomerId", stripeCustomerId);
+        console.log(`stripeCustomerId set to ${stripeCustomerId}`);
+        // Ensure that subscription status is checked after setting the ID
+        checkSubscription(stripeCustomerId).then((data) => {
+          if (data.active) {
+            // Update store or local state
+            user.update((currentUser) => ({
+              ...currentUser,
+              subscriptionActive: data.active,
+              subscriptionDaysLeft: data.daysLeft,
+            }));
+          }
+        });
+      }, 500);
+    }
+  }
+
   $: {
     currentUser = $user;
     if (currentUser && currentUser.subscriptionActive === true) {
@@ -158,7 +180,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword
+        currentPassword,
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -241,12 +263,19 @@
 
     const customerId = localStorage.getItem("stripeCustomerId");
 
+    if (!customerId) {
+      toast.error("Klant-ID niet gevonden", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     try {
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
 
       const response = await fetch(
-        "http://localhost:3000/cancel-subscription",
+        "https://app.mailgen.nl/api/cancel-subscription",
         {
           method: "POST",
           headers: {
@@ -257,39 +286,59 @@
             userId: userId,
             customerId: customerId,
           }),
-        }
+        },
       );
 
       const data = await response.json();
 
       if (data.success) {
         successMessage = data.message;
+
+        // Only update the store after the server confirms the cancellation
+        user.update((currentUser) => {
+          return {
+            ...currentUser,
+            subscriptionActive: false,
+            subscriptionDaysLeft: 0, // Set to 0 since the subscription is now canceled
+          };
+        });
+
+        // Clear customerId from localStorage after successful cancellation
+        localStorage.removeItem("stripeCustomerId");
+
+        toast.success("Abonnement succesvol geannuleerd.", {
+          position: "bottom-right",
+        });
       } else {
         throw new Error(data.error || "Failed to cancel subscription");
       }
     } catch (err) {
       errorMessage = err.message;
+      toast.error(errorMessage, {
+        position: "bottom-right",
+      });
     }
   };
 
   onMount(async () => {
     if (!browser) return;
+    setTimeout(() => {
+      // Get the 'cid' parameter from the URL
+      const stripeCustomerId = $page.url.searchParams.get("cid");
 
-    // Get the 'cid' parameter from the URL
-    const stripeCustomerId = $page.url.searchParams.get("cid");
+      // If 'cid' is present in the URL, set it to localStorage
+      if (stripeCustomerId) {
+        localStorage.setItem("stripeCustomerId", stripeCustomerId);
+        console.log(`stripeCustomerId set to ${stripeCustomerId}`);
+      }
 
-    // If 'cid' is present in the URL, set it to localStorage
-    if (stripeCustomerId) {
-      localStorage.setItem("stripeCustomerId", stripeCustomerId);
-      console.log(`stripeCustomerId set to ${stripeCustomerId}`);
-    }
+      const urlTab = $page.url.searchParams.get("tab");
+      if (urlTab) {
+        activeTab = urlTab;
+      }
 
-    const urlTab = $page.url.searchParams.get("tab");
-    if (urlTab) {
-      activeTab = urlTab;
-    }
-
-    fetchVariables();
+      fetchVariables();
+    }, 100); // Adding a delay to ensure all elements are ready before processing URL parameters.
   });
 
   const subscribe = async () => {
@@ -297,7 +346,7 @@
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
       const response = await fetch(
-        "http://localhost:3000/create-checkout-session",
+        "https://app.mailgen.nl/api/create-checkout-session",
         {
           method: "POST",
           headers: {
@@ -309,7 +358,7 @@
             workspaceId: workspaceId, // Pass the workspaceId
             userId: userId, // Pass the userId
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -567,7 +616,7 @@
         width: 24px;
         height: 24px;
         background-color: var(--primary);
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23000000' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'%3E%3C/path%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='https://www.w3.org/2000/svg' width='16' height='16' fill='%23000000' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'%3E%3C/path%3E%3C/svg%3E");
         background-position: center;
         background-repeat: no-repeat;
         background-size: 12px;

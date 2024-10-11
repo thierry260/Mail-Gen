@@ -8,7 +8,7 @@ export const ssr = false;
 
 const checkSubscription = async (id) => {
   try {
-    const response = await fetch("http://localhost:3000/check-subscription", {
+    const response = await fetch("https://app.mailgen.nl/api/check-subscription", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -33,7 +33,7 @@ export async function load({ url }) {
     let subscriptionActive = false;
     let subscriptionDaysLeft = 0;
 
-    const testmode = true;
+    const testmode = false;
 
     if (testmode) {
       subscriptionActive = true;
@@ -71,14 +71,6 @@ export async function load({ url }) {
       ) {
         window.location.href = "/login";
       }
-
-      // if (
-      //   currentUser &&
-      //   (url.pathname.startsWith("/login") ||
-      //     url.pathname.startsWith("/get-mailgen"))
-      // ) {
-      //   window.location.href = "/";
-      // }
     });
   }
 

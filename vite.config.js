@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import fs from "fs";
+import path from "path";
 
 export default defineConfig({
   plugins: [
@@ -14,8 +16,8 @@ export default defineConfig({
       manifest: {
         name: "Mail Gen",
         short_name: "Mail Gen",
-        start_url: "/",
-        scope: "/",
+        start_url: "./",
+        scope: "./",
         display: "standalone",
         background_color: "#426006",
         theme_color: "#c9f66f",
@@ -64,6 +66,19 @@ export default defineConfig({
   ],
   define: {
     "process.env.NODE_ENV": '"production"',
+  },
+  // server: {
+  //   https: {
+  //     key: fs.readFileSync('./localhost-key.pem'),
+  //     cert: fs.readFileSync('./localhost.pem'),
+  //   }
+  // },
+  proxy: {
+    '/api': {
+      target: 'https://localhost:26',
+      changeOrigin: true,
+      rewrite: (path) => path.replace(/^\/api/, ''),
+    },
   },
   build: {
     outDir: "build",
