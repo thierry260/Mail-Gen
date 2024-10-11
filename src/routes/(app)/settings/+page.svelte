@@ -180,7 +180,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword,
+        currentPassword
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -259,10 +259,13 @@
   };
 
   const cancelSubscription = async () => {
+    // Confirm the user really wants to cancel
     if (!confirm("Weet je zeker dat je je abonnement wilt annuleren?")) return;
 
+    // Get the customer ID from localStorage
     const customerId = localStorage.getItem("stripeCustomerId");
 
+    // If no customer ID is found, show an error
     if (!customerId) {
       toast.error("Klant-ID niet gevonden", {
         position: "bottom-right",
@@ -274,6 +277,7 @@
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
 
+      // Make the API call to cancel the subscription
       const response = await fetch(
         "https://app.mailgen.nl/api/cancel-subscription",
         {
@@ -286,15 +290,16 @@
             userId: userId,
             customerId: customerId,
           }),
-        },
+        }
       );
 
       const data = await response.json();
 
+      // Handle the success case
       if (data.success) {
         successMessage = data.message;
 
-        // Only update the store after the server confirms the cancellation
+        // Update the user state after cancellation
         user.update((currentUser) => {
           return {
             ...currentUser,
@@ -303,9 +308,10 @@
           };
         });
 
-        // Clear customerId from localStorage after successful cancellation
+        // Remove the customer ID from localStorage
         localStorage.removeItem("stripeCustomerId");
 
+        // Show a success toast message
         toast.success("Abonnement succesvol geannuleerd.", {
           position: "bottom-right",
         });
@@ -313,6 +319,7 @@
         throw new Error(data.error || "Failed to cancel subscription");
       }
     } catch (err) {
+      // Handle errors and show error messages
       errorMessage = err.message;
       toast.error(errorMessage, {
         position: "bottom-right",
@@ -345,6 +352,7 @@
     try {
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
+
       const response = await fetch(
         "https://app.mailgen.nl/api/create-checkout-session",
         {
@@ -358,7 +366,7 @@
             workspaceId: workspaceId, // Pass the workspaceId
             userId: userId, // Pass the userId
           }),
-        },
+        }
       );
 
       const data = await response.json();

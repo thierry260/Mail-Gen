@@ -7,17 +7,21 @@ import { user } from "$lib/stores/user";
 export const ssr = false;
 
 const checkSubscription = async (id) => {
+  const workspace = localStorage.getItem("workspace");
   try {
-    const response = await fetch("https://app.mailgen.nl/api/check-subscription", {
+    const response = await fetch("/api/check-subscription", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ workspaceId: workspace, customerId: id }),
     });
     console.log("DAYSLEFT", id);
 
     const data = await response.json();
+
+    console.log("data: ", data);
+
     return {
       active: data.active || false,
       daysLeft: data.days_left || 0,
@@ -40,14 +44,13 @@ export async function load({ url }) {
       subscriptionDaysLeft = 29;
       console.log("access granted by test mode");
     } else {
-      const stripeCustomerId = localStorage.getItem("stripeCustomerId");
+      const stripeCustomerId =
+        localStorage.getItem("stripeCustomerId") || "null";
+      const subscriptionData = await checkSubscription(stripeCustomerId);
+      subscriptionActive = subscriptionData.active;
+      subscriptionDaysLeft = subscriptionData.daysLeft;
 
-      // If stripeCustomerId exists, check subscription status
-      if (stripeCustomerId) {
-        const subscriptionData = await checkSubscription(stripeCustomerId);
-        subscriptionActive = subscriptionData.active;
-        subscriptionDaysLeft = subscriptionData.daysLeft;
-      }
+      console.log({ subscriptionActive, subscriptionDaysLeft });
     }
 
     // Ensure the auth state listener is set up
