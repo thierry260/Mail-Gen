@@ -65,6 +65,9 @@ export default defineConfig({
     }),
   ],
   define: {
+    "process.env.STRIPE_SECRET_KEY": JSON.stringify(
+      process.env.STRIPE_SECRET_KEY
+    ),
     "process.env.NODE_ENV": '"production"',
   },
   // server: {
