@@ -36,19 +36,30 @@ export async function load({ url }) {
   if (browser) {
     let subscriptionActive = false;
     let subscriptionDaysLeft = 0;
+    let subscriptionIsTrial = false;
 
-    const testmode = false;
+    const isLocalhost = Boolean(
+      window.location.hostname === "localhost" ||
+        window.location.hostname === "[::1]" ||
+        window.location.hostname.match(
+          /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+        )
+    );
+
+    let testmode = isLocalhost;
 
     if (testmode) {
       subscriptionActive = true;
       subscriptionDaysLeft = 29;
+      subscriptionIsTrial = true;
       console.log("access granted by test mode");
     } else {
       const stripeCustomerId =
         localStorage.getItem("stripeCustomerId") || "null";
       const subscriptionData = await checkSubscription(stripeCustomerId);
       subscriptionActive = subscriptionData.active;
-      subscriptionDaysLeft = subscriptionData.daysLeft;
+      subscriptionDaysLeft = subscriptionData.days_left;
+      subscriptionIsTrial = subscriptionData.is_trial;
 
       console.log({ subscriptionActive, subscriptionDaysLeft });
     }
@@ -61,6 +72,7 @@ export async function load({ url }) {
           ...currentUser,
           subscriptionActive,
           subscriptionDaysLeft,
+          subscriptionIsTrial,
         });
       } else {
         user.set(null);

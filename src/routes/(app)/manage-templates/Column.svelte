@@ -1,6 +1,6 @@
 <script>
+  import { onMount, onDestroy } from "svelte";
   import Sortable from "sortablejs";
-  import { onMount } from "svelte";
   import {
     DotsSixVertical,
     PencilSimple,
@@ -9,41 +9,128 @@
     File,
     CaretRight,
   } from "phosphor-svelte";
+  import { templatesStore } from "$lib/stores/templates";
 
+  export let id = "";
+  export let selectedCategory = "";
+  export let selectedCategories = [];
+  export let allCategories = [];
   export let categories = [];
   export let templates = [];
   export let level = 0;
   export let onSelect;
+  export let onRename;
+  export let onRemove;
   export let onMove;
-  export let selectedCategories = []; // Receive selectedCategories as a prop
-  export let onRename; // Function to handle renaming a category
-  export let onRemove; // Function to handle removing a category
+  export let onAddCategory;
+  export let onAddTemplate;
+
+  function findItemById(array, id, searchIn) {
+    for (const item of array) {
+      // Check if the current item's id matches the target id
+      if (item.id === id) {
+        return item;
+      }
+
+      // If searching in sub items, check if they exist
+      if (searchIn === "sub" && Array.isArray(item.sub)) {
+        const foundInSub = findItemById(item.sub, id, searchIn);
+        if (foundInSub) {
+          return foundInSub;
+        }
+      }
+
+      // If searching in templates, check if they exist
+      if (searchIn === "templates" && Array.isArray(item.templates)) {
+        const foundInTemplates = item.templates.find(
+          (template) => template.id === id
+        );
+        if (foundInTemplates) {
+          return foundInTemplates;
+        }
+      }
+    }
+
+    // If not found, return null
+    return null;
+  }
+
+  if (level > 0) {
+    let selectedItem = findItemById(allCategories, id, "sub");
+    console.log({ selectedItem });
+    categories = selectedItem ? selectedItem.sub : [];
+    templates = selectedItem ? selectedItem.templates : [];
+  }
 
   let categoriesContent, templatesContent;
+  let newCategoryName = "";
+  let newTemplateName = "";
 
-  // Initialize Sortable.js for drag-and-drop functionality
+  // Sortables instances
+  let categoriesSortable;
+  let templatesSortable;
+
+  const initializeSortables = () => {
+    if (categoriesContent) {
+      categoriesSortable = new Sortable(categoriesContent, {
+        group: "categories",
+        animation: 150,
+        handle: ".drag",
+        onEnd: (event) => {
+          const item = categories[event.oldIndex];
+          const toCategory = categories[event.newIndex];
+          onMove(item, categories[event.oldIndex], toCategory);
+        },
+      });
+    }
+
+    if (templatesContent) {
+      templatesSortable = new Sortable(templatesContent, {
+        group: "templates",
+        animation: 150,
+        handle: ".drag",
+        onEnd: (event) => {
+          const item = templates[event.oldIndex];
+          const toCategory = templates[event.newIndex];
+          onMove(item, templates[event.oldIndex], toCategory);
+        },
+      });
+    }
+  };
+
+  // Initialize Sortables on mount
   onMount(() => {
-    new Sortable(categoriesContent, {
-      group: "categories",
-      animation: 150,
-      handle: ".drag",
-      onEnd: (event) => {
-        const item = categories[event.oldIndex];
-        const toCategory = categories[event.newIndex];
-        onMove(item, categories[event.oldIndex], toCategory);
-      },
-    });
-    new Sortable(templatesContent, {
-      group: "templates",
-      animation: 150,
-      handle: ".drag",
-      onEnd: (event) => {
-        const item = templates[event.oldIndex];
-        const toCategory = templates[event.newIndex];
-        onMove(item, templates[event.oldIndex], toCategory);
-      },
-    });
+    initializeSortables();
   });
+
+  // Cleanup Sortables on destroy
+  onDestroy(() => {
+    categoriesSortable && categoriesSortable.destroy();
+    templatesSortable && templatesSortable.destroy();
+  });
+
+  // Reactivity for categories and templates changes
+  $: if (categoriesContent && categories && categories.length > 0) {
+    categoriesSortable.sort(categories.map((cat) => cat.id));
+  }
+
+  $: if (templatesContent && templates && templates.length > 0) {
+    templatesSortable.sort(templates.map((temp) => temp.id));
+  }
+
+  const addCategory = () => {
+    if (newCategoryName.trim()) {
+      onAddCategory(newCategoryName);
+      newCategoryName = ""; // Clear input after adding
+    }
+  };
+
+  const addTemplate = () => {
+    if (newTemplateName.trim()) {
+      onAddTemplate(newTemplateName, id);
+      newTemplateName = ""; // Clear input after adding
+    }
+  };
 </script>
 
 <div class="column">
@@ -59,18 +146,13 @@
             : ''}"
           on:click={() => onSelect(level, category)}
         >
-          <span class="icon drag">
-            <DotsSixVertical size={16} />
-          </span>
-          <span class="icon type">
-            <FolderSimple size={16} weight="bold" />
-          </span>
+          <span class="icon drag"><DotsSixVertical size={16} /></span>
+          <span class="icon type"><FolderSimple size={16} weight="bold" /></span
+          >
           <span class="name">{category.name}</span>
           <span class="actions">
             <span
               class="icon rename"
-              data-tooltip="Naam wijzigen"
-              data-flow="top"
               on:click={(e) => {
                 e.stopPropagation();
                 onRename(category);
@@ -80,8 +162,6 @@
             </span>
             <span
               class="icon remove"
-              data-tooltip="Verwijderen"
-              data-flow="top"
               on:click={(e) => {
                 e.stopPropagation();
                 onRemove(category);
@@ -90,67 +170,77 @@
               <TrashSimple size={14} />
             </span>
           </span>
-          <span class="icon caret">
-            <CaretRight size={14} />
-          </span>
+          <span class="icon caret"><CaretRight size={14} /></span>
         </div>
       {/each}
     {/if}
   </div>
-  <input
-    class="button simple add_button add_cat"
-    placeholder="+ Categorie toevoegen"
-  />
-  <span class="label">Templates</span>
-  <div class="items templates" bind:this={templatesContent}>
-    {#if templates && templates.length}
-      {#each templates as template (template.id)}
-        <div
-          class="item template template-{template.id} {selectedCategories.includes(
-            template
-          )
-            ? 'active'
-            : ''}"
-        >
-          <span class="icon drag">
-            <DotsSixVertical size={16} />
-          </span>
-          <span class="icon type">
-            <File size={16} weight="bold" />
-          </span>
-          <span class="name">{template.name}</span>
-          <span class="actions">
-            <span
-              class="icon rename"
-              data-tooltip="Naam wijzigen"
-              data-flow="top"
-              on:click={(e) => {
-                e.stopPropagation();
-                onRename(template, "template");
-              }}
-            >
-              <PencilSimple size={14} />
-            </span>
-            <span
-              class="icon remove"
-              data-tooltip="Verwijderen"
-              data-flow="top"
-              on:click={(e) => {
-                e.stopPropagation();
-                onRemove(template, "template");
-              }}
-            >
-              <TrashSimple size={14} />
-            </span>
-          </span>
-        </div>
-      {/each}
-    {/if}
+  <div class="add_button_outer">
+    <input
+      class="button simple add_button add_cat"
+      placeholder="+ Categorie"
+      bind:value={newCategoryName}
+      on:keypress={(e) => e.key === "Enter" && addCategory()}
+    />
+    <button class="button basic" on:click={addCategory}>Toevoegen</button>
   </div>
-  <input
-    class="button simple add_button add_template"
-    placeholder="+ Template toevoegen"
-  />
+
+  {#if level > 0}
+    <span class="label">Templates</span>
+    <div class="items templates" bind:this={templatesContent}>
+      {#if templates && templates.length}
+        {#each templates as template (template.id)}
+          <div
+            class="item template template-{template.id} {selectedCategory.id ===
+            template.id
+              ? 'active'
+              : ''}"
+          >
+            <span class="icon drag">
+              <DotsSixVertical size={16} />
+            </span>
+            <span class="icon type">
+              <File size={16} weight="bold" />
+            </span>
+            <span class="name">{template.name}</span>
+            <span class="actions">
+              <span
+                class="icon rename"
+                data-tooltip="Naam wijzigen"
+                data-flow="top"
+                on:click={(e) => {
+                  e.stopPropagation();
+                  onRename(template, "template");
+                }}
+              >
+                <PencilSimple size={14} />
+              </span>
+              <span
+                class="icon remove"
+                data-tooltip="Verwijderen"
+                data-flow="top"
+                on:click={(e) => {
+                  e.stopPropagation();
+                  onRemove(template, "template");
+                }}
+              >
+                <TrashSimple size={14} />
+              </span>
+            </span>
+          </div>
+        {/each}
+      {/if}
+      <div class="add_button_outer">
+        <input
+          class="button simple add_button add_temp"
+          placeholder="+ Template"
+          bind:value={newTemplateName}
+          on:keypress={(e) => e.key === "Enter" && addTemplate()}
+        />
+        <button class="button basic" on:click={addTemplate}>Toevoegen</button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -164,6 +254,33 @@
       margin-bottom: 0.5em;
       &:not(:first-child) {
         margin-top: 1em;
+      }
+    }
+
+    .add_button_outer {
+      display: grid;
+      grid-template-rows: max-content 0fr;
+      height: min-content;
+      transition: grid-template-rows 0.2s ease-out;
+      .add_button.add_button {
+        width: 100%;
+        padding: 10px 0;
+        border: none;
+        outline: none;
+        box-shadow: none;
+      }
+      button {
+        overflow: hidden;
+        padding: 0;
+        line-height: 2.5;
+        border: none;
+        outline: 1px solid var(--border);
+        outline-offset: -1px;
+      }
+
+      &:has(.add_button:focus),
+      &:has(.add_button:not(:placeholder-shown)) {
+        grid-template-rows: max-content 1fr;
       }
     }
 
@@ -186,7 +303,6 @@
         text-align: center;
         font-size: 1.3rem;
         line-height: 1.5;
-        /* min-height: 40px; */
         box-sizing: border-box;
       }
 
@@ -201,7 +317,6 @@
       --padding: 13px 10px;
       display: flex;
       align-items: center;
-      // gap: 5px;
       cursor: pointer;
       padding: 0;
       background-color: var(--gray-200);
@@ -232,10 +347,6 @@
         outline-color: var(--primary);
         background-color: hsl(from var(--primary) h s calc(l + 25));
         color: hsl(from var(--primary) h s calc(l - 60));
-        // cursor: unset;
-
-        // color: #fff;
-        // background-color: hsl(from var(--primary) h s calc(l - 60));
       }
 
       .icon {
@@ -264,8 +375,6 @@
       .actions {
         display: flex;
         align-items: center;
-        // gap: 2px;
-
         padding: var(--padding);
         padding-block: 5px;
         padding-left: 5px;
@@ -294,24 +403,9 @@
       }
 
       &.template {
-        cursor: unset;
-      }
-    }
-
-    .add_button.add_button {
-      cursor: unset;
-      padding: 5px 0 10px;
-      border: none;
-      outline: none;
-      box-shadow: none;
-      font-size: 1.5rem;
-    }
-
-    &:first-child {
-      .add_template,
-      .label,
-      .templates {
-        display: none;
+        &:hover {
+          background-color: #e0e0e0;
+        }
       }
     }
   }

@@ -1,6 +1,7 @@
 <script>
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
   import { CaretRight, Plus } from "phosphor-svelte";
   import { createCategory, createNewTemplate } from "$lib/utils/create";
   import { templatesStore } from "$lib/stores/templates";
@@ -208,6 +209,12 @@
 
   // // Load the category data on mount
   // loadCategoryData();
+
+  onMount(() => {
+    loadCategoryData();
+    if (id) {
+    }
+  });
 
   // // Reactive statement to reload category data whenever the ID changes
   $: if (id) {

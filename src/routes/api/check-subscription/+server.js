@@ -34,7 +34,11 @@ export async function POST({ request }) {
         const remainingTrialDays = 14 - diffInDays;
 
         return new Response(
-          JSON.stringify({ active: true, days_left: remainingTrialDays }),
+          JSON.stringify({
+            active: true,
+            days_left: remainingTrialDays,
+            is_trial: true,
+          }),
           { status: 200 }
         );
       }
@@ -51,14 +55,21 @@ export async function POST({ request }) {
           (1000 * 60 * 60 * 24)
       );
       return new Response(
-        JSON.stringify({ active: true, days_left: remainingDays }),
+        JSON.stringify({
+          active: true,
+          days_left: remainingDays,
+          is_trial: false,
+        }),
         { status: 200 }
       );
     }
 
-    return new Response(JSON.stringify({ active: false, days_left: 0 }), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ active: false, days_left: 0, is_trial: false }),
+      {
+        status: 200,
+      }
+    );
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,

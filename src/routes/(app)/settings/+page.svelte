@@ -36,6 +36,7 @@
   let successMessage = "";
   let hasActiveSubscription = false;
   let subscriptionDaysLeft = 0;
+  let subscriptionIsTrial = false;
   let currentUser;
 
   // Function to handle tab click and update URL
@@ -79,9 +80,37 @@
     if (currentUser && currentUser.subscriptionActive === true) {
       hasActiveSubscription = true;
       subscriptionDaysLeft = currentUser.subscriptionDaysLeft;
+      subscriptionIsTrial = currentUser.subscriptionIsTrial;
       console.log("Reactivestatement true");
     }
   }
+
+  const checkSubscription = async (id) => {
+    const workspace = localStorage.getItem("workspace");
+    try {
+      const response = await fetch("/api/check-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ workspaceId: workspace, customerId: id }),
+      });
+      console.log("DAYSLEFT", id);
+
+      const data = await response.json();
+
+      console.log("data: ", data);
+
+      return {
+        active: data.active || false,
+        daysLeft: data.days_left || 0,
+        isTrial: data.is_trial || false,
+      };
+    } catch (err) {
+      console.error("Error checking subscription:", err.message);
+      return { active: false, daysLeft: 0 };
+    }
+  };
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -545,12 +574,18 @@
     <div class="card">
       {#if hasActiveSubscription}
         <h2>Abonnement</h2>
-        <p class="mb-20">
-          Je abonnement is nog {subscriptionDaysLeft} dagen geldig.
-        </p>
-        <button class="button basic has_text" on:click={cancelSubscription}
-          >Abonnement annuleren</button
-        >
+        {#if subscriptionIsTrial}
+          <p>
+            Je proefperiode is nog {subscriptionDaysLeft} dagen geldig.
+          </p>
+        {:else}
+          <p class="mb-20">
+            Je abonnement is nog {subscriptionDaysLeft} dagen geldig.
+          </p>
+          <button class="button basic has_text" on:click={cancelSubscription}
+            >Abonnement annuleren</button
+          >
+        {/if}
       {:else}
         <h2>Abonneer je nu</h2>
         <div class="subscription_info">

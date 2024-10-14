@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { writable } from "svelte/store";
   import { X } from "phosphor-svelte";
+  import toast from "svelte-french-toast";
 
   export let visible = false;
   export let closeModal;
@@ -37,14 +38,32 @@
     dialogRef.close();
   }
 
-  const handleSubmit = () => {
-    // Handle form submission logic
-    console.log({
-      name,
-      email,
-      messageType,
-      message,
-    });
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, messageType, message }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success("Email succesvol verzonden!", {
+          position: "bottom-right",
+        });
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to send email.", {
+          position: "bottom-right",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error("An error occurred while sending the email.", {
+        position: "bottom-right",
+      });
+    }
+
     closeModal();
   };
 

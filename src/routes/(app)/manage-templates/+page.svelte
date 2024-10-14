@@ -6,7 +6,12 @@
 
   let selectedCategories = [];
   let lastLevel = -1;
-  $: categories = $templatesStore;
+  let categories = []; // Declare categories locally
+
+  // Subscribe to the templatesStore
+  $: {
+    categories = $templatesStore; // Update local categories when store changes
+  }
 
   const selectCategory = (level, selectedCategory) => {
     selectedCategories = selectedCategories.slice(0, level);
@@ -32,7 +37,6 @@
   };
 
   const onRename = (item, type = "category") => {
-    // Set the category name as editable and select its text
     const nameElement = document.querySelector(`.${type}-${item.id} .name`);
     if (nameElement) {
       nameElement.setAttribute("contenteditable", true);
@@ -43,17 +47,39 @@
       selection.removeAllRanges();
       selection.addRange(range);
 
-      // Add blur event to capture new name
-      nameElement.addEventListener(
-        "blur",
-        () => {
-          const newName = nameElement.textContent.trim();
-          console.log("New category name:", newName);
-          nameElement.removeAttribute("contenteditable");
-          // You can add logic here to update the category name in your store
-        },
-        { once: true }
-      );
+      const saveNewName = () => {
+        const newName = nameElement.textContent.trim();
+        console.log("New category name:", newName);
+        nameElement.removeAttribute("contenteditable");
+        // Update category name in the store
+        templatesStore.update((cats) => {
+          return cats.map((cat) => {
+            if (cat.id === item.id) {
+              return { ...cat, name: newName }; // Update the category name
+            } else if (cat.sub) {
+              return {
+                ...cat,
+                sub: cat.sub.map((subCat) => {
+                  if (subCat.id === item.id) {
+                    return { ...subCat, name: newName }; // Update subcategory name
+                  }
+                  return subCat;
+                }),
+              };
+            }
+            return cat;
+          });
+        });
+      };
+
+      // Event listeners for saving new name
+      nameElement.addEventListener("blur", saveNewName, { once: true });
+      nameElement.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          saveNewName();
+        }
+      });
     }
   };
 
@@ -64,31 +90,25 @@
         `Weet je zeker dat je ${typeFormatted} "${item.name}" wilt verwijderen?`
       )
     ) {
-      // Logic to remove the category and its subcategories from the store
       if (type == "template") {
+        // Logic to remove the template
       } else {
         removeCategoryAndSubcategories(item);
       }
-
       console.log(`Item ${item.name} removed`);
     }
   };
 
-  // Function to handle breadcrumb click (navigate back to that category)
   const navigateToCategory = (index) => {
     selectCategory(index, selectedCategories[index]);
   };
 
-  // Function to remove category and all subcategories
   const removeCategoryAndSubcategories = (categoryToRemove) => {
-    // Function to recursively remove categories and subcategories
     const removeRecursively = (categoryList, categoryId) => {
       return categoryList.filter((category) => {
-        // Remove the category and all its subcategories
         if (category.id === categoryId) {
           return false;
         }
-        // If the category has subcategories, apply the same logic to them
         if (category.sub) {
           category.sub = removeRecursively(category.sub, categoryId);
         }
@@ -96,10 +116,76 @@
       });
     };
 
-    // Update the templates store by removing the category from it
     templatesStore.update((categories) => {
-      // Apply the removeRecursively function to the top-level categories
       return removeRecursively(categories, categoryToRemove.id);
+    });
+  };
+
+  const addCategory = (name) => {
+    const newCategory = { id: Date.now(), name, sub: [] };
+    if (lastLevel === -1) {
+      templatesStore.update((cats) => [...cats, newCategory]);
+    } else {
+      templatesStore.update((cats) => {
+        const addToSubCategory = (categoryList) => {
+          return categoryList.map((cat) => {
+            if (cat.id === selectedCategories[lastLevel].id) {
+              return {
+                ...cat,
+                sub: [...(cat.sub || []), newCategory],
+              };
+            } else if (cat.sub) {
+              return {
+                ...cat,
+                sub: addToSubCategory(cat.sub),
+              };
+            }
+            return cat;
+          });
+        };
+        return addToSubCategory(cats);
+      });
+    }
+  };
+
+  const addTemplate = (name, categoryId) => {
+    const newTemplate = { id: Date.now(), name };
+    templatesStore.update((cats) => {
+      return cats.map((cat) => {
+        if (cat.id === categoryId) {
+          return {
+            ...cat,
+            templates: [...(cat.templates || []), newTemplate],
+          };
+        } else if (cat.sub) {
+          return {
+            ...cat,
+            sub: addTemplateToSubCategories(cat.sub, categoryId, newTemplate),
+          };
+        }
+        return cat;
+      });
+    });
+  };
+
+  const addTemplateToSubCategories = (
+    categoryList,
+    categoryId,
+    newTemplate
+  ) => {
+    return categoryList.map((cat) => {
+      if (cat.id === categoryId) {
+        return {
+          ...cat,
+          templates: [...(cat.templates || []), newTemplate],
+        };
+      } else if (cat.sub) {
+        return {
+          ...cat,
+          sub: addTemplateToSubCategories(cat.sub, categoryId, newTemplate),
+        };
+      }
+      return cat;
     });
   };
 </script>
@@ -110,7 +196,6 @@
 <nav class="breadcrumb">
   {#if selectedCategories.length > 0}
     <ul>
-      <!-- <li on:click={() => navigateToCategory(0)}>Home</li> -->
       {#each selectedCategories as category, index}
         <li on:click={() => navigateToCategory(index)}>
           {category.name}
@@ -133,18 +218,23 @@
     {onRename}
     {onRemove}
     {selectedCategories}
+    onAddCategory={addCategory}
+    onAddTemplate={addTemplate}
   />
 
   {#each selectedCategories as selectedCategory, index}
     <Column
-      categories={selectedCategory.sub}
-      templates={selectedCategory.templates}
+      allCategories={categories}
+      id={selectedCategory.id}
+      {selectedCategory}
       level={index + 1}
       onSelect={selectCategory}
       onMove={moveItem}
       {onRename}
       {onRemove}
       {selectedCategories}
+      onAddCategory={addCategory}
+      onAddTemplate={addTemplate}
     />
   {/each}
 </div>
