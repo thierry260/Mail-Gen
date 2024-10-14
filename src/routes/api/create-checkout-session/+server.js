@@ -1,4 +1,4 @@
-import { STRIPE_SECRET_KEY } from "$env/static/private";
+import { STRIPE_SECRET_KEY } from "$env/dynamic/private";
 import Stripe from "stripe";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "$lib/firebase"; // Update this based on your configuration
