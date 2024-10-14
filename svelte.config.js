@@ -1,5 +1,5 @@
 import sveltePreprocess from "svelte-preprocess";
-import adapter from "@sveltejs/adapter-static";
+import vercel from "@sveltejs/adapter-vercel"; // Make sure this is imported
 import path from "path";
 
 /** @type {import('@sveltejs/kit').Config} */
