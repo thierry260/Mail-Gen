@@ -9,7 +9,6 @@
   import { switchMobileNav } from "$lib/utils/utils.js";
 
   import "intro.js/introjs.css";
-  import "intro.js/introjs-cstm.css";
   import introJs from "intro.js";
 
   let data = [];

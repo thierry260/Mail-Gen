@@ -73,13 +73,13 @@ export default defineConfig({
   //     cert: fs.readFileSync('./localhost.pem'),
   //   }
   // },
-  proxy: {
-    '/api': {
-      target: 'https://localhost:26',
-      changeOrigin: true,
-      rewrite: (path) => path.replace(/^\/api/, ''),
-    },
-  },
+  // proxy: {
+  //   '/api': {
+  //     target: 'https://localhost:26',
+  //     changeOrigin: true,
+  //     rewrite: (path) => path.replace(/^\/api/, ''),
+  //   },
+  // },
   build: {
     outDir: "build",
     emptyOutDir: true,

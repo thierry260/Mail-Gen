@@ -46,7 +46,6 @@
   import BubbleMenu from "@tiptap/extension-bubble-menu";
 
   import "intro.js/introjs.css";
-  import "intro.js/introjs-cstm.css";
   import introJs from "intro.js";
 
   let id;

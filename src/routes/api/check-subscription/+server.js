@@ -1,8 +1,9 @@
+import { STRIPE_SECRET_KEY } from "$env/static/private";
 import Stripe from "stripe";
-import { doc, getDoc } from "firebase/firestore"; // Assuming you use Firestore here
-import { db } from "$lib/firebase"; // Ensure you have your Firestore instance properly set up
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "$lib/firebase";
 
-const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY);
+const stripe = new Stripe(STRIPE_SECRET_KEY); // Use the env variable here
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
@@ -56,7 +57,9 @@ export async function POST({ request }) {
       );
     }
 
-    return new Response(JSON.stringify({ active: false }), { status: 200 });
+    return new Response(JSON.stringify({ active: false, days_left: 0 }), {
+      status: 200,
+    });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,

@@ -1,8 +1,9 @@
+import { STRIPE_SECRET_KEY } from "$env/static/private";
 import Stripe from "stripe";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "$lib/firebase"; // Update this based on your configuration
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(STRIPE_SECRET_KEY); // Use the env variable here
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {

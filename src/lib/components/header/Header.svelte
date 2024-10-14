@@ -10,7 +10,6 @@
   import SupportModal from "$lib/components/header/SupportModal.svelte"; // Import the modal
 
   import "intro.js/introjs.css";
-  import "intro.js/introjs-cstm.css";
   import introJs from "intro.js";
 
   export let type = "overview";

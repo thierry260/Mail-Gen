@@ -10,6 +10,8 @@
 	"devDependencies": {
 		"@stripe/stripe-js": "^4.5.0",
 		"@sveltejs/adapter-auto": "^3.0.0",
+		"@sveltejs/adapter-static": "^3.0.5",
+		"@sveltejs/adapter-vercel": "^5.4.5",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"phosphor-svelte": "^2.0.1",
@@ -23,7 +25,6 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/adapter-node": "^5.2.5",
-		"@sveltejs/adapter-static": "^3.0.5",
 		"@tiptap/core": "^2.5.5",
 		"@tiptap/extension-bold": "^2.5.5",
 		"@tiptap/extension-bubble-menu": "^2.7.4",
