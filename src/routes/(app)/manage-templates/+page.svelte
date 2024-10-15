@@ -13,6 +13,10 @@
     categories = $templatesStore; // Update local categories when store changes
   }
 
+  // $: {
+  //   console.log({ selectedCategories });
+  // }
+
   const selectCategory = (level, selectedCategory) => {
     selectedCategories = selectedCategories.slice(0, level);
     selectedCategories.push(selectedCategory);
@@ -33,7 +37,61 @@
   };
 
   const moveItem = (item, fromCategory, toCategory) => {
-    console.log("Moving item", item, "from", fromCategory, "to", toCategory);
+    // console.log("Moving item", item, "from", fromCategory, "to", toCategory);
+
+    templatesStore.update((cats) => {
+      // Step 1: Remove the item from its current category
+      const removeItem = (categoryList, itemId) => {
+        return categoryList.map((cat) => {
+          if (cat.id === fromCategory) {
+            return {
+              ...cat,
+              templates: cat.templates
+                ? cat.templates.filter((t) => t.id !== itemId)
+                : cat.templates,
+              sub: cat.sub ? cat.sub.filter((s) => s.id !== itemId) : cat.sub,
+            };
+          } else if (cat.sub) {
+            return {
+              ...cat,
+              sub: removeItem(cat.sub, itemId),
+            };
+          }
+          return cat;
+        });
+      };
+
+      // Step 2: Add the item to the new category
+      const addItemToCategory = (categoryList, newItem, targetCategoryId) => {
+        return categoryList.map((cat) => {
+          if (cat.id === targetCategoryId) {
+            const itemKey = item.type === "template" ? "templates" : "sub";
+            return {
+              ...cat,
+              [itemKey]: [...(cat[itemKey] || []), newItem],
+            };
+          } else if (cat.sub) {
+            return {
+              ...cat,
+              sub: addItemToCategory(cat.sub, newItem, targetCategoryId),
+            };
+          }
+          return cat;
+        });
+      };
+
+      // Step 3: Update the store
+      const updatedCats = addItemToCategory(
+        removeItem(cats, item.id),
+        item,
+        toCategory
+      );
+      return updatedCats;
+    });
+
+    console.log(
+      `Item ${item.name} moved from category ${fromCategory} to ${toCategory}`
+    );
   };
 
   const onRename = (item, type = "category") => {
@@ -49,14 +107,27 @@
 
       const saveNewName = () => {
         const newName = nameElement.textContent.trim();
-        console.log("New category name:", newName);
+        console.log("New category/template name:", newName);
         nameElement.removeAttribute("contenteditable");
-        // Update category name in the store
+
+        // Update category/template name in the store
         templatesStore.update((cats) => {
           return cats.map((cat) => {
             if (cat.id === item.id) {
               return { ...cat, name: newName }; // Update the category name
+            } else if (type === "template" && cat.templates) {
+              // Search through templates if the type is "template"
+              return {
+                ...cat,
+                templates: cat.templates.map((template) => {
+                  if (template.id === item.id) {
+                    return { ...template, name: newName }; // Update template name
+                  }
+                  return template;
+                }),
+              };
             } else if (cat.sub) {
+              // Continue to search in subcategories for type "category"
               return {
                 ...cat,
                 sub: cat.sub.map((subCat) => {
@@ -121,72 +192,77 @@
     });
   };
 
-  const addCategory = (name) => {
-    const newCategory = { id: Date.now(), name, sub: [] };
-    if (lastLevel === -1) {
+  const addCategory = (name, categoryId) => {
+    const newCategory = { id: Date.now(), name, sub: [], templates: [] };
+    if (!categoryId) {
       templatesStore.update((cats) => [...cats, newCategory]);
+      console.log(categoryId);
     } else {
       templatesStore.update((cats) => {
-        const addToSubCategory = (categoryList) => {
-          return categoryList.map((cat) => {
-            if (cat.id === selectedCategories[lastLevel].id) {
-              return {
-                ...cat,
-                sub: [...(cat.sub || []), newCategory],
-              };
-            } else if (cat.sub) {
-              return {
-                ...cat,
-                sub: addToSubCategory(cat.sub),
-              };
-            }
-            return cat;
-          });
-        };
-        return addToSubCategory(cats);
+        const updatedCats = addToSubCategories(
+          cats,
+          categoryId,
+          newCategory,
+          "category"
+        );
+        // Code to trigger after the update
+        afterAddToSubCategories();
+        return updatedCats;
       });
     }
   };
 
   const addTemplate = (name, categoryId) => {
     const newTemplate = { id: Date.now(), name };
+    console.log(categoryId);
     templatesStore.update((cats) => {
-      return cats.map((cat) => {
-        if (cat.id === categoryId) {
-          return {
-            ...cat,
-            templates: [...(cat.templates || []), newTemplate],
-          };
-        } else if (cat.sub) {
-          return {
-            ...cat,
-            sub: addTemplateToSubCategories(cat.sub, categoryId, newTemplate),
-          };
-        }
-        return cat;
-      });
+      const updatedCats = addToSubCategories(
+        cats,
+        categoryId,
+        newTemplate,
+        "template"
+      );
+      // Code to trigger after the update
+      afterAddToSubCategories();
+      return updatedCats;
     });
   };
 
-  const addTemplateToSubCategories = (
-    categoryList,
-    categoryId,
-    newTemplate
-  ) => {
+  const addToSubCategories = (categoryList, categoryId, newItem, itemType) => {
     return categoryList.map((cat) => {
       if (cat.id === categoryId) {
         return {
           ...cat,
-          templates: [...(cat.templates || []), newTemplate],
+          [itemType === "template" ? "templates" : "sub"]: [
+            ...(cat[itemType === "template" ? "templates" : "sub"] || []),
+            newItem,
+          ],
         };
       } else if (cat.sub) {
         return {
           ...cat,
-          sub: addTemplateToSubCategories(cat.sub, categoryId, newTemplate),
+          sub: addToSubCategories(cat.sub, categoryId, newItem, itemType),
         };
       }
       return cat;
     });
+  };
+
+  const afterAddToSubCategories = () => {
+    // Your logic here, for example:
+    console.log("Item added to subcategories");
+
+    setTimeout(() => {
+      console.log({ selectedCategories });
+      selectedCategories.forEach((selectedCategory) => {
+        console.log(`.category.category-${selectedCategory.id}`);
+        setTimeout(() => {
+          document
+            .querySelector(`.category.category-${selectedCategory.id}`)
+            ?.click();
+        }, 0);
+      });
+    }, 0);
   };
 </script>
 
@@ -224,6 +300,8 @@
 
   {#each selectedCategories as selectedCategory, index}
     <Column
+      categories={selectedCategory.sub}
+      templates={selectedCategory.templates}
       allCategories={categories}
       id={selectedCategory.id}
       {selectedCategory}

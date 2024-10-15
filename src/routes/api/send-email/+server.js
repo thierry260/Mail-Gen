@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import mailgunTransport from "nodemailer-mailgun-transport";
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
@@ -6,19 +7,18 @@ export async function POST({ request }) {
     // Parse the form data sent from the frontend
     const { name, email, messageType, message } = await request.json();
 
-    // Configure the email transport using Nodemailer
-    const transporter = nodemailer.createTransport({
-      host: "smtp.smtpserver.com", // Replace with your SMTP server
-      port: 587, // Replace with the correct port, e.g., 587 for TLS
-      secure: false, // Set to true if using SSL (port 465), false for TLS (port 587)
+    // Mailgun configuration options
+    const mailgunAuth = {
       auth: {
-        user: "m.vereijken@hotmail.nl", // Your SMTP username
-        pass: "7@jMYZ3L8B6F@Ht", // Your SMTP password
+        api_key: "32f94259c517140aa6044d8068fbdb9c-d010bdaf-3ddf5761", // Use your Mailgun API key
+        domain: "mail.mailgen.nl", // Use your Mailgun domain (e.g., mail.mailgen.nl)
       },
-      tls: {
-        rejectUnauthorized: false, // For testing only, don't use in production
-      },
-    });
+    };
+
+    // Create the Mailgun transport
+    const transporter = nodemailer.createTransport(
+      mailgunTransport(mailgunAuth)
+    );
 
     // Email details
     const mailOptions = {

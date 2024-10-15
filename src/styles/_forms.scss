@@ -68,6 +68,10 @@ textarea {
       background-color: var(--gray-200);
       cursor: not-allowed;
     }
+
+    &.invalid {
+      border-color: var(--error, #f00);
+    }
   }
 
   input::placeholder {

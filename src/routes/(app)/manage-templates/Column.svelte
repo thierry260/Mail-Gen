@@ -55,12 +55,12 @@
     return null;
   }
 
-  if (level > 0) {
-    let selectedItem = findItemById(allCategories, id, "sub");
-    console.log({ selectedItem });
-    categories = selectedItem ? selectedItem.sub : [];
-    templates = selectedItem ? selectedItem.templates : [];
-  }
+  // if (level > 0) {
+  //   let selectedItem = findItemById(allCategories, id, "sub");
+  //   console.log({ selectedItem });
+  //   categories = selectedItem ? selectedItem.sub : [];
+  //   templates = selectedItem ? selectedItem.templates : [];
+  // }
 
   let categoriesContent, templatesContent;
   let newCategoryName = "";
@@ -77,9 +77,24 @@
         animation: 150,
         handle: ".drag",
         onEnd: (event) => {
-          const item = categories[event.oldIndex];
-          const toCategory = categories[event.newIndex];
-          onMove(item, categories[event.oldIndex], toCategory);
+          console.log(event);
+          console.log("from", event.from.dataset.id);
+          console.log("to", event.to.dataset.id);
+
+          const fromCategoryId = event.from.dataset.id;
+          const fromIndex = event.oldIndex;
+          const toCategoryId = event.from.dataset.id;
+          const toIndex = event.newIndex;
+
+          console.log({ fromCategoryId, fromIndex, toCategoryId, toIndex });
+
+          onMove(
+            "categories",
+            fromCategoryId,
+            fromIndex,
+            toCategoryId,
+            toIndex
+          );
         },
       });
     }
@@ -90,9 +105,18 @@
         animation: 150,
         handle: ".drag",
         onEnd: (event) => {
-          const item = templates[event.oldIndex];
-          const toCategory = templates[event.newIndex];
-          onMove(item, templates[event.oldIndex], toCategory);
+          console.log(event);
+          console.log("from", event.from.dataset.id);
+          console.log("to", event.to.dataset.id);
+
+          const fromCategoryId = event.from.dataset.id;
+          const fromIndex = event.oldIndex;
+          const toCategoryId = event.from.dataset.id;
+          const toIndex = event.newIndex;
+
+          console.log({ fromCategoryId, fromIndex, toCategoryId, toIndex });
+
+          onMove("templates", fromCategoryId, fromIndex, toCategoryId, toIndex);
         },
       });
     }
@@ -120,7 +144,7 @@
 
   const addCategory = () => {
     if (newCategoryName.trim()) {
-      onAddCategory(newCategoryName);
+      onAddCategory(newCategoryName, id);
       newCategoryName = ""; // Clear input after adding
     }
   };
@@ -135,7 +159,12 @@
 
 <div class="column">
   <span class="label">Subcategorieën</span>
-  <div class="items categories" bind:this={categoriesContent}>
+  <div
+    class="items categories"
+    bind:this={categoriesContent}
+    data-id={id}
+    data-type={"categories"}
+  >
     {#if categories && categories.length}
       {#each categories as category (category.id)}
         <div
@@ -187,7 +216,12 @@
 
   {#if level > 0}
     <span class="label">Templates</span>
-    <div class="items templates" bind:this={templatesContent}>
+    <div
+      class="items templates"
+      bind:this={templatesContent}
+      data-id={id}
+      data-type={"templates"}
+    >
       {#if templates && templates.length}
         {#each templates as template (template.id)}
           <div

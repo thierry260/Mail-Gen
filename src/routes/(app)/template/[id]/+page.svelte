@@ -132,6 +132,7 @@
           "data-id": node.attrs.id || "",
           "data-variable": node.attrs.variable || "",
           "data-placeholder": node.attrs.placeholder || "",
+          // contenteditable: "true",
         }),
         `{{${node.attrs.placeholder || node.attrs.variable || ""}}}`,
       ];
@@ -144,7 +145,7 @@
         dom.setAttribute("data-id", node.attrs.id || "");
         dom.setAttribute("data-variable", node.attrs.variable || "");
         dom.setAttribute("data-placeholder", node.attrs.placeholder || "");
-        dom.setAttribute("contenteditable", "false");
+        // dom.setAttribute("contenteditable", "true");
         // dom.textContent = `{{${node.attrs.variable || node.attrs.placeholder || ""}}}`; // Discuss
         dom.textContent = `{{${node.attrs.placeholder || node.attrs.variable || ""}}}`;
 
@@ -527,8 +528,30 @@
 
   // Function to handle key combination
   function handleKeyDown(event) {
-    if (!isEditMode) return;
+    // Check if the active element is an input or textarea
+    const isInputFocused =
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement;
 
+    // Check for Ctrl/Cmd + C
+    if ((event.ctrlKey || event.metaKey) && event.key === "c") {
+      if (!isInputFocused) {
+        // Only trigger if not focused on an input element
+        event.preventDefault(); // Prevent the default copy action
+        copyToClipboard(false);
+      }
+      return; // Exit early to prevent further processing
+    }
+
+    if (!isEditMode) return; // Edit mode shortcuts below
+
+    // Check for Ctrl/Cmd + S
+    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+      event.preventDefault(); // Prevent the default save action in the browser
+      saveTemplate(); // Trigger the saveTemplate function
+    }
+
+    // Check for Escape key
     if (event.key === "Escape") {
       if (shouldShow) {
         shouldShow = false;
@@ -550,6 +573,24 @@
 
     if (!isEditMode) {
       startTemplateTour();
+
+      document
+        .querySelector(".preview-content")
+        .addEventListener("click", function (event) {
+          // Check if the clicked element or any of its parents is a `code[data-variable]` element
+          const codeElement = event.target.closest("code[data-variable]");
+          // If a matching element is found, log 'test'
+          if (codeElement) {
+            const id = codeElement.dataset.id;
+            const inputElement = document.querySelector(
+              `.variables input[id="${id}"]`
+            );
+            if (inputElement) {
+              inputElement.focus();
+              inputElement.select();
+            }
+          }
+        });
     } else {
       startEditTemplateTour();
     }
@@ -781,27 +822,42 @@
 
   const handleInputChange = (variableId, event) => {
     userInput = { ...userInput, [variableId]: event.target.value };
+
     updatePreviewContent(); // Ensure the preview content updates
 
     const id = event.target.id;
-    console.log("id: ", id);
 
-    document
-      .querySelectorAll(`.preview-content code[data-id="${id}"]`)
-      .forEach((el) => {
-        el.classList.add("active");
-      });
+    if (event.target.classList.contains("invalid")) {
+      event.target.classList.remove("invalid");
+    }
+
+    setTimeout(() => {
+      document
+        .querySelectorAll(`.preview-content code[data-id="${id}"]`)
+        .forEach((el) => {
+          el.classList.add("active");
+        });
+    }, 0);
   };
 
   const handleInputFocus = (variableId, event) => {
     const id = event.target.id;
-    console.log("id: ", id);
+    let scrolled = false;
 
     // Select all matching elements and loop through them to add the class
     document
       .querySelectorAll(`.preview-content code[data-id="${id}"]`)
       .forEach((el) => {
         el.classList.add("active");
+
+        // Only scroll into view if the viewport is wider than 768px
+        if (!scrolled && window.innerWidth > 768) {
+          el.scrollIntoView({
+            behavior: "smooth", // Optional: Adds smooth scrolling effect
+            block: "center", // Optional: Scrolls the element into the center of the view
+          });
+          scrolled = true;
+        }
       });
   };
 
@@ -812,13 +868,13 @@
   };
 
   const updatePreviewContent = () => {
-    const previewElement = document.querySelector(".preview-content");
-    if (previewElement) {
-      previewElement.innerHTML = replaceVariables(
-        templateContentHTML,
-        userInput
-      );
-    }
+    // const previewElement = document.querySelector(".preview-content");
+    // if (previewElement) {
+    //   previewElement.innerHTML = replaceVariables(
+    //     templateContentHTML,
+    //     userInput
+    //   );
+    // }
   };
 
   // Handle click on variable span
@@ -958,6 +1014,32 @@
   const copyToClipboard = async (openMail = false) => {
     if (!hasActiveSubscription) {
       toast.error("Actief abonnement vereist", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    // Check if any inputs in .template .variables are empty
+    const inputs = document.querySelectorAll(".template .variables input");
+    let hasEmptyFields = false;
+
+    inputs.forEach((input) => {
+      if (!input.value.trim()) {
+        input.classList.add("invalid"); // Add 'invalid' class to empty inputs
+        hasEmptyFields = true; // Flag that there are empty fields
+      } else {
+        input.classList.remove("invalid"); // Remove 'invalid' class if the field is not empty
+      }
+    });
+
+    // If any fields are empty, show error toast and stop the function
+    if (hasEmptyFields) {
+      document.querySelector(".template .input")?.scrollIntoView({
+        behavior: "smooth", // Optional: Adds smooth scrolling effect
+        block: "center", // Optional: Scrolls the element into the center of the view
+      });
+
+      toast.error("Je hebt nog niet iedere variabele ingevuld", {
         position: "bottom-right",
       });
       return;
@@ -1382,245 +1464,248 @@
   {/if}
 </Header>
 
-{#if !isNextStage}
-  {#if isEditMode}
-    <div class="edit_template">
-      <label class="input_wrapper flex">
-        <input
-          type="text"
-          id="editTemplateName"
-          bind:value={templateData.name}
-          placeholder="&nbsp;"
-        />
-        <span>Template naam</span>
-      </label>
+{#if isEditMode}
+  <div class="edit_template">
+    <label class="input_wrapper flex">
+      <input
+        type="text"
+        id="editTemplateName"
+        bind:value={templateData.name}
+        placeholder="&nbsp;"
+      />
+      <span>Template naam</span>
+    </label>
 
-      <div class="edit_template_main">
-        <div class="editor_outer">
-          {#if editor}
-            <div class="editor_buttons">
-              <div class="formatting">
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleHeading({ level: 5 }).run()}
-                  class:active={editor.isActive("heading", { level: 5 })}
-                >
-                  H
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().setParagraph().run()}
-                  class:active={editor.isActive("paragraph")}
-                >
-                  P
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().toggleBold().run()}
-                  class:active={editor.isActive("bold")}
-                >
-                  B
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().toggleItalic().run()}
-                  class:active={editor.isActive("italic")}
-                >
-                  I
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleUnderline().run()}
-                  class:active={editor.isActive("underline")}
-                >
-                  U
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleBulletList().run()}
-                  class:active={editor.isActive("bulletList")}
-                >
-                  <ListBullets size="14" />
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleOrderedList().run()}
-                  class:active={editor.isActive("orderedList")}
-                >
-                  <ListNumbers size="14" />
-                </button>
-              </div>
-              <div class="actions">
-                <button
-                  on:click={() => editor.chain().focus().undo().run()}
-                  class:disabled={!editor.can().undo()}
-                  ><ArrowUUpLeft size="18" /></button
-                >
-                <button
-                  on:click={() => editor.chain().focus().redo().run()}
-                  class:disabled={!editor.can().redo()}
-                  ><ArrowUUpRight size="18" /></button
-                >
-              </div>
-            </div>
-          {/if}
-          <div class="editor" bind:this={editorElement}>
-            <button
-              class="button outline add_variable"
-              on:click={() => {
-                // shouldShow = true; // Show the bubble menu
-                if (editor) {
-                  editor.chain().focus().run();
-                }
-                shouldShow = true; // Show the bubble menu
-              }}
-            >
-              <!-- <BracketsCurly size={16} /> -->
-              + Voeg variabele toe
-              <div class="shortcut-bubble">
-                {isMac ? "Cmd" : "Ctrl"}+Shift+[
-              </div></button
-            >
-          </div>
-        </div>
-        {#if workspaceVariables.variables}
-          <div class="variables_list">
-            <label class="variables_list_top">
-              <input
-                type="checkbox"
-                name="toggle_variables_list"
-                id="toggle_variables_list"
-              />
-              <span class="flex caret"><CaretRight size={16} /></span>
-              <span class="label">Beschikbare variabelen</span>
-              <a href="/settings" target="_blank" class="flex"
-                ><GearSix size={16} /></a
+    <div class="edit_template_main">
+      <div class="editor_outer">
+        {#if editor}
+          <div class="editor_buttons">
+            <div class="formatting">
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleHeading({ level: 5 }).run()}
+                class:active={editor.isActive("heading", { level: 5 })}
               >
-            </label>
-            <div class="variables_list_content">
-              <input
-                type="text"
-                placeholder="Zoek variabelen"
-                bind:value={$variablesListSearch}
-                class="search-input"
-              />
-              <ul id="variables_list_ul">
-                {#if filteredVariables.length}
-                  {#each filteredVariables as [id, data]}
-                    <li
-                      class="variable draggable"
-                      data-id={id}
-                      data-variable={data.field_name}
-                      data-placeholder={data.placeholder}
-                      on:click={() =>
-                        insertVariable({
-                          id: id,
-                          variable: data.field_name,
-                          placeholder: data.placeholder,
-                        })}
-                    >
-                      <span class="flex"><DotsSixVertical size={16} /></span>
-                      {data.field_name}
-                    </li>
-                  {/each}
-                {:else}
-                  <p class="empty">Geen variabelen gevonden</p>
-                {/if}
-              </ul>
+                H
+              </button>
+              <button
+                on:click={() => editor.chain().focus().setParagraph().run()}
+                class:active={editor.isActive("paragraph")}
+              >
+                P
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleBold().run()}
+                class:active={editor.isActive("bold")}
+              >
+                B
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleItalic().run()}
+                class:active={editor.isActive("italic")}
+              >
+                I
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleUnderline().run()}
+                class:active={editor.isActive("underline")}
+              >
+                U
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleBulletList().run()}
+                class:active={editor.isActive("bulletList")}
+              >
+                <ListBullets size="14" />
+              </button>
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleOrderedList().run()}
+                class:active={editor.isActive("orderedList")}
+              >
+                <ListNumbers size="14" />
+              </button>
+            </div>
+            <div class="actions">
+              <button
+                on:click={() => editor.chain().focus().undo().run()}
+                class:disabled={!editor.can().undo()}
+                ><ArrowUUpLeft size="18" /></button
+              >
+              <button
+                on:click={() => editor.chain().focus().redo().run()}
+                class:disabled={!editor.can().redo()}
+                ><ArrowUUpRight size="18" /></button
+              >
             </div>
           </div>
         {/if}
+        <div class="editor" bind:this={editorElement}>
+          <button
+            class="button outline add_variable"
+            on:click={() => {
+              // shouldShow = true; // Show the bubble menu
+              if (editor) {
+                editor.chain().focus().run();
+              }
+              shouldShow = true; // Show the bubble menu
+            }}
+          >
+            <!-- <BracketsCurly size={16} /> -->
+            + Voeg variabele toe
+            <div class="shortcut-bubble">
+              {isMac ? "Cmd" : "Ctrl"}+Shift+[
+            </div></button
+          >
+        </div>
       </div>
-      <div class="buttons edit_buttons">
+      {#if workspaceVariables.variables}
+        <div class="variables_list">
+          <label class="variables_list_top">
+            <input
+              type="checkbox"
+              name="toggle_variables_list"
+              id="toggle_variables_list"
+            />
+            <span class="flex caret"><CaretRight size={16} /></span>
+            <span class="label">Beschikbare variabelen</span>
+            <a href="/settings" target="_blank" class="flex"
+              ><GearSix size={16} /></a
+            >
+          </label>
+          <div class="variables_list_content">
+            <input
+              type="text"
+              placeholder="Zoek variabelen"
+              bind:value={$variablesListSearch}
+              class="search-input"
+            />
+            <ul id="variables_list_ul">
+              {#if filteredVariables.length}
+                {#each filteredVariables as [id, data]}
+                  <li
+                    class="variable draggable"
+                    data-id={id}
+                    data-variable={data.field_name}
+                    data-placeholder={data.placeholder}
+                    on:click={() =>
+                      insertVariable({
+                        id: id,
+                        variable: data.field_name,
+                        placeholder: data.placeholder,
+                      })}
+                  >
+                    <span class="flex"><DotsSixVertical size={16} /></span>
+                    {data.field_name}
+                  </li>
+                {/each}
+              {:else}
+                <p class="empty">Geen variabelen gevonden</p>
+              {/if}
+            </ul>
+          </div>
+        </div>
+      {/if}
+    </div>
+    <div class="buttons edit_buttons">
+      <span data-flow="top" data-tooltip="Wijzigingen ongedaan maken">
         <button class="button basic has_text" on:click={toggleEditMode}>
           <X size="18" />Annuleren
         </button>
+      </span>
+      <span class="relative">
         <button class="button" on:click={saveTemplate}
           ><FloppyDisk size={18} />Opslaan</button
         >
-      </div>
+        <span class="shortcut-bubble">{isMac ? "Cmd" : "Ctrl"} + S</span>
+      </span>
     </div>
+  </div>
 
-    <div class="popup" bind:this={addVariableEl}>
-      <span
-        class="close"
-        on:click={() => {
-          if (editor) {
-            editor.chain().focus().run();
-          }
-          shouldShow = false; // Show the bubble menu
-          editingVariable = false;
-        }}><X size={10} /></span
-      >
+  <div class="popup" bind:this={addVariableEl}>
+    <span
+      class="close"
+      on:click={() => {
+        if (editor) {
+          editor.chain().focus().run();
+        }
+        shouldShow = false; // Show the bubble menu
+        editingVariable = false;
+      }}><X size={10} /></span
+    >
+    <input
+      type="text"
+      placeholder={editingVariable
+        ? "Variabele vervangen"
+        : "Variabele toevoegen"}
+      bind:value={variableSearchQuery}
+      bind:this={variableInput}
+      on:input={handleVariableSearch}
+      on:keypress={handleKeyPress}
+    />
+    {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
+      <span class="label">Zoekresultaten</span>
+      <ul>
+        {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
+              .toLowerCase()
+              .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+          <li
+            on:click={() =>
+              insertVariable({
+                id: id,
+                variable: data.field_name,
+                placeholder: data.placeholder,
+              })}
+          >
+            {data.field_name}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if showPlaceholderField}
       <input
         type="text"
-        placeholder={editingVariable
-          ? "Variabele vervangen"
-          : "Variabele toevoegen"}
-        bind:value={variableSearchQuery}
-        bind:this={variableInput}
-        on:input={handleVariableSearch}
+        placeholder="Placeholder"
+        bind:value={newVariable.placeholder}
         on:keypress={handleKeyPress}
       />
-      {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
-        <span class="label">Zoekresultaten</span>
-        <ul>
-          {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
-                .toLowerCase()
-                .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
-            <li
-              on:click={() =>
-                insertVariable({
-                  id: id,
-                  variable: data.field_name,
-                  placeholder: data.placeholder,
-                })}
-            >
-              {data.field_name}
-            </li>
+    {/if}
+    <!-- <button class="button simple" on:click={addVariableAction}
+      >+ Toevoegen</button
+    > -->
+  </div>
+{:else}
+  <div class="template">
+    <div class="input">
+      <div class="sticky">
+        <span class="label var_label">Variabelen</span>
+        <div class="variables">
+          {#each Object.keys(userInput) as variableId, index}
+            {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+              <div>
+                <label class="input_wrapper">
+                  <input
+                    type="text"
+                    placeholder="&nbsp;"
+                    id={variableId}
+                    value=""
+                    on:input={(e) => handleInputChange(variableId, e)}
+                    on:focus={(e) => handleInputFocus(variableId, e)}
+                    on:blur={(e) => handleInputBlur(variableId, e)}
+                    bind:this={inputRefs[index]}
+                  />
+                  <span
+                    >{workspaceVariables.variables[variableId].field_name}</span
+                  >
+                </label>
+              </div>
+            {/if}
           {/each}
-        </ul>
-      {/if}
-      {#if showPlaceholderField}
-        <input
-          type="text"
-          placeholder="Placeholder"
-          bind:value={newVariable.placeholder}
-          on:keypress={handleKeyPress}
-        />
-      {/if}
-      <!-- <button class="button simple" on:click={addVariableAction}
-        >+ Toevoegen</button
-      > -->
-    </div>
-  {:else}
-    <div class="template">
-      <span class="label var_label">Variabelen</span>
-      <div class="variables">
-        {#each Object.keys(userInput) as variableId, index}
-          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-            <div>
-              <!-- <span class="label"
-                >{workspaceVariables.variables[variableId].field_name}</span
-              > -->
-              <label class="input_wrapper">
-                <input
-                  type="text"
-                  placeholder="&nbsp;"
-                  id={variableId}
-                  bind:value={userInput[variableId]}
-                  on:input={(e) => handleInputChange(variableId, e)}
-                  on:focus={(e) => handleInputFocus(variableId, e)}
-                  on:blur={(e) => handleInputBlur(variableId, e)}
-                  bind:this={inputRefs[index]}
-                />
-                <span
-                  >{workspaceVariables.variables[variableId].field_name}</span
-                >
-              </label>
-            </div>
-          {/if}
-        {/each}
+        </div>
       </div>
-
-      <span class="label preview_label">Voorbeeld</span>
+    </div>
+    <div class="output">
+      <!-- <span class="label preview_label">Voorbeeld</span> -->
       <div class="preview">
         <div class="preview-content">
           {@html previewContent ||
@@ -1628,73 +1713,28 @@
         </div>
       </div>
     </div>
-    <div class="buttons">
-      <span
-        data-flow="top"
-        data-tooltip="Klik om te kopiëren"
-        data-default_tooltip="Klik om te kopiëren"
+  </div>
+  <div class="buttons">
+    <span class="relative">
+      <button class="button copy_mail" on:click={() => copyToClipboard(false)}
+        ><CopySimple size="18" />Kopiëren</button
       >
-        <button
-          class="button outline copy_mail"
-          on:click={() => copyToClipboard(false)}
-          ><CopySimple size="18" />Kopiëren</button
-        >
-      </span>
-      <span data-flow="top" data-tooltip="Mail opstellen">
-        <button
-          class="button outline mail_mail"
-          on:click={() => copyToClipboard(true)}
-          ><EnvelopeSimple size="18" />Mailen</button
-        >
-      </span>
-    </div>
-  {/if}
-{:else}
-  <h1>{templateData.name} - Mailen</h1>
-  <div class="email-details">
-    <label class="input_wrapper">
-      <input
-        type="text"
-        id="subject"
-        bind:value={mail.subject}
-        placeholder="&nbsp;"
-      />
-      <span for="userEmail">Onderwerp</span>
-    </label>
-    <label class="input_wrapper">
-      <input type="text" id="to" bind:value={mail.to} placeholder="&nbsp;" />
-      <span for="userEmail">Aan</span>
-    </label>
-    <div class="input_columns">
-      <label class="input_wrapper">
-        <input type="email" id="cc" bind:value={mail.cc} placeholder="&nbsp;" />
-        <span for="cc">CC</span>
-      </label>
-      <label class="input_wrapper">
-        <input
-          type="email"
-          id="bcc"
-          bind:value={mail.bcc}
-          placeholder="&nbsp;"
-        />
-        <span for="bcc">BCC</span>
-      </label>
-    </div>
-  </div>
-  <span class="label">Preview</span>
-  <div class="preview">
-    <div class="preview-content">
-      {@html replaceVariables(templateContentHTML, userInput) ||
-        "<em style='opacity:0.6;'>Deze template is nog leeg..</em>"}
-    </div>
-  </div>
-  <div class="buttons mail_actions">
-    <button class="button outline" on:click={prevPage}>Vorige</button>
-    <button class="button" on:click={sendEmail}>Mail openen</button>
+      <span class="shortcut-bubble">{isMac ? "Cmd" : "Ctrl"} + C</span>
+    </span>
+    <span data-flow="top" data-tooltip="Kopiëren en mail openen">
+      <button
+        class="button outline mail_mail"
+        on:click={() => copyToClipboard(true)}
+        ><EnvelopeSimple size="18" />Mailen</button
+      >
+    </span>
   </div>
 {/if}
 
 <style lang="scss">
+  :global(.relative) {
+    position: relative;
+  }
   .top {
     display: flex;
     flex-direction: row;
@@ -1713,30 +1753,69 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    background-color: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius-bigger, 10px);
+    gap: 0;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: inherit;
+
+      gap: 20px;
+      padding: 40px;
+
+      &.input {
+        border-right: 1px solid var(--border);
+        background-color: var(--gray-150, hsl(0 0% 92% / 1));
+        border-top-left-radius: inherit;
+        border-bottom-left-radius: inherit;
+
+        .sticky {
+          display: flex;
+          flex-direction: column;
+          gap: inherit;
+          position: sticky;
+          top: 80px;
+        }
+      }
+    }
+
     .variables {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
+      grid-template-columns: 100%;
+      gap: 15px;
       > * {
         display: flex;
         flex-direction: column;
         gap: 0;
       }
+
+      .input_wrapper input {
+        outline: revert;
+      }
+    }
+    .preview {
+      padding: 0;
+      border-radius: unset;
+      border: none;
     }
 
-    &.new_layout {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-      gap: 30px;
+    @media (max-width: $md) {
+      grid-template-columns: 100%;
 
-      .preview {
-        position: sticky;
-        bottom: 0;
-        margin-left: auto;
-        right: 0;
-        background-color: var(--background);
-        code {
-          color: #fff;
+      > div {
+        padding: 30px;
+        &.input {
+          grid-row: 2;
+          border-top-left-radius: 0;
+          border-bottom-right-radius: inherit;
+          border-right: 0;
         }
       }
     }
@@ -1764,6 +1843,9 @@
       p:empty {
         display: flex;
         height: 1.5em;
+      }
+      p {
+        font-size: 16px;
       }
     }
     .variable {
@@ -1798,6 +1880,27 @@
     @media (max-width: $lg) {
       bottom: -30px;
     }
+
+    .shortcut-bubble {
+      position: absolute;
+      right: 10px;
+      top: 2px;
+      transform: translate(0, -50%);
+      background-color: #323232;
+      padding: 3px 6px;
+      font-size: 1rem;
+      border-radius: 10px;
+      color: #fff;
+      background-color: var(--gray-700);
+      pointer-events: none;
+      transition:
+        opacity 0.2s ease-out,
+        transform 0.2s ease-out;
+    }
+    // .button:hover + .shortcut-bubble {
+    //   opacity: 0;
+    //   transform: translate(0, 0);
+    // }
   }
   .email-details {
     display: flex;
@@ -1828,6 +1931,7 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    min-width: 1px;
     .editor_buttons {
       border-bottom: 1px solid var(--border);
       background-color: var(--gray-100);
@@ -1943,9 +2047,12 @@
     background-color: #fff;
     background-color: var(--gray-800);
     width: 300px;
+    flex-shrink: 0;
     max-height: 500px;
     height: 100vh;
     overflow-y: auto;
+    position: sticky;
+    top: 60px;
 
     /* ===== Scrollbar CSS ===== */
     scrollbar-width: auto;
@@ -2122,6 +2229,10 @@
     }
   }
 
+  :global(.preview-content p) {
+    font-size: unset;
+  }
+
   .popup {
     background-color: white;
     padding: 10px;
@@ -2256,7 +2367,13 @@
     }
   }
 
-  :global(.template.new_layout code) {
-    background-color: #fff;
+  :global(input.invalid.invalid.invalid.invalid.invalid) {
+    --error: #e74c3c;
+    border-color: var(--error, #f00);
+    background-color: hsl(from var(--error) h s calc(l + 40));
+    + span {
+      --error: #e74c3c;
+      color: var(--error);
+    }
   }
 </style>
