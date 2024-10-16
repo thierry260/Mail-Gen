@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "$lib/firebase"; // Adjust this based on your configuration
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY);
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {

@@ -401,26 +401,29 @@
   });
 
   const subscribe = async () => {
-    console.log("subscribe hier alle moeders");
+    console.log("subscribe function triggered");
     try {
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
 
-      const response = await fetch("/api/create-checkout-session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${window.location.origin}/api/create-checkout-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe",
+            email: auth.currentUser.email,
+            workspaceId: workspaceId,
+            userId: userId,
+          }),
         },
-        body: JSON.stringify({
-          priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe", // Your Price ID
-          email: auth.currentUser.email, // Pass the user's email
-          workspaceId: workspaceId, // Pass the workspaceId
-          userId: userId, // Pass the userId
-        }),
-      });
+      );
 
       const data = await response.json();
-      console.log("current data: ", data);
+      console.log("API response: ", data);
 
       if (data.sessionId) {
         const stripe = await stripePromise;
@@ -432,9 +435,10 @@
           errorMessage = error.message;
         }
       } else {
-        throw new Error("SessionId missing");
+        throw new Error("SessionId missing in API response");
       }
     } catch (err) {
+      console.error("Error in subscribe function: ", err.message);
       errorMessage = err.message;
     }
   };
