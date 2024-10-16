@@ -1676,34 +1676,37 @@
   </div>
 {:else}
   <div class="template">
-    <div class="input">
-      <div class="sticky">
-        <span class="label var_label">Variabelen</span>
-        <div class="variables">
-          {#each Object.keys(userInput) as variableId, index}
-            {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-              <div>
-                <label class="input_wrapper">
-                  <input
-                    type="text"
-                    placeholder="&nbsp;"
-                    id={variableId}
-                    value=""
-                    on:input={(e) => handleInputChange(variableId, e)}
-                    on:focus={(e) => handleInputFocus(variableId, e)}
-                    on:blur={(e) => handleInputBlur(variableId, e)}
-                    bind:this={inputRefs[index]}
-                  />
-                  <span
-                    >{workspaceVariables.variables[variableId].field_name}</span
-                  >
-                </label>
-              </div>
-            {/if}
-          {/each}
+    {#if Object.keys(userInput) && Object.keys(userInput).length > 0}
+      <div class="input">
+        <div class="sticky">
+          <span class="label var_label">Variabelen</span>
+          <div class="variables">
+            {#each Object.keys(userInput) as variableId, index}
+              {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+                <div>
+                  <label class="input_wrapper">
+                    <input
+                      type="text"
+                      placeholder="&nbsp;"
+                      id={variableId}
+                      value=""
+                      on:input={(e) => handleInputChange(variableId, e)}
+                      on:focus={(e) => handleInputFocus(variableId, e)}
+                      on:blur={(e) => handleInputBlur(variableId, e)}
+                      bind:this={inputRefs[index]}
+                    />
+                    <span
+                      >{workspaceVariables.variables[variableId]
+                        .field_name}</span
+                    >
+                  </label>
+                </div>
+              {/if}
+            {/each}
+          </div>
         </div>
       </div>
-    </div>
+    {/if}
     <div class="output">
       <!-- <span class="label preview_label">Voorbeeld</span> -->
       <div class="preview">

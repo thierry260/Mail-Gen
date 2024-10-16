@@ -10,7 +10,7 @@ export async function POST({ request }) {
     // Mailgun configuration options
     const mailgunAuth = {
       auth: {
-        api_key: "32f94259c517140aa6044d8068fbdb9c-d010bdaf-3ddf5761", // Use your Mailgun API key
+        api_key: process.env.MAILGUN_KEY, // Use your Mailgun API key
         domain: "mail.mailgen.nl", // Use your Mailgun domain (e.g., mail.mailgen.nl)
       },
     };
