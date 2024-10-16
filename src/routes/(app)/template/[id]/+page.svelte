@@ -1538,89 +1538,93 @@
       </div>
     </div>
 
-    <div class="popup" bind:this={addVariableEl}>
-      <span
-        class="close"
-        on:click={() => {
-          if (editor) {
-            editor.chain().focus().run();
-          }
-          shouldShow = false; // Show the bubble menu
-          editingVariable = false;
-        }}><X size={10} /></span
-      >
+  <div class="popup" bind:this={addVariableEl}>
+    <span
+      class="close"
+      on:click={() => {
+        if (editor) {
+          editor.chain().focus().run();
+        }
+        shouldShow = false; // Show the bubble menu
+        editingVariable = false;
+      }}><X size={10} /></span
+    >
+    <input
+      type="text"
+      placeholder={editingVariable
+        ? "Variabele vervangen"
+        : "Variabele toevoegen"}
+      bind:value={variableSearchQuery}
+      bind:this={variableInput}
+      on:input={handleVariableSearch}
+      on:keypress={handleKeyPress}
+    />
+    {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
+      <span class="label">Zoekresultaten</span>
+      <ul>
+        {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
+              .toLowerCase()
+              .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+          <li
+            on:click={() =>
+              insertVariable({
+                id: id,
+                variable: data.field_name,
+                placeholder: data.placeholder,
+              })}
+          >
+            {data.field_name}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if showPlaceholderField}
       <input
         type="text"
-        placeholder={editingVariable
-          ? "Variabele vervangen"
-          : "Variabele toevoegen"}
-        bind:value={variableSearchQuery}
-        bind:this={variableInput}
-        on:input={handleVariableSearch}
+        placeholder="Placeholder"
+        bind:value={newVariable.placeholder}
         on:keypress={handleKeyPress}
       />
-      {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
-        <span class="label">Zoekresultaten</span>
-        <ul>
-          {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
-                .toLowerCase()
-                .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
-            <li
-              on:click={() =>
-                insertVariable({
-                  id: id,
-                  variable: data.field_name,
-                  placeholder: data.placeholder,
-                })}
-            >
-              {data.field_name}
-            </li>
-          {/each}
-        </ul>
-      {/if}
-      {#if showPlaceholderField}
-        <input
-          type="text"
-          placeholder="Placeholder"
-          bind:value={newVariable.placeholder}
-          on:keypress={handleKeyPress}
-        />
-      {/if}
-      <!-- <button class="button simple" on:click={addVariableAction}
-        >+ Toevoegen</button
-      > -->
-    </div>
-  {:else}
-    <div class="template">
-      <span class="label var_label">Variabelen</span>
-      <div class="variables">
-        {#each Object.keys(userInput) as variableId, index}
-          {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
-            <div>
-              <!-- <span class="label"
-                >{workspaceVariables.variables[variableId].field_name}</span
-              > -->
-              <label class="input_wrapper">
-                <input
-                  type="text"
-                  placeholder="&nbsp;"
-                  id={variableId}
-                  bind:value={userInput[variableId]}
-                  on:input={(e) => handleInputChange(variableId, e)}
-                  on:focus={(e) => handleInputFocus(variableId, e)}
-                  on:blur={(e) => handleInputBlur(variableId, e)}
-                  bind:this={inputRefs[index]}
-                />
-                <span
-                  >{workspaceVariables.variables[variableId].field_name}</span
-                >
-              </label>
-            </div>
-          {/if}
-        {/each}
+    {/if}
+    <!-- <button class="button simple" on:click={addVariableAction}
+      >+ Toevoegen</button
+    > -->
+  </div>
+{:else}
+  <div class="template">
+    {#if Object.keys(userInput) && Object.keys(userInput).length > 0}
+      <div class="input">
+        <div class="sticky">
+          <span class="label var_label">Variabelen</span>
+          <div class="variables">
+            {#each Object.keys(userInput) as variableId, index}
+              {#if workspaceVariables.variables && workspaceVariables.variables[variableId]}
+                <div>
+                  <label class="input_wrapper">
+                    <input
+                      type="text"
+                      placeholder="&nbsp;"
+                      id={variableId}
+                      value=""
+                      on:input={(e) => handleInputChange(variableId, e)}
+                      on:focus={(e) => handleInputFocus(variableId, e)}
+                      on:blur={(e) => handleInputBlur(variableId, e)}
+                      bind:this={inputRefs[index]}
+                    />
+                    <span
+                      >{workspaceVariables.variables[variableId]
+                        .field_name}</span
+                    >
+                  </label>
+                </div>
+              {/if}
+            {/each}
+          </div>
+        </div>
       </div>
-
-      <span class="label preview_label">Voorbeeld</span>
+    {/if}
+    <div class="output">
+      <!-- <span class="label preview_label">Voorbeeld</span> -->
       <div class="preview">
         <div class="preview-content">
           {@html previewContent ||

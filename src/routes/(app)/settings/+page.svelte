@@ -16,6 +16,7 @@
   import Header from "$lib/components/header/Header.svelte";
   import { user } from "$lib/stores/user";
   import toast from "svelte-french-toast";
+  import Managetemplates from "./ManageTemplates.svelte";
 
   let workspaceVariables = {};
   let newVariable = { field_name: "", placeholder: "" };
@@ -42,7 +43,7 @@
   // Function to handle tab click and update URL
   const setActiveTab = (tab) => {
     activeTab = tab;
-    // goto(`/settings?tab=${tab}`); // Update the URL with the active tab
+    goto(`/settings?tab=${tab}`); // Update the URL with the active tab
   };
 
   // Handle URL query parameters on page load
@@ -91,7 +92,7 @@
       // If there's no customerId, treat as a new customer (or trial user)
       if (!id) {
         console.log(
-          "No stripeCustomerId found, handling as new customer or trial.",
+          "No stripeCustomerId found, handling as new customer or trial."
         );
 
         const response = await fetch(
@@ -102,7 +103,7 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ workspaceId: workspace }),
-          },
+          }
         );
 
         const data = await response.json();
@@ -123,7 +124,7 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ workspaceId: workspace, customerId: id }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -235,7 +236,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword,
+        currentPassword
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -401,7 +402,6 @@
   });
 
   const subscribe = async () => {
-    console.log("subscribe function triggered");
     try {
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
@@ -419,7 +419,7 @@
             workspaceId: workspaceId,
             userId: userId,
           }),
-        },
+        }
       );
 
       const data = await response.json();
@@ -451,6 +451,10 @@
   <button
     class:active={activeTab === "variables"}
     on:click={() => setActiveTab("variables")}>Variabelen</button
+  >
+  <button
+    class:active={activeTab === "templates"}
+    on:click={() => setActiveTab("templates")}>Templates</button
   >
   <button
     class:active={activeTab === "account"}
@@ -526,6 +530,8 @@
       {/if}
     </div>
   </div>
+{:else if activeTab === "templates"}
+  <Managetemplates />
 {:else if activeTab === "account"}
   <div class="tab-content">
     <div class="card">

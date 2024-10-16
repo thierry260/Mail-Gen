@@ -27,6 +27,7 @@
   let templates = [];
 
   $: id = $page.params.id;
+  $: data = $templatesStore;
 
   const findCategoryById = (categories, id) => {
     for (const category of categories) {
@@ -53,8 +54,6 @@
   };
 
   const loadCategoryData = async () => {
-    const data = $templatesStore;
-
     console.log("data: ", data);
     if (data) {
       categories = data.map((category) => ({

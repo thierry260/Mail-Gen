@@ -60,7 +60,6 @@
   //   if (storeLoaded) {
   //     data = $templatesStore.map((category) => ({
   //       ...category,
-  //       open: category.open ? false : true, // Toggle or initialize to true/false based on previous value
   //     }));
   //   }
   // }
@@ -234,9 +233,9 @@
             <ArrowsOutLineVertical size={15} />
           {/if}
         </button>
-        <a href="/manage-templates" class="toggle-all-icon">
+        <!-- <a href="/manage-templates" class="toggle-all-icon">
           <GearSix size={15} />
-        </a>
+        </a> -->
       </div>
     </span>
     <div class="templates_items">
@@ -477,7 +476,7 @@
     }
     .add_main_cat {
       // border: 2px dashed rgba(255, 255, 255, 0.6);
-      margin-top: 10px;
+      // margin-top: 10px;
       color: rgba(0, 0, 0, 0.7);
       // text-align: center;
       // justify-content: center;

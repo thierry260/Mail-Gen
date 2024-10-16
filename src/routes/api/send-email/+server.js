@@ -7,18 +7,20 @@ export async function POST({ request }) {
     const { name, email, messageType, message } = await request.json();
 
     // Configure the email transport using Nodemailer
-    const transporter = nodemailer.createTransport({
+    const mailgunAuth = {
       host: "smtp.smtpserver.com", // Replace with your SMTP server
       port: 587, // Replace with the correct port, e.g., 587 for TLS
       secure: false, // Set to true if using SSL (port 465), false for TLS (port 587)
       auth: {
-        user: "m.vereijken@hotmail.nl", // Your SMTP username
-        pass: "7@jMYZ3L8B6F@Ht", // Your SMTP password
+        api_key: process.env.MAILGUN_KEY, // Use your Mailgun API key
+        domain: "mail.mailgen.nl", // Use your Mailgun domain (e.g., mail.mailgen.nl)
       },
-      tls: {
-        rejectUnauthorized: false, // For testing only, don't use in production
-      },
-    });
+    };
+
+    // Create the Mailgun transport
+    const transporter = nodemailer.createTransport(
+      mailgunTransport(mailgunAuth)
+    );
 
     // Email details
     const mailOptions = {

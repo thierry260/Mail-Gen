@@ -10,13 +10,16 @@ const checkSubscription = async (id) => {
   const workspace = localStorage.getItem("workspace");
   console.log("ID: ", id);
   try {
-    const response = await fetch(`${window.location.origin}/api/check-subscription`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ workspaceId: workspace, customerId: id }),
-    });
+    const response = await fetch(
+      `${window.location.origin}/api/check-subscription`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ workspaceId: workspace, customerId: id }),
+      }
+    );
     console.log("DAYSLEFT", id);
 
     const data = await response.json();
@@ -34,7 +37,6 @@ const checkSubscription = async (id) => {
 };
 
 export async function load({ url }) {
-
   if (browser) {
     let subscriptionActive = false;
     let subscriptionDaysLeft = 0;
@@ -42,14 +44,19 @@ export async function load({ url }) {
 
     const isLocalhost = Boolean(
       window.location.hostname === "localhost" ||
-      window.location.hostname === "[::1]" ||
-      window.location.hostname.match(
-        /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-      )
+        window.location.hostname === "[::1]" ||
+        window.location.hostname.match(
+          /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+        )
     );
 
-    // let testmode = isLocalhost;
-    let testmode = false;
+    // Check if testMode exists in localStorage and is set to "true"
+    const localStorageTestMode = localStorage.getItem("testMode") === "true";
+
+    console.log("localStorageTestMode: ", localStorageTestMode);
+
+    // Use test mode if it's either localhost or testMode is set in localStorage
+    let testmode = isLocalhost || localStorageTestMode;
 
     if (testmode) {
       subscriptionActive = true;
