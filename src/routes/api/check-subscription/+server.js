@@ -20,10 +20,11 @@ export async function POST({ request }) {
 
     const isTrial = workSpaceData.is_trial && workSpaceData.is_trial === true;
 
-    if (isTrial) {
+    // Handle trial case (without a stripeCustomerId)
+    if (isTrial || !customerId) {
       const creationDate = new Date(
         workSpaceData.created_at.seconds * 1000 +
-          workSpaceData.created_at.nanoseconds / 1000000
+        workSpaceData.created_at.nanoseconds / 1000000
       );
 
       const currentDate = new Date();
@@ -35,15 +36,26 @@ export async function POST({ request }) {
 
         return new Response(
           JSON.stringify({
-            active: true,
+            active: false, // No active subscription yet
             days_left: remainingTrialDays,
             is_trial: true,
           }),
           { status: 200 }
         );
       }
+
+      // Trial expired, no active subscription
+      return new Response(
+        JSON.stringify({
+          active: false,
+          days_left: 0,
+          is_trial: false,
+        }),
+        { status: 200 }
+      );
     }
 
+    // If customerId exists, check Stripe subscription
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -52,7 +64,7 @@ export async function POST({ request }) {
     if (subscriptions.data.length > 0) {
       const remainingDays = Math.floor(
         (subscriptions.data[0].current_period_end * 1000 - Date.now()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       );
       return new Response(
         JSON.stringify({

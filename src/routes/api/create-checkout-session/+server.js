@@ -9,7 +9,7 @@ export async function POST({ request }) {
   try {
     // Parse the request body
     const { priceId, email, workspaceId, userId } = await request.json();
-
+    console.log("ENV KEY: ", process.env.STRIPE_SECRET_KEY);
     // Create a new customer in Stripe using the provided email
     const customer = await stripe.customers.create({ email });
     const customerId = customer.id;
@@ -28,7 +28,6 @@ export async function POST({ request }) {
       success_url: `https://app.mailgen.nl/settings?tab=subscription&payment=success&cid=${customerId}`,
       cancel_url: `https://app.mailgen.nl/settings?tab=subscription&payment=cancel`,
     });
-
     // Return the sessionId and customerId back to the client
     return new Response(JSON.stringify({ sessionId: session.id, customerId }), {
       status: 200,

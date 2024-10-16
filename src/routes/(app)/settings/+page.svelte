@@ -88,19 +88,45 @@
   const checkSubscription = async (id) => {
     const workspace = localStorage.getItem("workspace");
     try {
-      const response = await fetch("/api/check-subscription", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // If there's no customerId, treat as a new customer (or trial user)
+      if (!id) {
+        console.log(
+          "No stripeCustomerId found, handling as new customer or trial.",
+        );
+
+        const response = await fetch(
+          `${window.location.origin}/api/check-subscription`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ workspaceId: workspace }),
+          },
+        );
+
+        const data = await response.json();
+
+        return {
+          active: false, // New customers have no active subscriptions
+          daysLeft: data.days_left || 0,
+          isTrial: data.is_trial || true, // Assume trial for new customers
+        };
+      }
+
+      // Proceed with checking subscription for existing customers
+      const response = await fetch(
+        `${window.location.origin}/api/check-subscription`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ workspaceId: workspace, customerId: id }),
         },
-        body: JSON.stringify({ workspaceId: workspace, customerId: id }),
-      });
-      console.log("DAYSLEFT", id);
+      );
 
       const data = await response.json();
-
-      console.log("data: ", data);
-
       return {
         active: data.active || false,
         daysLeft: data.days_left || 0,
@@ -209,7 +235,7 @@
       const user = auth.currentUser;
       const credential = EmailAuthProvider.credential(
         user.email,
-        currentPassword
+        currentPassword,
       );
 
       await reauthenticateWithCredential(user, credential);
@@ -307,20 +333,17 @@
       const userId = auth.currentUser.uid;
 
       // Make the API call to cancel the subscription
-      const response = await fetch(
-        "https://app.mailgen.nl/api/cancel-subscription",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            workspaceId: workspaceId,
-            userId: userId,
-            customerId: customerId,
-          }),
-        }
-      );
+      const response = await fetch("/api/cancel-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workspaceId: workspaceId,
+          userId: userId,
+          customerId: customerId,
+        }),
+      });
 
       const data = await response.json();
 
@@ -378,27 +401,26 @@
   });
 
   const subscribe = async () => {
+    console.log("subscribe hier alle moeders");
     try {
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
 
-      const response = await fetch(
-        "https://app.mailgen.nl/api/create-checkout-session",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe", // Your Price ID
-            email: auth.currentUser.email, // Pass the user's email
-            workspaceId: workspaceId, // Pass the workspaceId
-            userId: userId, // Pass the userId
-          }),
-        }
-      );
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe", // Your Price ID
+          email: auth.currentUser.email, // Pass the user's email
+          workspaceId: workspaceId, // Pass the workspaceId
+          userId: userId, // Pass the userId
+        }),
+      });
 
       const data = await response.json();
+      console.log("current data: ", data);
 
       if (data.sessionId) {
         const stripe = await stripePromise;
@@ -575,18 +597,20 @@
       {#if hasActiveSubscription}
         <h2>Abonnement</h2>
         {#if subscriptionIsTrial}
-          <p>
-            Je proefperiode is nog {subscriptionDaysLeft} dagen geldig.
-          </p>
+          <p>Je proefperiode is nog {subscriptionDaysLeft} dagen geldig.</p>
         {:else}
           <p class="mb-20">
             Je abonnement is nog {subscriptionDaysLeft} dagen geldig.
           </p>
-          <button class="button basic has_text" on:click={cancelSubscription}
-            >Abonnement annuleren</button
-          >
+          <button class="button basic has_text" on:click={cancelSubscription}>
+            Abonnement annuleren
+          </button>
         {/if}
-      {:else}
+      {/if}
+    </div>
+
+    {#if subscriptionIsTrial || !hasActiveSubscription}
+      <div class="card">
         <h2>Abonneer je nu</h2>
         <div class="subscription_info">
           <div>
@@ -621,15 +645,15 @@
             ></small
           >
         </div>
-      {/if}
+      </div>
+    {/if}
 
-      {#if errorMessage}
-        <p style="color: red;">{errorMessage}</p>
-      {/if}
-      {#if successMessage}
-        <p style="color: green;">{successMessage}</p>
-      {/if}
-    </div>
+    {#if errorMessage}
+      <p style="color: red;">{errorMessage}</p>
+    {/if}
+    {#if successMessage}
+      <p style="color: green;">{successMessage}</p>
+    {/if}
   </div>
 {/if}
 
