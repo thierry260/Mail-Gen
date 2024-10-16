@@ -121,82 +121,82 @@
     }
   }
 
-  async function sendMagicLink() {
-    try {
-      const actionCodeSettings = {
-        // URL you want to redirect back to. The domain (and URL) must be in the authorized domains in Firebase.
-        url: window.location.origin + `?workspace=${workspace}`,
-        handleCodeInApp: true,
-      };
+  // async function sendMagicLink() {
+  //   try {
+  //     const actionCodeSettings = {
+  //       // URL you want to redirect back to. The domain (and URL) must be in the authorized domains in Firebase.
+  //       url: window.location.origin + `?workspace=${workspace}`,
+  //       handleCodeInApp: true,
+  //     };
 
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      // Save the email locally to complete login after redirect
-      window.localStorage.setItem("emailForSignIn", email);
-      toast.success("Login link sent to your email", {
-        position: "bottom-right",
-      });
-    } catch (error) {
-      toast.error("Error sending login link", {
-        position: "bottom-right",
-      });
-    }
-  }
+  //     await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+  //     // Save the email locally to complete login after redirect
+  //     window.localStorage.setItem("emailForSignIn", email);
+  //     toast.success("Login link sent to your email", {
+  //       position: "bottom-right",
+  //     });
+  //   } catch (error) {
+  //     toast.error("Error sending login link", {
+  //       position: "bottom-right",
+  //     });
+  //   }
+  // }
 
-  async function checkMagicLink() {
-    if (isSignInWithEmailLink(auth, window.location.href)) {
-      let email = window.localStorage.getItem("emailForSignIn");
+  // async function checkMagicLink() {
+  //   if (isSignInWithEmailLink(auth, window.location.href)) {
+  //     let email = window.localStorage.getItem("emailForSignIn");
 
-      if (!email) {
-        // If email is not found in local storage, prompt the user to provide it
-        email = window.prompt("Please provide your email for confirmation");
-      }
+  //     if (!email) {
+  //       // If email is not found in local storage, prompt the user to provide it
+  //       email = window.prompt("Please provide your email for confirmation");
+  //     }
 
-      try {
-        const userCredential = await signInWithEmailLink(
-          auth,
-          email,
-          window.location.href,
-        );
-        const user = userCredential.user;
+  //     try {
+  //       const userCredential = await signInWithEmailLink(
+  //         auth,
+  //         email,
+  //         window.location.href,
+  //       );
+  //       const user = userCredential.user;
 
-        // Check if the user belongs to the workspace
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
+  //       // Check if the user belongs to the workspace
+  //       const userRef = doc(db, "users", user.uid);
+  //       const userDoc = await getDoc(userRef);
 
-        if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
-          localStorage.setItem("workspace", workspace);
+  //       if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
+  //         localStorage.setItem("workspace", workspace);
 
-          // Check for user's subscription info in the workspace
-          const workspaceRef = doc(db, "workspaces", workspace);
-          const workspaceDoc = await getDoc(workspaceRef);
+  //         // Check for user's subscription info in the workspace
+  //         const workspaceRef = doc(db, "workspaces", workspace);
+  //         const workspaceDoc = await getDoc(workspaceRef);
 
-          if (workspaceDoc.exists()) {
-            const workspaceData = workspaceDoc.data();
-            if (workspaceData.users && workspaceData.users[user.uid]) {
-              const userWorkspaceData = workspaceData.users[user.uid];
-              if (userWorkspaceData.stripeCustomerId) {
-                localStorage.setItem(
-                  "stripeCustomerId",
-                  userWorkspaceData.stripeCustomerId,
-                );
-              }
-            }
-          }
+  //         if (workspaceDoc.exists()) {
+  //           const workspaceData = workspaceDoc.data();
+  //           if (workspaceData.users && workspaceData.users[user.uid]) {
+  //             const userWorkspaceData = workspaceData.users[user.uid];
+  //             if (userWorkspaceData.stripeCustomerId) {
+  //               localStorage.setItem(
+  //                 "stripeCustomerId",
+  //                 userWorkspaceData.stripeCustomerId,
+  //               );
+  //             }
+  //           }
+  //         }
 
-          // Redirect the user to the dashboard or homepage
-          goto("/");
-        } else {
-          toast.error("No access to workspace", {
-            position: "bottom-right",
-          });
-        }
-      } catch (error) {
-        toast.error("Error logging in with magic link", {
-          position: "bottom-right",
-        });
-      }
-    }
-  }
+  //         // Redirect the user to the dashboard or homepage
+  //         goto("/");
+  //       } else {
+  //         toast.error("No access to workspace", {
+  //           position: "bottom-right",
+  //         });
+  //       }
+  //     } catch (error) {
+  //       toast.error("Error logging in with magic link", {
+  //         position: "bottom-right",
+  //       });
+  //     }
+  //   }
+  // }
 </script>
 
 {#if step === 1}
@@ -264,9 +264,9 @@
       <span>Wachtwoord</span>
     </label>
     <button class="button" type="submit">Login</button>
-    <button class="button" type="button" on:click={sendMagicLink}>
+    <!-- <button class="button" type="button" on:click={sendMagicLink}>
       Send Magic Link
-    </button>
+    </button> -->
 
     <!-- Forgot password link -->
     <button type="button" class="link-button" on:click={resetPassword}>
