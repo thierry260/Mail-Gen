@@ -593,8 +593,8 @@
   </div>
 {:else if activeTab === "subscription"}
   <div class="tab-content">
-    <div class="card">
-      {#if hasActiveSubscription}
+    {#if hasActiveSubscription}
+      <div class="card">
         <h2>Abonnement</h2>
         {#if subscriptionIsTrial}
           <p>Je proefperiode is nog {subscriptionDaysLeft} dagen geldig.</p>
@@ -606,8 +606,8 @@
             Abonnement annuleren
           </button>
         {/if}
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     {#if subscriptionIsTrial || !hasActiveSubscription}
       <div class="card">
