@@ -8,8 +8,9 @@ export const ssr = false;
 
 const checkSubscription = async (id) => {
   const workspace = localStorage.getItem("workspace");
+  console.log("ID: ", id);
   try {
-    const response = await fetch("/api/check-subscription", {
+    const response = await fetch(`${window.location.origin}/api/check-subscription`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -33,6 +34,7 @@ const checkSubscription = async (id) => {
 };
 
 export async function load({ url }) {
+
   if (browser) {
     let subscriptionActive = false;
     let subscriptionDaysLeft = 0;
@@ -40,13 +42,14 @@ export async function load({ url }) {
 
     const isLocalhost = Boolean(
       window.location.hostname === "localhost" ||
-        window.location.hostname === "[::1]" ||
-        window.location.hostname.match(
-          /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-        )
+      window.location.hostname === "[::1]" ||
+      window.location.hostname.match(
+        /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
+      )
     );
 
-    let testmode = isLocalhost;
+    // let testmode = isLocalhost;
+    let testmode = false;
 
     if (testmode) {
       subscriptionActive = true;
