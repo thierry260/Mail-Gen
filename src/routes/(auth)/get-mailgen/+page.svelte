@@ -86,7 +86,7 @@
               templates: [
                 {
                   id: "j63CPPKaTlOnPxxooJvu",
-                  name: "Je allereerste template",
+                  name: "Welkom bij MailGen",
                   lastUpdated: new Date(),
                 },
               ],
@@ -109,7 +109,7 @@
             "j63CPPKaTlOnPxxooJvu"
           );
           await setDoc(templateRef, {
-            name: "Je allereerste template",
+            name: "Welkom bij MailGen",
             content: {
               content: [
                 {

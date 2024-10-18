@@ -83,7 +83,10 @@ export const deleteTemplate = async (templateId) => {
       const workspaceData = docSnap.data();
 
       // Delete the template document
-      await deleteDoc(doc(db, "templates", templateId));
+      await deleteDoc(
+        doc(db, "workspaces", workspaceId, "templates", templateId)
+      );
+
       console.log(`Template with ID ${templateId} deleted successfully`);
 
       // Remove template ID from workspace categories

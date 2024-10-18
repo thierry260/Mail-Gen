@@ -1,8 +1,30 @@
 // src/lib/utils/create.js
-import { doc, updateDoc, getDoc, addDoc, collection } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  getDoc,
+  getDocs,
+  addDoc,
+  collection,
+} from "firebase/firestore";
 import { clearCache } from "$lib/utils/get"; // Adjust import path as per your setup
 import { db } from "$lib/firebase"; // Use the alias '@' to refer to the 'src' directory
 import { browser } from "$app/environment";
+import { user } from "$lib/stores/user";
+import toast from "svelte-french-toast";
+
+let subscriptionIsTrial = false;
+let subscriptionDaysLeft = -1;
+let hasActiveSubscription = false;
+
+// Since $user cannot be used directly in non-Svelte files, subscribe to the store manually
+user.subscribe((currentUser) => {
+  if (currentUser && currentUser.subscriptionActive === true) {
+    hasActiveSubscription = true;
+    subscriptionDaysLeft = currentUser.subscriptionDaysLeft;
+    subscriptionIsTrial = currentUser.subscriptionIsTrial;
+  }
+});
 
 // Function to generate an ID with 8 characters
 const generateId = () => {
@@ -95,6 +117,33 @@ export async function createNewTemplate(
 ) {
   try {
     if (!browser) return;
+
+    if (subscriptionIsTrial) {
+      console.log("adding template on trial");
+
+      // Get the templates collection reference
+      const templatesCollectionRef = collection(
+        db,
+        "workspaces",
+        localStorage.getItem("workspace"),
+        "templates"
+      );
+
+      // Fetch all templates to check the count
+      const templatesSnapshot = await getDocs(templatesCollectionRef);
+      const templatesCount = templatesSnapshot.size;
+
+      console.log(templatesCount, "existing templates");
+
+      // Check if there are already 20 templates
+      // if (templatesCount >= 20) {
+      if (templatesCount >= 20 && localStorage.getItem("workspace") != "wms") {
+        toast.error("Maximum aantal templates bereikt tijdens proefperiode", {
+          position: "bottom-right",
+        });
+        return null; // Prevent adding a new template
+      }
+    }
 
     const docRef = await addDoc(
       collection(
