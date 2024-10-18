@@ -402,8 +402,7 @@
           },
         }),
         Placeholder.configure({
-          placeholder:
-            "Begin met schrijven. Gebruik 'Shift + {' om een variabele toe te voegen.",
+          placeholder: `Begin met schrijven. Gebruik '${isMac ? "Cmd" : "Ctrl"}+Shift+[' om een variabele toe te voegen.`,
         }),
         BulletList,
         OrderedList,
@@ -416,7 +415,7 @@
         BubbleMenu.configure({
           element: addVariableEl, // Set the element for the bubble menu
           tippyOptions: {
-            placement: "bottom", // Position the menu below the cursor\
+            placement: "bottom-start", // Position the menu below the cursor\
             animation: "shift-away",
             interactive: true,
           },
@@ -2249,7 +2248,7 @@
     flex-direction: column;
     gap: 15px;
     outline: 100vmax solid rgba(0, 0, 0, 0.1);
-    margin-left: -20px;
+    // margin-left: -20px;
 
     opacity: 0; /* Ensure it's initially hidden */
     transform: translateY(-10px);
@@ -2309,8 +2308,8 @@
       content: "";
       position: absolute;
       top: -3px;
-      left: calc(50%);
-      transform: translate(-50%, calc(-100% + 3px));
+      left: 15px;
+      transform: translate(0, calc(-100% + 3px));
       // left: 14px;
       // transform: translate(0, calc(-100% + 3px));
       width: 0px;
@@ -2323,8 +2322,8 @@
       content: "";
       position: absolute;
       top: -1px;
-      left: 50%;
-      transform: translate(-50%, calc(-100% + 3px));
+      left: 15px;
+      transform: translate(0, calc(-100% + 3px));
       // left: 15px;
       // transform: translate(0, calc(-100% + 2px));
       width: 0px;
