@@ -1812,6 +1812,10 @@
 
       .input_wrapper input {
         outline: revert;
+
+        &:not(:placeholder-shown) {
+          border-color: var(--gray-400);
+        }
       }
     }
     .preview {
