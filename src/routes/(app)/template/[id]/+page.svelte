@@ -1759,21 +1759,31 @@
         flex-direction: column;
         gap: 0;
       }
+
+      .input_wrapper input {
+        outline: revert;
+
+        &:not(:placeholder-shown) {
+          border-color: var(--gray-400);
+        }
+      }
+    }
+    .preview {
+      padding: 0;
+      border-radius: unset;
+      border: none;
     }
 
-    &.new_layout {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-      gap: 30px;
+    @media (max-width: $md) {
+      grid-template-columns: 100%;
 
-      .preview {
-        position: sticky;
-        bottom: 0;
-        margin-left: auto;
-        right: 0;
-        background-color: var(--background);
-        code {
-          color: #fff;
+      > div {
+        padding: 30px;
+        &.input {
+          grid-row: 2;
+          border-top-left-radius: 0;
+          border-bottom-right-radius: inherit;
+          border-right: 0;
         }
       }
     }

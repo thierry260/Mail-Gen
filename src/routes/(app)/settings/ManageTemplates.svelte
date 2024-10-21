@@ -18,11 +18,32 @@
   // Subscribe to the templatesStore
   $: {
     categories = $templatesStore; // Update local categories when store changes
+
+    // Log the state of previousTemplates and $templatesStore
+    console.log("previousTemplates:", previousTemplates);
+    console.log("$templatesStore:", $templatesStore);
   }
 
-  $: console.log("savingTemplates - previousTemplates", previousTemplates);
+  // Function to handle updates to templatesStore
+  function updateTemplates(newTemplates) {
+    // Store the current state for undo
+    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
+    templatesStore.set(newTemplates);
+    refreshDOM();
+  }
 
-  // Define the removeContentProperty function
+  // Add event listener for undo-toast
+  document.addEventListener("undo-toast", () => {
+    // Restore previousTemplates to templatesStore
+    templatesStore.set(previousTemplates);
+    refreshDOM();
+    console.log("Undo triggered via undo-toast event");
+
+    // Clear the timeout to avoid saving changes after undo
+    clearTimeout(undoTimeout);
+  });
+
+  // Function to remove unnecessary content property before saving
   function removeContentProperty(arr) {
     arr.forEach((item) => {
       if (item.templates && Array.isArray(item.templates)) {
@@ -34,64 +55,38 @@
         removeContentProperty(item.sub);
       }
     });
-
     return arr;
   }
 
-  // Create a reactive statement to show the toast when templatesStore changes
+  // Reactive block to handle templatesStore changes
   $: if ($templatesStore) {
     const currentTemplates = JSON.parse(JSON.stringify($templatesStore));
-    let undoTriggered = false; // Flag to track if undo has been triggered
 
-    console.log("savingTemplates - $templatesStore updated", $templatesStore);
+    // Check if templates have changed
+    if (
+      previousTemplates.length > 0 &&
+      JSON.stringify(previousTemplates) !== JSON.stringify(currentTemplates)
+    ) {
+      // Trigger custom toast with the UndoToast component
+      toast_(UndoToast, { duration: 5000, position: "bottom-right" });
 
-    if (previousTemplates.length) {
-      console.log("savingTemplates - comparing");
-      if (
-        JSON.stringify(previousTemplates) !== JSON.stringify($templatesStore)
-      ) {
-        console.log("savingTemplates - templatesStore different than previous");
+      // Clear the previous timeout if it exists to avoid multiple saves
+      clearTimeout(undoTimeout);
 
-        // Trigger custom toast with the UndoToast component
-        toast_(
-          UndoToast,
-          {
-            props: {
-              onUndo: () => {
-                templatesStore.set(previousTemplates); // Properly passing onUndo
-                undoTriggered = true; // Set flag to indicate undo was triggered
-              },
-            },
-          },
-          { duration: 5000, position: "bottom-right" }
-        );
+      // Set a timeout to save changes after 5 seconds, if undo is not triggered
+      undoTimeout = setTimeout(() => {
+        // Remove content properties from templates before saving
+        const newCategoriesArray = removeContentProperty(currentTemplates);
 
-        // Set a timeout to apply changes to Firestore/localStorage after the toast
-        undoTimeout = setTimeout(() => {
-          if (!undoTriggered) {
-            // Check if undo was not triggered
-            // Remove content properties from templates before saving
-            const newCategoriesArray = removeContentProperty(currentTemplates);
+        // Save to Firestore or localStorage
+        console.log("Saving templates to Firestore", newCategoriesArray);
+        const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
 
-            // Here you would update Firebase or localStorage
-            console.log("savingTemplates - saved", newCategoriesArray);
-
-            const docRef = doc(
-              db,
-              "workspaces",
-              localStorage.getItem("workspace")
-            );
-
-            updateDoc(docRef, {
-              categories: newCategoriesArray,
-            });
-          }
-        }, 5000);
-      }
+        updateDoc(docRef, { categories: newCategoriesArray })
+          .then(() => console.log("Templates saved"))
+          .catch((error) => console.error("Error saving templates:", error));
+      }, 5000);
     }
-
-    // Store the current state as previous for undo purposes
-    previousTemplates = currentTemplates;
   }
 
   const navigateToCategory = (index) => {
@@ -495,6 +490,8 @@
   const refreshDOM = () => {
     // Your logic here, for example:
     console.log("Item added to subcategories");
+
+    console.log("refreshDOM $templatesStore: ", $templatesStore);
 
     setTimeout(() => {
       console.log({ selectedCategories });

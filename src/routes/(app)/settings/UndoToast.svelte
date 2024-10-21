@@ -1,16 +1,18 @@
 <!-- UndoToast.svelte -->
 <script>
+  import { createEventDispatcher } from "svelte";
   import toast_ from "svelte-french-toast";
   import { X } from "phosphor-svelte";
 
   export let toast;
-  export let onUndo = () => {}; // Default fallback to avoid errors
+
+  const dispatch = createEventDispatcher();
 
   const handleUndo = () => {
-    if (typeof onUndo === "function") {
-      onUndo(); // Call the passed onUndo function
-      toast_.dismiss(toast.id); // Dismiss toast when undo is clicked
-    }
+    // Manually trigger a DOM event for undo
+    const undoEvent = new CustomEvent("undo-toast", { detail: toast.id });
+    document.dispatchEvent(undoEvent); // Dispatch the event globally
+    toast_.dismiss(toast.id); // Dismiss the toast when undo is clicked
   };
 </script>
 
