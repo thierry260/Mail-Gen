@@ -75,7 +75,7 @@
         open: false, // Add open property to handle accordion state
       }));
       data.forEach((item) => expandParents(item, currentId, currentType));
-      templatesStore.set(data); // Initialize the store with the data
+      // templatesStore.set(data); // Initialize the store with the data
     } else {
       console.log("Categories not found");
       data = []; // Ensure data is an empty array if fetch fails
@@ -158,7 +158,12 @@
       await signOut(auth);
 
       Object.keys(localStorage).forEach((key) => {
-        if (key !== "favoriteTemplates" && key !== "recentlyViewed") {
+        if (
+          key !== "favoriteTemplates" &&
+          key !== "recentlyViewed" &&
+          key !== "stripeCustomerId" &&
+          key !== "testMode"
+        ) {
           localStorage.removeItem(key);
         }
       });

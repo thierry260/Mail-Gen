@@ -526,8 +526,30 @@
 
   // Function to handle key combination
   function handleKeyDown(event) {
-    if (!isEditMode) return;
+    // Check if the active element is an input or textarea
+    const isInputFocused =
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement;
 
+    // Check for Ctrl/Cmd + C
+    if ((event.ctrlKey || event.metaKey) && event.key === "c") {
+      if (!isInputFocused && !isEditMode) {
+        // Only trigger if not focused on an input element
+        event.preventDefault(); // Prevent the default copy action
+        copyToClipboard(false);
+      }
+      return; // Exit early to prevent further processing
+    }
+
+    if (!isEditMode) return; // Edit mode shortcuts below
+
+    // Check for Ctrl/Cmd + S
+    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+      event.preventDefault(); // Prevent the default save action in the browser
+      saveTemplate(); // Trigger the saveTemplate function
+    }
+
+    // Check for Escape key
     if (event.key === "Escape") {
       if (shouldShow) {
         shouldShow = false;
@@ -767,15 +789,26 @@
   const replaceVariables = (content, variables) => {
     if (!content) return ""; // Check if content is defined
 
-    return content.replace(/{{(.*?)}}/g, (match, p1) => {
-      const variable = Object.entries(workspaceVariables.variables).find(
-        ([id, data]) => {
-          return data.placeholder === p1.trim();
-        }
-      );
-      const value = variable ? variables[variable[0]] || match : match;
-      return value;
+    // Create a temporary DOM element to manipulate HTML
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = content;
+
+    // Loop through each <code> element in the temporary DOM
+    const codeElements = tempDiv.querySelectorAll("code");
+
+    codeElements.forEach((codeEl) => {
+      const placeholder = codeEl.getAttribute("data-placeholder");
+      const variableId = codeEl.getAttribute("data-id");
+
+      // Check if there's a corresponding user input
+      if (placeholder && variables[variableId]) {
+        // Replace the text content of the code element with the user input
+        codeEl.textContent = variables[variableId];
+      }
     });
+
+    // Return the modified HTML
+    return tempDiv.innerHTML;
   };
 
   const handleInputChange = (variableId, event) => {
@@ -964,6 +997,7 @@
 
     try {
       const htmlElement = document.querySelector(".preview-content");
+
       const copyPromise = copyHtmlToClipboardPromise(htmlElement);
 
       const successMessage = openMail

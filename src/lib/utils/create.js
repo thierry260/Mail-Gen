@@ -27,7 +27,7 @@ user.subscribe((currentUser) => {
 });
 
 // Function to generate an ID with 8 characters
-const generateId = () => {
+export const generateId = () => {
   return Math.random().toString(36).substr(2, 8);
 };
 
@@ -118,7 +118,8 @@ export async function createNewTemplate(
   try {
     if (!browser) return;
 
-    if (subscriptionIsTrial) {
+    const localStorageTestMode = localStorage.getItem("testMode") === "true";
+    if (subscriptionIsTrial && !localStorageTestMode) {
       console.log("adding template on trial");
 
       // Get the templates collection reference

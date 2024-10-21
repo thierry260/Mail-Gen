@@ -1,27 +1,112 @@
 <script>
   import Column from "./Column.svelte";
   import { templatesStore } from "$lib/stores/templates";
-  import { CaretRight } from "phosphor-svelte";
-  import { createNewTemplate } from "$lib/utils/create";
+  import { CaretRight, House } from "phosphor-svelte";
+  import { createNewTemplate, generateId } from "$lib/utils/create";
+  import toast_ from "svelte-french-toast";
+  import UndoToast from "./UndoToast.svelte";
+  import { updateDoc, doc } from "firebase/firestore";
+  import { db } from "$lib/firebase";
 
   let selectedCategories = [];
   let lastLevel = -1;
+
   let categories = []; // Declare categories locally
+  let previousTemplates = [];
+  let undoTimeout;
 
   // Subscribe to the templatesStore
   $: {
     categories = $templatesStore; // Update local categories when store changes
   }
 
+  $: console.log("savingTemplates - previousTemplates", previousTemplates);
+
+  // Define the removeContentProperty function
+  function removeContentProperty(arr) {
+    arr.forEach((item) => {
+      if (item.templates && Array.isArray(item.templates)) {
+        item.templates.forEach((template) => {
+          delete template.content;
+        });
+      }
+      if (item.sub && Array.isArray(item.sub)) {
+        removeContentProperty(item.sub);
+      }
+    });
+
+    return arr;
+  }
+
+  // Create a reactive statement to show the toast when templatesStore changes
+  $: if ($templatesStore) {
+    const currentTemplates = JSON.parse(JSON.stringify($templatesStore));
+    let undoTriggered = false; // Flag to track if undo has been triggered
+
+    console.log("savingTemplates - $templatesStore updated", $templatesStore);
+
+    if (previousTemplates.length) {
+      console.log("savingTemplates - comparing");
+      if (
+        JSON.stringify(previousTemplates) !== JSON.stringify($templatesStore)
+      ) {
+        console.log("savingTemplates - templatesStore different than previous");
+
+        // Trigger custom toast with the UndoToast component
+        toast_(
+          UndoToast,
+          {
+            props: {
+              onUndo: () => {
+                templatesStore.set(previousTemplates); // Properly passing onUndo
+                undoTriggered = true; // Set flag to indicate undo was triggered
+              },
+            },
+          },
+          { duration: 5000, position: "bottom-right" }
+        );
+
+        // Set a timeout to apply changes to Firestore/localStorage after the toast
+        undoTimeout = setTimeout(() => {
+          if (!undoTriggered) {
+            // Check if undo was not triggered
+            // Remove content properties from templates before saving
+            const newCategoriesArray = removeContentProperty(currentTemplates);
+
+            // Here you would update Firebase or localStorage
+            console.log("savingTemplates - saved", newCategoriesArray);
+
+            const docRef = doc(
+              db,
+              "workspaces",
+              localStorage.getItem("workspace")
+            );
+
+            updateDoc(docRef, {
+              categories: newCategoriesArray,
+            });
+          }
+        }, 5000);
+      }
+    }
+
+    // Store the current state as previous for undo purposes
+    previousTemplates = currentTemplates;
+  }
+
   const navigateToCategory = (index) => {
-    selectCategory(index, selectedCategories[index]);
+    if (index >= 0) {
+      selectCategory(index, selectedCategories[index]);
+    } else {
+      selectCategory(0, false);
+    }
   };
 
   const selectCategory = (level, selectedCategory) => {
-    selectedCategories = selectedCategories.slice(0, level);
-    selectedCategories.push(selectedCategory);
+    if (selectedCategory) {
+      selectedCategories = selectedCategories.slice(0, level);
+      selectedCategories.push(selectedCategory);
 
-    setTimeout(() => {
       const container = document.querySelector(".template_columns");
       if (container) {
         const visibleColumns = container.children.length;
@@ -33,7 +118,21 @@
         });
       }
       lastLevel = level;
-    }, 20);
+    } else {
+      selectedCategories = [];
+
+      const container = document.querySelector(".template_columns");
+      if (container) {
+        const visibleColumns = container.children.length;
+        const columnWidth = container.offsetWidth / visibleColumns;
+        const scrollPosition = columnWidth * level;
+        container.scrollTo({
+          left: scrollPosition,
+          behavior: "smooth",
+        });
+      }
+      lastLevel = level;
+    }
   };
 
   const moveItem = (
@@ -196,6 +295,7 @@
 
     // Update the store with the new state
     templatesStore.set([...currentTemplates]); // Use a shallow copy to trigger reactivity
+    // templatesStore.update((currentTemplates) => currentTemplates);
   };
 
   const onRename = (item, type = "category") => {
@@ -336,7 +436,7 @@
   };
 
   const addCategory = (name, categoryId) => {
-    const newCategory = { id: Date.now(), name, sub: [], templates: [] };
+    const newCategory = { id: generateId(), name, sub: [], templates: [] };
     if (!categoryId) {
       templatesStore.update((cats) => [...cats, newCategory]);
       console.log(categoryId);
@@ -349,14 +449,15 @@
           "category"
         );
         // Code to trigger after the update
-        refreshDOM();
         return updatedCats;
       });
+      refreshDOM();
     }
   };
 
-  const addTemplate = (name, categoryId) => {
-    const newTemplate = { id: Date.now(), name };
+  const addTemplate = async (name, categoryId) => {
+    const newTemplateId = await createNewTemplate(categoryId, name);
+    const newTemplate = { id: newTemplateId, name };
     console.log(categoryId);
     templatesStore.update((cats) => {
       const updatedCats = addToSubCategories(
@@ -366,9 +467,9 @@
         "template"
       );
       // Code to trigger after the update
-      refreshDOM();
       return updatedCats;
     });
+    refreshDOM();
   };
 
   const addToSubCategories = (categoryList, categoryId, newItem, itemType) => {
@@ -397,15 +498,15 @@
 
     setTimeout(() => {
       console.log({ selectedCategories });
-      selectedCategories.forEach((selectedCategory) => {
+      selectedCategories.forEach((selectedCategory, index) => {
         console.log(`.category.category-${selectedCategory.id}`);
         setTimeout(() => {
           document
             .querySelector(`.category.category-${selectedCategory.id}`)
             ?.click();
-        }, 0);
+        }, 20);
       });
-    }, 0);
+    }, 20);
   };
 </script>
 
@@ -413,6 +514,12 @@
 <nav class="breadcrumb">
   {#if selectedCategories.length > 0}
     <ul>
+      <li on:click={() => navigateToCategory(-1)}>
+        <House size={14} />
+        <span class="flex icon">
+          <CaretRight size={14} />
+        </span>
+      </li>
       {#each selectedCategories as category, index}
         <li on:click={() => navigateToCategory(index)}>
           {category.name}
@@ -422,10 +529,14 @@
         </li>
       {/each}
     </ul>
+  {:else}
+    <ul>
+      <li><House size={14} /></li>
+    </ul>
   {/if}
 </nav>
 
-<div class="template_columns">
+<div class="template_columns card">
   <!-- Render the first column with the top-level categories -->
   <Column
     {categories}
@@ -459,7 +570,7 @@
 
 <style lang="scss">
   .breadcrumb {
-    margin-bottom: -30px;
+    // margin-bottom: -30px;
     min-height: 30px;
 
     ul {
@@ -473,6 +584,7 @@
       display: flex;
       align-items: center;
       gap: 2px;
+      font-size: 1.4rem;
       &:hover {
         text-decoration: underline;
       }
@@ -488,7 +600,6 @@
     --gap: 2rem;
     display: grid;
     overflow-x: auto;
-    padding-top: 40px;
     grid-auto-columns: calc((100% / 3) - (var(--gap, 2rem) * 2 / 3));
     grid-auto-flow: column;
     grid-column-gap: var(--gap, 2rem);
@@ -505,5 +616,12 @@
     width: 100%;
     padding-right: var(--gap, 2rem);
     border-right: 1px solid var(--border);
+  }
+
+  .card {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: var(--border-radius-big, 10px);
+    border: 1px solid var(--border);
   }
 </style>
