@@ -54,28 +54,6 @@
     }
   }
 
-  $: if ($page.url.searchParams.get("cid")) {
-    const stripeCustomerId = $page.url.searchParams.get("cid");
-
-    if (stripeCustomerId) {
-      setTimeout(() => {
-        localStorage.setItem("stripeCustomerId", stripeCustomerId);
-        console.log(`stripeCustomerId set to ${stripeCustomerId}`);
-        // Ensure that subscription status is checked after setting the ID
-        checkSubscription(stripeCustomerId).then((data) => {
-          if (data.active) {
-            // Update store or local state
-            user.update((currentUser) => ({
-              ...currentUser,
-              subscriptionActive: data.active,
-              subscriptionDaysLeft: data.daysLeft,
-            }));
-          }
-        });
-      }, 500);
-    }
-  }
-
   $: {
     currentUser = $user;
     if (currentUser && currentUser.subscriptionActive === true) {
@@ -85,59 +63,6 @@
       console.log("Reactivestatement true");
     }
   }
-
-  const checkSubscription = async (id) => {
-    const workspace = localStorage.getItem("workspace");
-    try {
-      // If there's no customerId, treat as a new customer (or trial user)
-      if (!id) {
-        console.log(
-          "No stripeCustomerId found, handling as new customer or trial."
-        );
-
-        const response = await fetch(
-          `${window.location.origin}/api/check-subscription`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ workspaceId: workspace }),
-          }
-        );
-
-        const data = await response.json();
-
-        return {
-          active: false, // New customers have no active subscriptions
-          daysLeft: data.days_left || 0,
-          isTrial: data.is_trial || true, // Assume trial for new customers
-        };
-      }
-
-      // Proceed with checking subscription for existing customers
-      const response = await fetch(
-        `${window.location.origin}/api/check-subscription`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ workspaceId: workspace, customerId: id }),
-        }
-      );
-
-      const data = await response.json();
-      return {
-        active: data.active || false,
-        daysLeft: data.days_left || 0,
-        isTrial: data.is_trial || false,
-      };
-    } catch (err) {
-      console.error("Error checking subscription:", err.message);
-      return { active: false, daysLeft: 0 };
-    }
-  };
 
   // Fetch all workspace variables when the component mounts
   const fetchVariables = async () => {
@@ -383,14 +308,14 @@
   onMount(async () => {
     if (!browser) return;
     setTimeout(() => {
-      // Get the 'cid' parameter from the URL
-      const stripeCustomerId = $page.url.searchParams.get("cid");
+      // // Get the 'cid' parameter from the URL
+      // const stripeCustomerId = $page.url.searchParams.get("cid");
 
-      // If 'cid' is present in the URL, set it to localStorage
-      if (stripeCustomerId) {
-        localStorage.setItem("stripeCustomerId", stripeCustomerId);
-        console.log(`stripeCustomerId set to ${stripeCustomerId}`);
-      }
+      // // If 'cid' is present in the URL, set it to localStorage
+      // if (stripeCustomerId) {
+      //   localStorage.setItem("stripeCustomerId", stripeCustomerId);
+      //   console.log(`stripeCustomerId set to ${stripeCustomerId}`);
+      // }
 
       const urlTab = $page.url.searchParams.get("tab");
       if (urlTab) {

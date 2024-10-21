@@ -122,6 +122,7 @@
 
   // Initialize Sortables on mount
   onMount(() => {
+    console.log("onMount Column");
     initializeSortables();
   });
 
@@ -130,15 +131,6 @@
     categoriesSortable && categoriesSortable.destroy();
     templatesSortable && templatesSortable.destroy();
   });
-
-  // Reactivity for categories and templates changes
-  $: if (categoriesContent && categories && categories.length > 0) {
-    categoriesSortable.sort(categories.map((cat) => cat.id));
-  }
-
-  $: if (templatesContent && templates && templates.length > 0) {
-    templatesSortable.sort(templates.map((temp) => temp.id));
-  }
 
   const addCategory = () => {
     if (newCategoryName.trim()) {

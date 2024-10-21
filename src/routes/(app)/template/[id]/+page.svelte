@@ -534,7 +534,7 @@
 
     // Check for Ctrl/Cmd + C
     if ((event.ctrlKey || event.metaKey) && event.key === "c") {
-      if (!isInputFocused) {
+      if (!isInputFocused && !isEditMode) {
         // Only trigger if not focused on an input element
         event.preventDefault(); // Prevent the default copy action
         copyToClipboard(false);
@@ -808,15 +808,26 @@
   const replaceVariables = (content, variables) => {
     if (!content) return ""; // Check if content is defined
 
-    return content.replace(/{{(.*?)}}/g, (match, p1) => {
-      const variable = Object.entries(workspaceVariables.variables).find(
-        ([id, data]) => {
-          return data.placeholder === p1.trim();
-        }
-      );
-      const value = variable ? variables[variable[0]] || match : match;
-      return value;
+    // Create a temporary DOM element to manipulate HTML
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = content;
+
+    // Loop through each <code> element in the temporary DOM
+    const codeElements = tempDiv.querySelectorAll("code");
+
+    codeElements.forEach((codeEl) => {
+      const placeholder = codeEl.getAttribute("data-placeholder");
+      const variableId = codeEl.getAttribute("data-id");
+
+      // Check if there's a corresponding user input
+      if (placeholder && variables[variableId]) {
+        // Replace the text content of the code element with the user input
+        codeEl.textContent = variables[variableId];
+      }
     });
+
+    // Return the modified HTML
+    return tempDiv.innerHTML;
   };
 
   const handleInputChange = (variableId, event) => {
@@ -1046,6 +1057,7 @@
 
     try {
       const htmlElement = document.querySelector(".preview-content");
+
       const copyPromise = copyHtmlToClipboardPromise(htmlElement);
 
       const successMessage = openMail

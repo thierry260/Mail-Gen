@@ -6,26 +6,25 @@ import { user } from "$lib/stores/user";
 
 export const ssr = false;
 
-const checkSubscription = async (id) => {
-  const workspace = localStorage.getItem("workspace");
-  console.log("ID: ", id);
+const checkSubscription = async (
+  workspaceId,
+  customerId,
+  redirected = false
+) => {
   try {
-    const response = await fetch(
-      `${window.location.origin}/api/check-subscription`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ workspaceId: workspace, customerId: id }),
-      }
-    );
-    console.log("DAYSLEFT", id);
+    const response = await fetch("/api/check-subscription", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        workspaceId,
+        customerId,
+        redirectedFromStripe: redirected,
+      }),
+    });
 
     const data = await response.json();
-
-    console.log("data: ", data);
-
     return {
       active: data.active || false,
       daysLeft: data.days_left || 0,
@@ -50,34 +49,49 @@ export async function load({ url }) {
         )
     );
 
-    // Check if testMode exists in localStorage and is set to "true"
     const localStorageTestMode = localStorage.getItem("testMode") === "true";
-
-    console.log("localStorageTestMode: ", localStorageTestMode);
-
-    // Use test mode if it's either localhost or testMode is set in localStorage
-    let testmode = isLocalhost || localStorageTestMode;
+    const testmode = isLocalhost || localStorageTestMode;
 
     if (testmode) {
       subscriptionActive = true;
       subscriptionDaysLeft = 29;
       subscriptionIsTrial = true;
-      console.log("access granted by test mode");
     } else {
-      const stripeCustomerId =
-        localStorage.getItem("stripeCustomerId") || "null";
-      const subscriptionData = await checkSubscription(stripeCustomerId);
-      subscriptionActive = subscriptionData.active;
-      subscriptionDaysLeft = subscriptionData.days_left;
-      subscriptionIsTrial = subscriptionData.is_trial;
+      const workspaceId = localStorage.getItem("workspace");
 
-      console.log({ subscriptionActive, subscriptionDaysLeft });
+      // Check for the 'cid' URL parameter on load
+      const redirectedFromStripe = url.searchParams.get("cid");
+      let stripeCustomerId = localStorage.getItem("stripeCustomerId");
+
+      if (redirectedFromStripe) {
+        localStorage.setItem("stripeCustomerId", redirectedFromStripe);
+        stripeCustomerId = redirectedFromStripe;
+        console.log(
+          `redirectedFromStripe - stripeCustomerId set to ${redirectedFromStripe}`
+        );
+      }
+
+      const subscriptionData = await checkSubscription(
+        workspaceId,
+        stripeCustomerId,
+        Boolean(redirectedFromStripe)
+      );
+
+      console.log("checkSubscription, subscriptionData;", { subscriptionData });
+
+      console.log("checkSubscription, params;", {
+        workspaceId,
+        stripeCustomerId,
+        redirectedFromStripe,
+      });
+
+      subscriptionActive = subscriptionData.active;
+      subscriptionDaysLeft = subscriptionData.daysLeft;
+      subscriptionIsTrial = subscriptionData.isTrial; // Make sure this is returned by your API
     }
 
-    // Ensure the auth state listener is set up
     onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        // Update the user store with user info, subscription status, and days left
         user.set({
           ...currentUser,
           subscriptionActive,
@@ -88,7 +102,6 @@ export async function load({ url }) {
         user.set(null);
       }
 
-      // Redirect to login if the user is not authenticated and is on a protected route
       if (
         !currentUser &&
         !url.pathname.startsWith("/login") &&
