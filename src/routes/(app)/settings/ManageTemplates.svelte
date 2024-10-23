@@ -4,9 +4,11 @@
   import { CaretRight, House } from "phosphor-svelte";
   import { createNewTemplate, generateId } from "$lib/utils/create";
   import toast_ from "svelte-french-toast";
+  import toast from "svelte-french-toast";
   import UndoToast from "./UndoToast.svelte";
   import { updateDoc, doc } from "firebase/firestore";
   import { db } from "$lib/firebase";
+  import { tick } from "svelte";
 
   let selectedCategories = [];
   let lastLevel = -1;
@@ -14,29 +16,24 @@
   let categories = []; // Declare categories locally
   let previousTemplates = [];
   let undoTimeout;
+  let columnsContainer;
+
+  $: $templatesStore = [...$templatesStore]; // This forces reactivity by reassigning the store
 
   // Subscribe to the templatesStore
   $: {
     categories = $templatesStore; // Update local categories when store changes
-
-    // Log the state of previousTemplates and $templatesStore
-    console.log("previousTemplates:", previousTemplates);
-    console.log("$templatesStore:", $templatesStore);
-  }
-
-  // Function to handle updates to templatesStore
-  function updateTemplates(newTemplates) {
-    // Store the current state for undo
-    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
-    templatesStore.set(newTemplates);
-    refreshDOM();
   }
 
   // Add event listener for undo-toast
-  document.addEventListener("undo-toast", () => {
+  document.addEventListener("undo-toast", async () => {
     // Restore previousTemplates to templatesStore
     templatesStore.set(previousTemplates);
-    refreshDOM();
+    // await tick(); // Wait for DOM updates
+
+    setTimeout(() => {
+      refreshDOM();
+    }, 20);
     console.log("Undo triggered via undo-toast event");
 
     // Clear the timeout to avoid saving changes after undo
@@ -46,6 +43,9 @@
   // Function to remove unnecessary content property before saving
   function removeContentProperty(arr) {
     arr.forEach((item) => {
+      if (item.open) {
+        delete item.open;
+      }
       if (item.templates && Array.isArray(item.templates)) {
         item.templates.forEach((template) => {
           delete template.content;
@@ -58,7 +58,8 @@
     return arr;
   }
 
-  // Reactive block to handle templatesStore changes
+  let currentToastId = null; // Store the current toast ID
+
   $: if ($templatesStore) {
     const currentTemplates = JSON.parse(JSON.stringify($templatesStore));
 
@@ -67,11 +68,17 @@
       previousTemplates.length > 0 &&
       JSON.stringify(previousTemplates) !== JSON.stringify(currentTemplates)
     ) {
-      // Trigger custom toast with the UndoToast component
-      toast_(UndoToast, { duration: 5000, position: "bottom-right" });
+      // If a toast is already shown, dismiss it and clear the timeout
+      if (currentToastId) {
+        toast_.dismiss(currentToastId); // Dismiss the previous toast
+        clearTimeout(undoTimeout); // Clear any previous timeout
+      }
 
-      // Clear the previous timeout if it exists to avoid multiple saves
-      clearTimeout(undoTimeout);
+      // Trigger a new toast with the UndoToast component and store its ID
+      currentToastId = toast_(UndoToast, {
+        duration: 5000,
+        position: "bottom-right",
+      });
 
       // Set a timeout to save changes after 5 seconds, if undo is not triggered
       undoTimeout = setTimeout(() => {
@@ -83,8 +90,15 @@
         const docRef = doc(db, "workspaces", localStorage.getItem("workspace"));
 
         updateDoc(docRef, { categories: newCategoriesArray })
-          .then(() => console.log("Templates saved"))
+          .then(() =>
+            toast.success("Wijzigingen opgeslagen", {
+              position: "bottom-right",
+            })
+          )
           .catch((error) => console.error("Error saving templates:", error));
+
+        // Reset the currentToastId after saving
+        // currentToastId = null;
       }, 5000);
     }
   }
@@ -97,46 +111,58 @@
     }
   };
 
-  const selectCategory = (level, selectedCategory) => {
+  const selectCategory = async (level, selectedCategory) => {
+    var temp_selectedCategories = selectedCategories;
+    selectedCategories = [];
+
+    await tick();
+    selectedCategories = temp_selectedCategories;
     if (selectedCategory) {
       selectedCategories = selectedCategories.slice(0, level);
       selectedCategories.push(selectedCategory);
 
-      const container = document.querySelector(".template_columns");
-      if (container) {
-        const visibleColumns = container.children.length;
-        const columnWidth = container.offsetWidth / visibleColumns;
-        const scrollPosition = columnWidth * level;
-        container.scrollTo({
-          left: scrollPosition,
-          behavior: "smooth",
-        });
-      }
-      lastLevel = level;
+      setTimeout(() => {
+        const container = document.querySelector(".template_columns");
+        if (container) {
+          const visibleColumns = container.children.length;
+          const columnWidth = container.offsetWidth / visibleColumns;
+          const scrollPosition = columnWidth * level;
+          const maxScrollPosition =
+            container.scrollWidth - container.clientWidth;
+          container.scrollTo({
+            left: maxScrollPosition,
+            behavior: "smooth",
+          });
+        }
+        lastLevel = level;
+      }, 20);
     } else {
       selectedCategories = [];
 
-      const container = document.querySelector(".template_columns");
-      if (container) {
-        const visibleColumns = container.children.length;
-        const columnWidth = container.offsetWidth / visibleColumns;
-        const scrollPosition = columnWidth * level;
-        container.scrollTo({
-          left: scrollPosition,
-          behavior: "smooth",
-        });
-      }
-      lastLevel = level;
+      setTimeout(() => {
+        const container = document.querySelector(".template_columns");
+        if (container) {
+          const visibleColumns = container.children.length;
+          const columnWidth = container.offsetWidth / visibleColumns;
+          const scrollPosition = columnWidth * level;
+          container.scrollTo({
+            left: scrollPosition,
+            behavior: "smooth",
+          });
+        }
+        lastLevel = level;
+      }, 20);
     }
   };
 
-  const moveItem = (
+  const moveItem = async (
     type,
     fromCategoryId,
     fromIndex,
     toCategoryId,
     toIndex,
-    movedItemId
+    movedItemId,
+    revert = false
   ) => {
     console.log(
       "moveItem called with:",
@@ -148,6 +174,8 @@
     );
 
     // Fetch the current state of the templatesStore
+    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
+
     const currentTemplates = $templatesStore;
 
     // Function to find the item and its parent
@@ -159,6 +187,7 @@
     ) => {
       if (!fromCategoryId) {
         const item = currentArray?.find((cat) => cat.id == movedItemId);
+        console.log("hoofdcategorie -", item, movedItemId);
         return { item, parent: false }; // Parent is false for top-level categories
       } else {
         for (let category of currentArray) {
@@ -219,17 +248,14 @@
       itemToMove = { ...found.item }; // Clone the item to move
       fromParent = found.parent || false;
 
-      // Adjust `toIndex` if moving within the same parent or array
-      if (fromCategoryId === toCategoryId && fromIndex < toIndex) {
-        toIndex--; // Adjust `toIndex` to account for the shift after removal
-      }
-
       if (type === "categories") {
         // Remove item from the correct place
         if (fromParent === false) {
           // Top-level category
           if (fromIndex >= 0 && fromIndex < currentTemplates.length) {
-            console.log(`${itemToMove.name} removed from index ${fromIndex}`);
+            console.log(
+              `hoofdcategorie -${itemToMove.name} removed from index ${fromIndex}`
+            );
             currentTemplates.splice(fromIndex, 1);
           } else {
             console.warn("fromIndex out of bounds:", fromIndex);
@@ -273,12 +299,15 @@
         }
       } else {
         // If no target category, we're moving a top-level item
-        console.log("fromParent: ", fromParent);
-        console.log("toIndex: ", toIndex);
-        console.log("itemToMove: ", itemToMove);
+        console.log("hoofdcategorie -------------------: ");
+        console.log("hoofdcategorie fromParent: ", fromParent);
+        console.log("hoofdcategorie toIndex: ", toIndex);
+        console.log("hoofdcategorie itemToMove: ", itemToMove);
         if (fromParent === false) {
           // If moving within top-level categories
-          console.log(`${itemToMove.name} added to index ${toIndex}`);
+          console.log(
+            `hoofdcategorie moved to - ${itemToMove.name} added to index ${toIndex}`
+          );
           currentTemplates.splice(toIndex, 0, itemToMove); // Insert at the corrected index
         } else if (type === "categories") {
           fromParent.sub.splice(toIndex, 0, itemToMove); // Add to the same parent at new position
@@ -288,12 +317,28 @@
       }
     }
 
-    // Update the store with the new state
-    templatesStore.set([...currentTemplates]); // Use a shallow copy to trigger reactivity
-    // templatesStore.update((currentTemplates) => currentTemplates);
+    if (revert) {
+      templatesStore.set(previousTemplates);
+
+      setTimeout(() => {
+        refreshDOM();
+      }, 20);
+
+      toast.error("Een categorie kan niet zijn eigen subcategorie zijn", {
+        position: "bottom-right",
+      });
+
+      // Clear the timeout to avoid saving changes after undo
+      clearTimeout(undoTimeout);
+    } else {
+      // Update the store with the new state
+      templatesStore.set([...currentTemplates]);
+    }
   };
 
   const onRename = (item, type = "category") => {
+    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
+
     const nameElement = document.querySelector(`.${type}-${item.id} .name`);
 
     if (nameElement) {
@@ -356,6 +401,8 @@
   };
 
   const onRemove = (item, type = "category") => {
+    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
+
     const typeFormatted = type === "category" ? "categorie" : "template";
     if (
       confirm(
@@ -431,6 +478,8 @@
   };
 
   const addCategory = (name, categoryId) => {
+    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
+
     const newCategory = { id: generateId(), name, sub: [], templates: [] };
     if (!categoryId) {
       templatesStore.update((cats) => [...cats, newCategory]);
@@ -451,6 +500,8 @@
   };
 
   const addTemplate = async (name, categoryId) => {
+    previousTemplates = JSON.parse(JSON.stringify($templatesStore)); // Make a deep copy
+
     const newTemplateId = await createNewTemplate(categoryId, name);
     const newTemplate = { id: newTemplateId, name };
     console.log(categoryId);
@@ -487,23 +538,67 @@
     });
   };
 
-  const refreshDOM = () => {
-    // Your logic here, for example:
+  const refreshDOM = async () => {
     console.log("Item added to subcategories");
 
-    console.log("refreshDOM $templatesStore: ", $templatesStore);
+    categories = [];
+
+    await tick(); // Wait for DOM updates
+
+    // document.querySelector(".template_columns .column:nth-child(2)")?.remove();
+
+    // const activeMainCat = document.querySelector(
+    //     ".template_columns .column:first-child .category.active"
+    // );
+
+    // if (!activeMainCat) {
+    //     console.error("No active main category found.");
+    //     return; // Exit if there's no active category
+    // }
+
+    // const nextMainCat = activeMainCat.nextElementSibling;
+
+    // if (nextMainCat) {
+    //     activeMainCat.classList.remove("active");
+
+    //     const clickEvent = new MouseEvent("click", {
+    //         bubbles: true,
+    //         cancelable: true,
+    //         view: window,
+    //     });
+    //     nextMainCat.dispatchEvent(clickEvent);
+    // } else {
+    //     console.error("No next main category found.");
+    // }
+
+    categories = [...$templatesStore];
 
     setTimeout(() => {
       console.log({ selectedCategories });
       selectedCategories.forEach((selectedCategory, index) => {
         console.log(`.category.category-${selectedCategory.id}`);
-        setTimeout(() => {
-          document
-            .querySelector(`.category.category-${selectedCategory.id}`)
-            ?.click();
-        }, 20);
+        setTimeout(
+          () => {
+            const categoryElement = document.querySelector(
+              `.category.category-${selectedCategory.id}`
+            );
+            if (categoryElement) {
+              const clickEvent = new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+              });
+              categoryElement.dispatchEvent(clickEvent);
+            } else {
+              console.error(
+                `Category element .category.category-${selectedCategory.id} not found.`
+              );
+            }
+          },
+          200 + index * 100
+        );
       });
-    }, 20);
+    }, 100);
   };
 </script>
 
@@ -528,12 +623,12 @@
     </ul>
   {:else}
     <ul>
-      <li><House size={14} /></li>
+      <li><House size={14} />Hoofdcategorieën</li>
     </ul>
   {/if}
 </nav>
 
-<div class="template_columns card">
+<div class="template_columns card" bind:this={columnsContainer}>
   <!-- Render the first column with the top-level categories -->
   <Column
     {categories}
@@ -547,7 +642,7 @@
     onAddTemplate={addTemplate}
   />
 
-  {#each selectedCategories as selectedCategory, index}
+  {#each selectedCategories as selectedCategory, index (selectedCategory.id)}
     <Column
       categories={selectedCategory.sub}
       templates={selectedCategory.templates}
@@ -595,9 +690,12 @@
 
   .template_columns {
     --gap: 2rem;
+    --columns: 3;
     display: grid;
     overflow-x: auto;
-    grid-auto-columns: calc((100% / 3) - (var(--gap, 2rem) * 2 / 3));
+    grid-auto-columns: calc(
+      (100% / var(--columns)) - (var(--gap, 2rem) * 2 / 3)
+    );
     grid-auto-flow: column;
     grid-column-gap: var(--gap, 2rem);
     grid-template-rows: minmax(0, 1fr);
@@ -607,12 +705,32 @@
     &::-webkit-scrollbar {
       display: none; /* Safari and Chrome */
     }
+
+    @media (max-width: $md) {
+      --columns: 2;
+    }
+    @media (max-width: $sm) {
+      --columns: 1;
+      grid-auto-columns: calc((100% / var(--columns)));
+    }
   }
   :global(.template_columns > .column) {
     flex: 1;
     width: 100%;
     padding-right: var(--gap, 2rem);
     border-right: 1px solid var(--border);
+    transition:
+      padding-right 0.2s ease-out,
+      border-color 0.2s ease-out;
+    &:last-child:not(:first-child) {
+      padding-right: 0;
+      border-color: transparent;
+    }
+
+    @media (max-width: $sm) {
+      padding-right: 0;
+      border-color: transparent;
+    }
   }
 
   .card {

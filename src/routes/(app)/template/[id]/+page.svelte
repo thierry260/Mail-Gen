@@ -1977,6 +1977,7 @@
           font-size: 1.3rem;
           color: var(--gray-600);
           transform: translateY(1px);
+          pointer-events: none;
         }
       }
     }

@@ -17,7 +17,7 @@
 </script>
 
 <div class="custom_toast">
-  <span>Wijzigingen opgeslagen</span>
+  <span>Templates aangepast</span>
   <button class="button basic" on:click={handleUndo}>Ongedaan maken</button>
   <!-- <button on:click={() => toast_.dismiss(toast.id)}><X size={14} /></button> -->
 </div>

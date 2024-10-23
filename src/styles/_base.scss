@@ -528,6 +528,9 @@ main:has(.settings) nav:first-child {
 }
 
 .preview-content {
+  p {
+    color: #555555;
+  }
   p:empty {
     display: flex;
     height: 1.5em;

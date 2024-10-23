@@ -1,12 +1,11 @@
-// static/manifest.json
 {
-    "name": "Mail Gen", //long name of your app
-    "short_name": "Mail Gen", //name of your app on home screen
+    "name": "MailGen",
+    "short_name": "MailGen",
     "start_url": "/",
     "scope": "/",
-    "display": "standalone", //how app is displayed
-    "background_color": "#34e89e",
-    "theme_color": "#34e89e",
+    "display": "standalone",
+    "background_color": "#C9F66F",
+    "theme_color": "#C9F66F",
     "icons": [
         {
             "purpose": "maskable",

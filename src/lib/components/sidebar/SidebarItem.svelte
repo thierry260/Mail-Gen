@@ -13,16 +13,17 @@
 
   let unsubscribe;
 
-  unsubscribe = templatesStore.subscribe((value) => {
-    const itemFromStore = value.find((cat) => cat.id === item.id);
-    if (itemFromStore) {
-      item = itemFromStore;
-    }
-  });
+  // unsubscribe = templatesStore.subscribe((value) => {
+  //   const itemFromStore = value.find((cat) => cat.id === item.id);
+  //   if (itemFromStore) {
+  //     item = itemFromStore;
+  //     console.log(`${item.name}`);
+  //   }
+  // });
 
-  onDestroy(() => {
-    unsubscribe();
-  });
+  // onDestroy(() => {
+  //   unsubscribe();
+  // });
 
   const viewTemplate = (templateId) => {
     switchMobileNav("browse");

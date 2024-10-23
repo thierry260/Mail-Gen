@@ -23,8 +23,6 @@
 
     if (data) {
       console.log(data);
-
-      console.log("$templatesStore: ", $templatesStore);
       allTemplates = [];
       data.forEach((category) => {
         allTemplates = extractTemplates(category, allTemplates);

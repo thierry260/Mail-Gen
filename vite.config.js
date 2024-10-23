@@ -14,8 +14,8 @@ export default defineConfig({
       },
       registerType: "autoUpdate",
       manifest: {
-        name: "Mail Gen",
-        short_name: "Mail Gen",
+        name: "MailGen",
+        short_name: "MailGen",
         start_url: "./",
         scope: "./",
         display: "standalone",

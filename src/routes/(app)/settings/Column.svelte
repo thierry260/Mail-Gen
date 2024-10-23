@@ -39,39 +39,48 @@
         animation: 150,
         handle: ".drag",
         onEnd: (event) => {
-          console.log(event);
-          console.log("from", event.from.dataset.id);
-          console.log("to", event.to.dataset.id);
-
-          const fromCategoryId = event.from.dataset.id
-            ? event.from.dataset.id
-            : null;
+          // console.log(event);
+          let revert = false;
+          const fromCategoryId = event.from.dataset.id || null;
           const fromIndex = event.oldIndex;
           const toCategoryId =
-            event.to.dataset.id == event.from.dataset.id
-              ? false
+            event.to.dataset.id === event.from.dataset.id
+              ? null
               : event.to.dataset.id;
           const toIndex = event.newIndex;
-
-          // Get the ID of the moved item
           const movedItemId = event.item.dataset.id;
 
-          console.log({
-            fromCategoryId,
-            fromIndex,
-            toCategoryId,
-            toIndex,
-            movedItemId,
-          });
+          // Check if the moved item is the same as the destination category
+          if (movedItemId === toCategoryId) {
+            console.log(
+              `Move reverted: Moved item ${movedItemId} cannot be in the same category.`
+            );
+            revert = true;
+          }
 
-          onMove(
-            "categories",
-            fromCategoryId,
-            fromIndex,
-            toCategoryId,
-            toIndex,
-            movedItemId // Pass the moved item ID to onMove
-          );
+          console.log("hoofdcategorie to index Column: ", toIndex);
+
+          // Trigger onMove only if fromCategoryId is not equal to toCategoryId or fromIndex differs from toIndex
+          if (fromCategoryId !== toCategoryId || fromIndex !== toIndex) {
+            console.log({
+              fromCategoryId,
+              fromIndex,
+              toCategoryId,
+              toIndex,
+              movedItemId,
+              revert,
+            });
+
+            onMove(
+              "categories",
+              fromCategoryId,
+              fromIndex,
+              toCategoryId,
+              toIndex,
+              movedItemId,
+              revert
+            );
+          }
         },
       });
     }
@@ -82,39 +91,34 @@
         animation: 150,
         handle: ".drag",
         onEnd: (event) => {
-          console.log(event);
-          console.log("from", event.from.dataset.id);
-          console.log("to", event.to.dataset.id);
-
-          const fromCategoryId = event.from.dataset.id
-            ? event.from.dataset.id
-            : null;
+          const fromCategoryId = event.from.dataset.id || null;
           const fromIndex = event.oldIndex;
           const toCategoryId =
-            event.to.dataset.id == event.from.dataset.id
-              ? false
+            event.to.dataset.id === event.from.dataset.id
+              ? null
               : event.to.dataset.id;
           const toIndex = event.newIndex;
-
-          // Get the ID of the moved item
           const movedItemId = event.item.dataset.id;
 
-          console.log({
-            fromCategoryId,
-            fromIndex,
-            toCategoryId,
-            toIndex,
-            movedItemId,
-          });
+          // Trigger onMove only if fromCategoryId is not equal to toCategoryId or fromIndex differs from toIndex
+          if (fromCategoryId !== toCategoryId || fromIndex !== toIndex) {
+            console.log({
+              fromCategoryId,
+              fromIndex,
+              toCategoryId,
+              toIndex,
+              movedItemId,
+            });
 
-          onMove(
-            "templates",
-            fromCategoryId,
-            fromIndex,
-            toCategoryId,
-            toIndex,
-            movedItemId
-          );
+            onMove(
+              "templates",
+              fromCategoryId,
+              fromIndex,
+              toCategoryId,
+              toIndex,
+              movedItemId
+            );
+          }
         },
       });
     }
@@ -148,7 +152,11 @@
 </script>
 
 <div class="column">
-  <span class="label">Subcategorieën</span>
+  {#if level == 0}
+    <span class="label">Categorieën</span>
+  {:else}
+    <span class="label">Subcategorieën</span>
+  {/if}
   <div class="items categories">
     <div
       class="items_inner"

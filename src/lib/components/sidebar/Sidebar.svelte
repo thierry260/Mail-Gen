@@ -61,6 +61,7 @@
   //     data = $templatesStore.map((category) => ({
   //       ...category,
   //     }));
+  //     data.forEach((item) => expandParents(item, currentId, currentType));
   //   }
   // }
 
@@ -90,6 +91,11 @@
       }));
       data.forEach((item) => expandParents(item, currentId, currentType));
       templatesStore.set(data); // Initialize the store with the data
+
+      //     data = $templatesStore.map((category) => ({
+      //       ...category,
+      //     }));
+
       storeLoaded = true;
     } else {
       console.log("Categories not found");
@@ -137,19 +143,21 @@
 
   const toggleAll = () => {
     areAllOpen = !areAllOpen;
-    data = data.map((category) => ({
-      ...category,
-      open: areAllOpen,
-      sub: category.sub
-        ? category.sub.map((sub) => ({ ...sub, open: areAllOpen }))
-        : category.sub,
-      templates: category.templates
-        ? category.templates.map((template) => ({
-            ...template,
-            open: areAllOpen,
-          }))
-        : category.templates,
-    }));
+    templatesStore.update((categories) =>
+      categories.map((category) => ({
+        ...category,
+        open: areAllOpen,
+        sub: category.sub
+          ? category.sub.map((sub) => ({ ...sub, open: areAllOpen }))
+          : category.sub,
+        templates: category.templates
+          ? category.templates.map((template) => ({
+              ...template,
+              open: areAllOpen,
+            }))
+          : category.templates,
+      }))
+    );
   };
   // Logout function
   const logout = async () => {
@@ -192,7 +200,7 @@
 
         if (newCategory) {
           console.log(`New category created successfully:`, newCategory);
-          data = [...data, newCategory];
+          templatesStore.update((templates) => [...templates, newCategory]);
           toast.success("Hoofdcategorie toegevoegd", {
             position: "bottom-right",
           });
@@ -217,7 +225,7 @@
         <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
       </figure>
       <div class="hide_on_compact">
-        <h6>Mail Gen</h6>
+        <h6>MailGen</h6>
         <small>Early access</small>
       </div>
     </a>
@@ -245,7 +253,7 @@
     </span>
     <div class="templates_items">
       {#if Array.isArray(data)}
-        {#each data as item}
+        {#each $templatesStore as item}
           <SidebarItem bind:item {currentId} {currentType} />
         {/each}
       {:else}
@@ -486,6 +494,10 @@
       // text-align: center;
       // justify-content: center;
       // font-size: 1.4rem;
+      transition: background-color 0.2s ease-out;
+      &:hover {
+        background-color: var(--gray-100);
+      }
     }
 
     .sidebar-bottom {

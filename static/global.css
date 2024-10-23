@@ -489,7 +489,9 @@ main:has(.home) nav:first-child {
 [data-tooltip=""]::after, [data-tooltip=""]::before {
   display: none !important;
 }
-
+.preview-content p {
+  color: #555555;
+}
 .preview-content p:empty {
   display: flex;
   height: 1.5em;
