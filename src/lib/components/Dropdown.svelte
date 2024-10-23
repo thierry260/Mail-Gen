@@ -309,4 +309,34 @@
     display: inline-block;
     margin-right: 8px;
   }
+
+  :global(
+      .templates_items
+        > .accordion_item:last-of-type
+        > .accordion_header:not(.open)
+        ul.dropdown_list,
+      .templates_items
+        > .accordion_item:last-of-type
+        > div:last-child
+        > *
+        ul.dropdown_list
+    ) {
+    top: unset;
+    bottom: calc(100% + 10px);
+
+    &::before {
+      top: unset;
+      bottom: 0;
+      border-width: 6px 5px 0 5px;
+      border-color: #fff transparent transparent transparent;
+      transform: translateY(100%);
+    }
+    &::after {
+      top: unset;
+      bottom: 0;
+      border-width: 7px 6px 0 6px;
+      border-color: #e6e6e6 transparent transparent transparent;
+      transform: translateY(100%);
+    }
+  }
 </style>

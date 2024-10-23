@@ -77,7 +77,6 @@
   };
 
   const updateTemplates = () => {
-    console.log("$templatesStore updated", $templatesStore);
     const category = findCategoryById(categories, id);
     if (category) {
       templates = extractTemplates(category);
