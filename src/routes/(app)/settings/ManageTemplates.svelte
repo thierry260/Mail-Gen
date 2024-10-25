@@ -318,6 +318,7 @@
     }
 
     if (revert) {
+      console.log("revert");
       templatesStore.set(previousTemplates);
 
       setTimeout(() => {
@@ -387,6 +388,7 @@
 
         // Update the templatesStore using the recursive function
         templatesStore.update((cats) => updateNameRecursively(cats));
+        // refreshDOM();
       };
 
       // Event listeners for saving the new name
@@ -484,6 +486,7 @@
     if (!categoryId) {
       templatesStore.update((cats) => [...cats, newCategory]);
       console.log(categoryId);
+      refreshDOM();
     } else {
       templatesStore.update((cats) => {
         const updatedCats = addToSubCategories(
@@ -539,37 +542,13 @@
   };
 
   const refreshDOM = async () => {
+    // return;
+
     console.log("Item added to subcategories");
 
     categories = [];
 
     await tick(); // Wait for DOM updates
-
-    // document.querySelector(".template_columns .column:nth-child(2)")?.remove();
-
-    // const activeMainCat = document.querySelector(
-    //     ".template_columns .column:first-child .category.active"
-    // );
-
-    // if (!activeMainCat) {
-    //     console.error("No active main category found.");
-    //     return; // Exit if there's no active category
-    // }
-
-    // const nextMainCat = activeMainCat.nextElementSibling;
-
-    // if (nextMainCat) {
-    //     activeMainCat.classList.remove("active");
-
-    //     const clickEvent = new MouseEvent("click", {
-    //         bubbles: true,
-    //         cancelable: true,
-    //         view: window,
-    //     });
-    //     nextMainCat.dispatchEvent(clickEvent);
-    // } else {
-    //     console.error("No next main category found.");
-    // }
 
     categories = [...$templatesStore];
 
@@ -595,7 +574,7 @@
               );
             }
           },
-          200 + index * 100
+          100 + index * 100
         );
       });
     }, 100);
@@ -688,9 +667,11 @@
     }
   }
 
-  .template_columns {
+  .template_columns.template_columns {
     --gap: 2rem;
     --columns: 3;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
     display: grid;
     overflow-x: auto;
     grid-auto-columns: calc(
@@ -700,10 +681,30 @@
     grid-column-gap: var(--gap, 2rem);
     grid-template-rows: minmax(0, 1fr);
 
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    scrollbar-width: none; /* Firefox */
+    // -ms-overflow-style: none; /* Internet Explorer 10+ */
+    // scrollbar-width: none; /* Firefox */
+    // &::-webkit-scrollbar {
+    //   display: none; /* Safari and Chrome */
+    // }
+
+    /* ===== Scrollbar CSS ===== */
+    // scrollbar-width: auto;
+    // scrollbar-color: #ebebeb #ffffff;
+
+    /* Chrome, Edge, and Safari */
     &::-webkit-scrollbar {
-      display: none; /* Safari and Chrome */
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.15);
+      border-radius: 10px;
+      border: px solid transparent;
     }
 
     @media (max-width: $md) {

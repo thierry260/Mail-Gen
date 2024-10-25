@@ -11,7 +11,7 @@
   import { templatesStore } from "$lib/stores/templates";
   import { onDestroy } from "svelte";
 
-  let unsubscribe;
+  // let unsubscribe;
 
   // unsubscribe = templatesStore.subscribe((value) => {
   //   const itemFromStore = value.find((cat) => cat.id === item.id);

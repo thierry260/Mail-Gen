@@ -650,6 +650,11 @@
     animation: addTopPadding 0.5s ease-out 1s forwards; /* Animation with delay and forwards */
   }
 
+  :global(.toaster .message) {
+    font-size: 1.4rem;
+    margin: 4px 4px 4px 8px;
+  }
+
   @keyframes addTopPadding {
     0% {
       padding-top: 0px;

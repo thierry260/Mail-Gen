@@ -12,8 +12,10 @@
   import { writable } from "svelte/store";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { tick } from "svelte";
 
   let workspaceId = "";
+  let workspaceInput = false;
   let workspaceName = "";
   let email = "";
   let password = "";
@@ -21,6 +23,10 @@
   let lastName = "";
   let errorMessage = writable("");
   let isInvited = false;
+
+  $: if ($page.url.searchParams.has("email")) {
+    email = $page.url.searchParams.get("email");
+  }
 
   $: if ($page.url.searchParams.has("id")) {
     const workspaceReferral = atob($page.url.searchParams.get("id")).split(",");
@@ -38,6 +44,12 @@
         workspaceName = "Unknown Workspace";
       }
     })();
+  }
+
+  $: if (workspaceInput) {
+    tick().then(() => {
+      workspaceInput.focus(); // Focus the input after the DOM updates
+    });
   }
 
   async function register() {
@@ -231,6 +243,7 @@
         placeholder="&nbsp;"
         type="text"
         id="workspaceName"
+        bind:this={workspaceInput}
         bind:value={workspaceName}
         required
       />

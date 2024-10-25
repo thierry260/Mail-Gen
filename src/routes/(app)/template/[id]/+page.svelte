@@ -1,5 +1,6 @@
 <script>
   import { onMount, onDestroy } from "svelte";
+  import { beforeNavigate } from "$app/navigation";
   import { page } from "$app/stores";
   import { writable } from "svelte/store";
   import { goto } from "$app/navigation";
@@ -15,6 +16,7 @@
   import { user } from "$lib/stores/user";
   import toast from "svelte-french-toast";
   import Sortable from "sortablejs";
+  import { tick } from "svelte";
 
   import {
     Star,
@@ -49,6 +51,7 @@
   import introJs from "intro.js";
 
   let id;
+  let changesMade = false;
   let templateData = {};
   let templateContentHTML = "";
   let workspaceVariables = { variables: {} }; // Ensure workspaceVariables is initialized with a default structure
@@ -333,6 +336,12 @@
             sort: false, // Disable sorting within the list
             animation: 150,
             draggable: "li", // Draggable items are <li> elements
+            onClone(evt) {
+              console.log("onClone: ", evt);
+            },
+            onMove(evt) {
+              console.log("onMove: ", evt);
+            },
             onEnd(evt) {
               // This gets triggered when an item is dropped into another container
               const item = evt.item;
@@ -341,9 +350,18 @@
               const placeholder = item.getAttribute("data-placeholder");
 
               console.log(evt);
+              console.log("target: ", evt.originalEvent.target);
+              const target = evt.originalEvent.target;
 
-              // Insert the variable into the tiptap editor
-              insertVariable({ id, variable, placeholder });
+              // console.log(evt.clone.)
+              if (target.classList.contains("tiptap")) {
+                // Insert the variable into the tiptap editor
+                insertVariable({ id, variable, placeholder });
+              } else {
+                toast.error("Ongeldige locatie", {
+                  position: "bottom-right",
+                });
+              }
             },
           });
         }
@@ -389,6 +407,7 @@
 
     shouldShow = false;
     editingVariable = false;
+    changesMade = false;
 
     editor = new Editor({
       content: templateData.content,
@@ -430,12 +449,37 @@
 
                 triggerEditorChange();
               },
+              "Mod-Shift-.": (e) => {
+                shouldShow = true; // Show the bubble menu
+
+                triggerEditorChange();
+              },
+              // "{": (e) => {
+              //   shouldShow = true; // Show the bubble menu
+
+              //   triggerEditorChange(true);
+              // },
             };
           },
         }),
       ],
+      // editorProps: {
+      //   handleTextInput(view, from, to, text) {
+      //     console.log("handleTextInput", text);
+      //     if (text == "{") {
+      //       shouldShow = true; // Show the bubble menu
+      //       triggerEditorChange();
+      //       return true;
+      //     } else {
+      //       return false;
+      //     }
+      //   },
+      // },
       onTransaction: () => {
         editor = editor; // force re-render so `editor.isActive` works as expected
+      },
+      onUpdate({ editor }) {
+        changesMade = true;
       },
     });
 
@@ -509,18 +553,25 @@
     }
   };
 
-  const triggerEditorChange = () => {
+  const triggerEditorChange = async (backspace = false) => {
     const { state, view } = editor;
     const { from, to } = state.selection; // Get the current cursor position
 
     if (from == to) {
-      editor
-        .chain()
-        .focus()
-        .insertContent(" ") // Insert the space
-        .run();
-      document.execCommand("delete");
-      editor.chain().focus().run(); // Execute the selection
+      if (backspace) {
+        await tick();
+        await tick();
+        // document.execCommand("delete");
+        // editor.chain().focus().run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .insertContent(" ") // Insert the space
+          .run();
+        document.execCommand("delete");
+        editor.chain().focus().run(); // Execute the selection
+      }
     }
   };
 
@@ -551,10 +602,13 @@
 
     // Check for Escape key
     if (event.key === "Escape") {
-      if (shouldShow) {
-        shouldShow = false;
-        editingVariable = false;
-        triggerEditorChange();
+      if (editor) {
+        editor.chain().focus().run();
+      }
+      shouldShow = false; // Show the bubble menu
+      editingVariable = false;
+      if (event.target.classList.contains("variables_list_input")) {
+        variablesListSearch.set("");
       }
     }
   }
@@ -580,6 +634,25 @@
     document.removeEventListener("keydown", handleKeyDown);
     if (editor) {
       editor.destroy();
+    }
+
+    if (changesMade) {
+      console.log("you forgot to save changes");
+    }
+  });
+
+  beforeNavigate(({ cancel }) => {
+    if (changesMade) {
+      if (
+        !confirm(
+          "Weet je zeker dat je deze pagina wilt verlaten? Je hebt onopgeslagen wijzigingen die verloren zullen gaan."
+        )
+      ) {
+        cancel();
+        isEditMode = true;
+      } else {
+        changesMade = false;
+      }
     }
   });
 
@@ -1130,6 +1203,7 @@
       startEditTemplateTour();
       // Add #edit to the current URL
       goto(`${window.location.pathname}#edit`, { replaceState: true });
+      changesMade = false;
     } else {
       // Remove #edit from the URL
       goto(window.location.pathname, { replaceState: true });
@@ -1203,6 +1277,8 @@
           createdAt: new Date(),
         });
       }
+
+      changesMade = false;
 
       toggleEditMode();
 
@@ -1428,140 +1504,147 @@
         <span>Template naam</span>
       </label>
 
-      <div class="edit_template_main">
-        <div class="editor_outer">
-          {#if editor}
-            <div class="editor_buttons">
-              <div class="formatting">
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleHeading({ level: 5 }).run()}
-                  class:active={editor.isActive("heading", { level: 5 })}
-                >
-                  H
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().setParagraph().run()}
-                  class:active={editor.isActive("paragraph")}
-                >
-                  P
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().toggleBold().run()}
-                  class:active={editor.isActive("bold")}
-                >
-                  B
-                </button>
-                <button
-                  on:click={() => editor.chain().focus().toggleItalic().run()}
-                  class:active={editor.isActive("italic")}
-                >
-                  I
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleUnderline().run()}
-                  class:active={editor.isActive("underline")}
-                >
-                  U
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleBulletList().run()}
-                  class:active={editor.isActive("bulletList")}
-                >
-                  <ListBullets size="14" />
-                </button>
-                <button
-                  on:click={() =>
-                    editor.chain().focus().toggleOrderedList().run()}
-                  class:active={editor.isActive("orderedList")}
-                >
-                  <ListNumbers size="14" />
-                </button>
-              </div>
-              <div class="actions">
-                <button
-                  on:click={() => editor.chain().focus().undo().run()}
-                  class:disabled={!editor.can().undo()}
-                  ><ArrowUUpLeft size="18" /></button
-                >
-                <button
-                  on:click={() => editor.chain().focus().redo().run()}
-                  class:disabled={!editor.can().redo()}
-                  ><ArrowUUpRight size="18" /></button
-                >
-              </div>
-            </div>
-          {/if}
-          <div class="editor" bind:this={editorElement}>
-            <button
-              class="button outline add_variable"
-              on:click={() => {
-                // shouldShow = true; // Show the bubble menu
-                if (editor) {
-                  editor.chain().focus().run();
-                }
-                shouldShow = true; // Show the bubble menu
-              }}
-            >
-              <!-- <BracketsCurly size={16} /> -->
-              + Voeg variabele toe
-              <div class="shortcut-bubble">
-                {isMac ? "Cmd" : "Ctrl"}+Shift+[
-              </div></button
-            >
-          </div>
-        </div>
-        {#if workspaceVariables.variables}
-          <div class="variables_list">
-            <label class="variables_list_top">
-              <input
-                type="checkbox"
-                name="toggle_variables_list"
-                id="toggle_variables_list"
-              />
-              <span class="flex caret"><CaretRight size={16} /></span>
-              <span class="label">Beschikbare variabelen</span>
-              <a href="/settings" target="_blank" class="flex"
-                ><GearSix size={16} /></a
+    <div class="edit_template_main">
+      <div class="editor_outer">
+        {#if editor}
+          <div class="editor_buttons">
+            <div class="formatting">
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleHeading({ level: 5 }).run()}
+                class:active={editor.isActive("heading", { level: 5 })}
               >
-            </label>
-            <div class="variables_list_content">
+                H
+              </button>
+              <button
+                on:click={() => editor.chain().focus().setParagraph().run()}
+                class:active={editor.isActive("paragraph")}
+              >
+                P
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleBold().run()}
+                class:active={editor.isActive("bold")}
+              >
+                B
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleItalic().run()}
+                class:active={editor.isActive("italic")}
+              >
+                I
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleUnderline().run()}
+                class:active={editor.isActive("underline")}
+              >
+                U
+              </button>
+              <button
+                on:click={() => editor.chain().focus().toggleBulletList().run()}
+                class:active={editor.isActive("bulletList")}
+              >
+                <ListBullets size="14" />
+              </button>
+              <button
+                on:click={() =>
+                  editor.chain().focus().toggleOrderedList().run()}
+                class:active={editor.isActive("orderedList")}
+              >
+                <ListNumbers size="14" />
+              </button>
+            </div>
+            <div class="actions">
+              <button
+                on:click={() => editor.chain().focus().undo().run()}
+                class:disabled={!editor.can().undo()}
+                ><ArrowUUpLeft size="18" /></button
+              >
+              <button
+                on:click={() => editor.chain().focus().redo().run()}
+                class:disabled={!editor.can().redo()}
+                ><ArrowUUpRight size="18" /></button
+              >
+            </div>
+          </div>
+        {/if}
+        <div class="editor" bind:this={editorElement}>
+          <button
+            class="button outline add_variable"
+            on:click={() => {
+              // shouldShow = true; // Show the bubble menu
+              if (editor) {
+                editor.chain().focus().run();
+              }
+              shouldShow = true; // Show the bubble menu
+            }}
+          >
+            <!-- <BracketsCurly size={16} /> -->
+            + Voeg variabele toe
+            <div class="shortcut-bubble">
+              {isMac ? "Cmd" : "Ctrl"}+Shift+[
+            </div></button
+          >
+        </div>
+      </div>
+      {#if workspaceVariables.variables}
+        <div class="variables_list">
+          <label class="variables_list_top">
+            <input
+              type="checkbox"
+              name="toggle_variables_list"
+              id="toggle_variables_list"
+            />
+            <span class="flex caret"><CaretRight size={16} /></span>
+            <span class="label">Beschikbare variabelen</span>
+            <a href="/settings" target="_blank" class="flex"
+              ><GearSix size={16} /></a
+            >
+          </label>
+          <div class="variables_list_content">
+            <div class="variables_list_input_outer">
               <input
                 type="text"
                 placeholder="Zoek variabelen"
                 bind:value={$variablesListSearch}
-                class="search-input"
+                class="search-input variables_list_input"
               />
-              <ul id="variables_list_ul">
-                {#if filteredVariables.length}
-                  {#each filteredVariables as [id, data]}
-                    <li
-                      class="variable draggable"
-                      data-id={id}
-                      data-variable={data.field_name}
-                      data-placeholder={data.placeholder}
-                      on:click={() =>
-                        insertVariable({
-                          id: id,
-                          variable: data.field_name,
-                          placeholder: data.placeholder,
-                        })}
-                    >
-                      <span class="flex"><DotsSixVertical size={16} /></span>
-                      {data.field_name}
-                    </li>
-                  {/each}
-                {:else}
-                  <p class="empty">Geen variabelen gevonden</p>
-                {/if}
-              </ul>
+              <div
+                class="shortcut-bubble"
+                on:click={() => variablesListSearch.set("")}
+              >
+                Esc
+              </div>
             </div>
+            <ul id="variables_list_ul">
+              {#if filteredVariables.length}
+                {#each filteredVariables as [id, data]}
+                  <li
+                    class="variable draggable"
+                    data-id={id}
+                    data-variable={data.field_name}
+                    data-placeholder={data.placeholder}
+                    on:click={() =>
+                      insertVariable({
+                        id: id,
+                        variable: data.field_name,
+                        placeholder: data.placeholder,
+                      })}
+                  >
+                    <span class="flex"><DotsSixVertical size={16} /></span>
+                    {data.field_name}
+                  </li>
+                {/each}
+              {:else}
+                <p class="empty">Geen variabelen gevonden</p>
+              {/if}
+            </ul>
           </div>
-        {/if}
-      </div>
-      <div class="buttons edit_buttons">
+        </div>
+      {/if}
+    </div>
+    <div class="buttons edit_buttons">
+      <span data-flow="top" data-tooltip="Wijzigingen ongedaan maken">
         <button class="button basic has_text" on:click={toggleEditMode}>
           <X size="18" />Annuleren
         </button>
@@ -1842,6 +1925,10 @@
     justify-content: center;
     z-index: 5;
 
+    [data-tooltip] button {
+      height: 100%;
+    }
+
     @media (max-width: $lg) {
       bottom: -30px;
     }
@@ -2049,7 +2136,6 @@
       background-repeat: no-repeat;
       background-size: 16px;
       // margin-top: 10px;
-      margin-bottom: 10px;
       padding: 8px;
       padding-left: 30px;
       width: 100%;
@@ -2076,6 +2162,33 @@
       li {
         .variable {
         }
+      }
+    }
+
+    .variables_list_input_outer {
+      position: relative;
+      margin-bottom: 10px;
+      .shortcut-bubble {
+        opacity: 0;
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-75%);
+        background-color: var(--gray-200);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 1.3rem;
+        color: var(--gray-600);
+        pointer-events: none;
+        transition:
+          opacity 0.2s ease-out,
+          transform 0.2s ease-out;
+      }
+
+      input:not(:placeholder-shown) + .shortcut-bubble {
+        opacity: 1;
+        transform: translateY(-50%);
+        pointer-events: auto;
       }
     }
 
