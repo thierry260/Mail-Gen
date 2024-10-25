@@ -59,12 +59,13 @@
     }, 100);
   };
 
-  // Recursive function to search through categories and templates
   const searchItems = (items, query) => {
     let results = [];
+    const lowerCaseQuery = query.toLowerCase();
+
     items.forEach((item) => {
-      // Check if the item matches the query
-      if (item.name.toLowerCase().includes(query.toLowerCase())) {
+      // Check if the category name includes the search query
+      if (item.name.toLowerCase().includes(lowerCaseQuery)) {
         results.push({
           type: "category",
           id: item.id,
@@ -72,25 +73,59 @@
         });
       }
 
-      // Check subcategories recursively
+      // Recursively search in subcategories
       if (item.sub) {
         results = results.concat(searchItems(item.sub, query));
       }
 
-      // Check templates
+      // Search within templates
       if (item.templates) {
         item.templates.forEach((template) => {
-          if (template.name.toLowerCase().includes(query.toLowerCase())) {
+          const contentString = JSON.stringify(
+            template.content || ""
+          ).toLowerCase();
+
+          // Check if template name or content contains the search query
+          if (
+            template.name.toLowerCase().includes(lowerCaseQuery) ||
+            contentString.includes(lowerCaseQuery)
+          ) {
             results.push({
               type: "template",
               id: template.id,
               name: template.name,
+              matchedContent: contentString.includes(lowerCaseQuery)
+                ? "Matched in content"
+                : "",
             });
           }
         });
       }
     });
-    return results.slice(0, 6); // Limit to maximum 6 results
+
+    return results.slice(0, 6); // Return the top 6 results for simplicity
+  };
+
+  // Helper function to search in the content array
+  const searchInContent = (contentArray, query) => {
+    let matches = [];
+
+    const searchRecursively = (array) => {
+      array.forEach((item) => {
+        if (Array.isArray(item)) {
+          // If item is an array, search recursively
+          searchRecursively(item);
+        } else if (
+          typeof item === "string" &&
+          item.toLowerCase().includes(query)
+        ) {
+          matches.push(item);
+        }
+      });
+    };
+
+    searchRecursively(contentArray);
+    return matches; // Return found matches
   };
 
   // Function to navigate based on suggestion type

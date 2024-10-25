@@ -24,6 +24,32 @@
   export let onAddCategory;
   export let onAddTemplate;
 
+  // let unsubscribe;
+
+  // unsubscribe = templatesStore.subscribe((value) => {
+  //   const itemFromStore = value.find((cat) => cat.id === id);
+  //   if (itemFromStore) {
+  //     if (categories != itemFromStore.sub) {
+  //       console.log("old categories: ", categories);
+  //       categories = itemFromStore.sub;
+  //       console.log("new categories: ", categories);
+  //       console.log(
+  //         `${itemFromStore.id} - ${itemFromStore.name} categories updated`
+  //       );
+  //     }
+  //     if (templates != itemFromStore.templates) {
+  //       templates = itemFromStore.templates;
+  //       console.log(
+  //         `${itemFromStore.id} - ${itemFromStore.name} templates updated`
+  //       );
+  //     }
+  //   }
+  // });
+
+  // onDestroy(() => {
+  //   unsubscribe();
+  // });
+
   let categoriesContent, templatesContent;
   let newCategoryName = "";
   let newTemplateName = "";
@@ -176,9 +202,20 @@
             on:click={() => onSelect(level, category)}
           >
             <span class="icon drag"><DotsSixVertical size={16} /></span>
-            <span class="icon type"
-              ><FolderSimple size={16} weight="bold" /></span
+            <div
+              class="folder_outer"
+              data-tooltip={category.sub.length === 0 &&
+              category.templates.length === 0
+                ? "Leeg"
+                : `${category.sub.length > 0 ? `${category.sub.length} ${category.sub.length === 1 ? "categorie" : "categorieën"}` : ""}${category.sub.length > 0 && category.templates.length > 0 ? " • " : ""}${category.templates.length > 0 ? `${category.templates.length} ${category.templates.length === 1 ? "template" : "templates"}` : ""}`}
+              data-flow="top"
             >
+              <span
+                class="icon type folder"
+                data-count={category.sub.length + category.templates.length}
+                ><FolderSimple size={20} /></span
+              >
+            </div>
             <span class="name">{category.name}</span>
             <span class="actions">
               <span
@@ -238,7 +275,7 @@
                 <DotsSixVertical size={16} />
               </span>
               <span class="icon type">
-                <File size={16} weight="bold" />
+                <File size={18} />
               </span>
               <span class="name">{template.name}</span>
               <span class="actions">
@@ -269,15 +306,15 @@
           {/each}
         {/if}
       </div>
-      <div class="add_button_outer">
-        <input
-          class="button simple add_button add_temp"
-          placeholder="+ Template"
-          bind:value={newTemplateName}
-          on:keypress={(e) => e.key === "Enter" && addTemplate()}
-        />
-        <button class="button basic" on:click={addTemplate}>Toevoegen</button>
-      </div>
+    </div>
+    <div class="add_button_outer">
+      <input
+        class="button simple add_button add_temp"
+        placeholder="+ Template"
+        bind:value={newTemplateName}
+        on:keypress={(e) => e.key === "Enter" && addTemplate()}
+      />
+      <button class="button basic" on:click={addTemplate}>Toevoegen</button>
     </div>
   {/if}
 </div>
@@ -303,10 +340,11 @@
       transition: grid-template-rows 0.2s ease-out;
       .add_button.add_button {
         width: 100%;
-        padding: 10px 0;
+        padding: 5px 0 10px;
         border: none;
         outline: none;
         box-shadow: none;
+        font-size: 1.5rem;
       }
       button {
         overflow: hidden;
@@ -394,14 +432,54 @@
         display: flex;
       }
 
+      .folder_outer {
+        &[data-tooltip]::after {
+          transform: translate(-15px, 10px);
+        }
+        &[data-tooltip]:hover::after {
+          transform: translate(-15px, 0);
+        }
+      }
+
+      .folder {
+        position: relative;
+        &::after {
+          content: attr(data-count);
+          position: absolute;
+          top: 0;
+          left: 50%;
+          border-radius: 50%;
+          background-color: var(--gray-800);
+          color: #fff;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          width: 25px;
+          height: 25px;
+
+          top: 2px;
+          left: 0;
+          color: unset;
+          background-color: unset;
+          display: flex;
+          width: 20px;
+          height: 18px;
+          font-size: 0.8rem;
+          font-weight: 700;
+
+          // padding: 0 0 1px 1px;
+        }
+      }
+
       .type {
-        padding-right: 5px;
+        padding-right: 4px;
         color: var(--text);
       }
 
       .drag {
         padding: var(--padding);
-        padding-right: 5px;
+        padding-right: 4px;
         cursor: grab;
       }
       .name {
@@ -445,8 +523,11 @@
 
       &.template {
         cursor: unset;
+        background: #fff;
+        box-shadow: 0 0 0px 1px var(--border);
         &:hover {
           background-color: #e0e0e0;
+          background-color: var(--gray-100);
         }
       }
     }
