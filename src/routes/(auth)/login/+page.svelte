@@ -49,7 +49,7 @@
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
       const user = userCredential.user;
 
@@ -77,7 +77,7 @@
             if (userWorkspaceData.stripeCustomerId) {
               localStorage.setItem(
                 "stripeCustomerId",
-                userWorkspaceData.stripeCustomerId,
+                userWorkspaceData.stripeCustomerId
               );
             }
           }
@@ -101,13 +101,17 @@
     // Prompt user for email with pre-filled value
     const userEmail = window.prompt(
       "Voer je e-mailadres in om je wachtwoord te resetten:",
-      email,
+      email
     );
 
     // Check if user canceled the prompt or didn't provide an email
     if (userEmail) {
       try {
-        await sendPasswordResetEmail(auth, userEmail);
+        const actionCodeSettings = {
+          url: "https://app.mailgen.nl/login", // After password reset, the user will be give the ability to go back
+          handleCodeInApp: false,
+        };
+        await sendPasswordResetEmail(auth, userEmail, actionCodeSettings);
         toast.success("Reset link verstuurd", {
           position: "bottom-right",
         });

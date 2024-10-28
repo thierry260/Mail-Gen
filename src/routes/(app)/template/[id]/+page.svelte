@@ -66,6 +66,7 @@
   let variableSearchQuery = "";
   let newVariable = { field_name: "", placeholder: "" };
   let variableInput = false;
+  let placeholderField = false; // State to control placeholder field visibility
   let showPlaceholderField = false; // State to control placeholder field visibility
   let inputRefs = []; // Array to hold references to each input
   const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
@@ -78,11 +79,27 @@
   let focusedId = -1;
 
   $: {
+    if (!shouldShow) {
+      newVariable = { field_name: "", placeholder: "" };
+      variableSearchQuery = "";
+      showPlaceholderField = false;
+    }
+  }
+
+  $: {
     if (inputRefs[0]) {
       setTimeout(() => {
         inputRefs[0].focus();
         inputRefs[0].select();
       }, 50);
+    }
+  }
+
+  $: {
+    if (placeholderField) {
+      placeholderField.focus();
+    } else {
+      newVariable = { field_name: "", placeholder: "" };
     }
   }
 
@@ -355,7 +372,7 @@
               const target = evt.originalEvent.target;
 
               // console.log(evt.clone.)
-              if (target.classList.contains("tiptap")) {
+              if (target.closest(".tiptap")) {
                 // Insert the variable into the tiptap editor
                 insertVariable({ id, variable, placeholder });
               } else {
@@ -455,11 +472,13 @@
 
                 triggerEditorChange();
               },
-              // "{": (e) => {
-              //   shouldShow = true; // Show the bubble menu
+              "{": async (e) => {
+                shouldShow = true; // Show the bubble menu
+                // document.execCommand("delete");
+                await tick();
 
-              //   triggerEditorChange(true);
-              // },
+                triggerEditorChange();
+              },
             };
           },
         }),
@@ -576,41 +595,94 @@
     }
   };
 
-  // Function to handle key combination
   function handleKeyDown(event) {
-    // Check if the active element is an input or textarea
-    const isInputFocused =
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement;
-
-    // Check for Ctrl/Cmd + C
     if ((event.ctrlKey || event.metaKey) && event.key === "c") {
+      const isInputFocused =
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement;
+
       if (!isInputFocused && !isEditMode) {
-        // Only trigger if not focused on an input element
-        event.preventDefault(); // Prevent the default copy action
+        event.preventDefault();
         copyToClipboard(false);
       }
-      return; // Exit early to prevent further processing
+      return;
     }
 
-    if (!isEditMode) return; // Edit mode shortcuts below
+    if (!isEditMode) return;
 
-    // Check for Ctrl/Cmd + S
-    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
-      event.preventDefault(); // Prevent the default save action in the browser
-      saveTemplate(); // Trigger the saveTemplate function
+    switch (event.key) {
+      case "Escape":
+        if (editor) editor.chain().focus().run();
+        shouldShow = false;
+        setTimeout(() => {
+          editingVariable = false;
+        }, 250);
+
+        if (event.target.classList.contains("variables_list_input")) {
+          variablesListSearch.set("");
+        }
+        break;
+
+      case "s":
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          saveTemplate();
+        }
+        break;
     }
 
-    // Check for Escape key
-    if (event.key === "Escape") {
-      if (editor) {
-        editor.chain().focus().run();
-      }
-      shouldShow = false; // Show the bubble menu
-      editingVariable = false;
-      if (event.target.classList.contains("variables_list_input")) {
-        variablesListSearch.set("");
-      }
+    if (!shouldShow || showPlaceholderField) return;
+
+    const variableItems = document.querySelectorAll(".variable-item");
+    const inputFocused = document.activeElement === variableInput;
+    let currentIndex = -1;
+
+    if (variableItems.length) {
+      variableItems.forEach((item, index) => {
+        if (item === document.activeElement) currentIndex = index;
+      });
+    }
+
+    console.log("event.key", event.key);
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (inputFocused) {
+          if (!variableItems[1]) {
+            variableItems[0]?.focus();
+          } else {
+            variableItems[1]?.focus();
+          }
+        } else if (currentIndex < variableItems.length - 1) {
+          variableItems[currentIndex + 1].focus();
+        }
+        break;
+
+      case "ArrowUp":
+        if (currentIndex > 0) {
+          event.preventDefault();
+          variableItems[currentIndex - 1].focus();
+        } else if (currentIndex === 0) {
+          event.preventDefault();
+          variableInput.focus();
+        }
+        break;
+
+      case "Enter":
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (showPlaceholderField) {
+          addVariableAction(true);
+        } else if (variableItems) {
+          if (!inputFocused && currentIndex >= 0) {
+            variableItems[currentIndex].click();
+          } else if (inputFocused) {
+            variableItems[0]?.click();
+          }
+        }
+        break;
     }
   }
 
@@ -1115,19 +1187,6 @@
       }
     });
 
-    // If any fields are empty, show error toast and stop the function
-    if (hasEmptyFields) {
-      document.querySelector(".template .input")?.scrollIntoView({
-        behavior: "smooth", // Optional: Adds smooth scrolling effect
-        block: "center", // Optional: Scrolls the element into the center of the view
-      });
-
-      toast.error("Je hebt nog niet iedere variabele ingevuld", {
-        position: "bottom-right",
-      });
-      return;
-    }
-
     try {
       const htmlElement = document.querySelector(".preview-content");
 
@@ -1149,6 +1208,21 @@
           duration: 8000, // Display the success/error message for 5 seconds
         }
       );
+
+      // If any fields are empty, show error toast and stop the function
+      if (hasEmptyFields) {
+        document.querySelector(".template .input")?.scrollIntoView({
+          behavior: "smooth", // Optional: Adds smooth scrolling effect
+          block: "center", // Optional: Scrolls the element into the center of the view
+        });
+
+        setTimeout(() => {
+          toast("Let op: Niet iedere variabele ingevuld", {
+            // icon: "⚠️",
+            position: "bottom-right",
+          });
+        }, 1000); // 500ms delay
+      }
 
       if (openMail) {
         // Open the email client after copying
@@ -1397,6 +1471,7 @@
   };
 
   const addNewVariable = async () => {
+    showPlaceholderField = true;
     if (newVariable.field_name && newVariable.placeholder) {
       const id =
         "var_" +
@@ -1451,10 +1526,8 @@
 
   const handleVariableSearch = (e) => {
     variableSearchQuery = e.target.value;
-    console.log(workspaceVariables);
     let existingVariable = {};
     if (workspaceVariables.variables) {
-      console.log(workspaceVariables.variables);
       existingVariable = Object.entries(workspaceVariables.variables).filter(
         ([id, data]) =>
           data.field_name
@@ -1471,7 +1544,7 @@
       // If no existing variable is found, allow adding new variable
       selectedVariable = "";
       newVariable.field_name = variableSearchQuery;
-      showPlaceholderField = true;
+      // showPlaceholderField = true;
     } else {
       showPlaceholderField = false;
     }
@@ -1488,7 +1561,14 @@
     }
   };
 
-  const addVariableAction = async () => {
+  const addVariableAction = async (removeSelectedVariable = false) => {
+    if (removeSelectedVariable) {
+      selectedVariable = "";
+      newVariable.field_name = variableSearchQuery;
+    }
+
+    console.log({ newVariable });
+
     if (selectedVariable) {
       console.log(selectedVariable);
       insertVariable({
@@ -1496,7 +1576,7 @@
         variable: selectedVariable[1].field_name,
         placeholder: selectedVariable[1].placeholder,
       });
-    } else if (newVariable.field_name && newVariable.placeholder) {
+    } else if (newVariable.field_name && showPlaceholderField) {
       console.log("custom var");
       const newVariableData = await addNewVariable(); // Wait for the Promise to resolve
       if (newVariableData) {
@@ -1638,11 +1718,8 @@
               shouldShow = true; // Show the bubble menu
             }}
           >
-            <!-- <BracketsCurly size={16} /> -->
             + Voeg variabele toe
-            <div class="shortcut-bubble">
-              {isMac ? "Cmd" : "Ctrl"}+Shift+[
-            </div></button
+            <div class="shortcut-bubble">&#123;</div></button
           >
         </div>
       </div>
@@ -1721,33 +1798,68 @@
     <span
       class="close"
       on:click={() => {
-        if (editor) {
-          editor.chain().focus().run();
-        }
-        shouldShow = false; // Show the bubble menu
+        if (editor) editor.chain().focus().run();
+        shouldShow = false;
         editingVariable = false;
       }}><X size={10} /></span
     >
-    <input
-      type="text"
-      placeholder={editingVariable
-        ? "Variabele vervangen"
-        : "Variabele toevoegen"}
-      bind:value={variableSearchQuery}
-      bind:this={variableInput}
-      on:input={handleVariableSearch}
-      on:keypress={handleKeyPress}
-    />
+
+    <label class="input_wrapper">
+      <input
+        type="text"
+        placeholder="&nbsp;"
+        bind:value={variableSearchQuery}
+        bind:this={variableInput}
+        on:input={handleVariableSearch}
+        on:keydown={handleKeyDown}
+        on:keypress={(event) =>
+          event.key === "Enter" && addVariableAction(showPlaceholderField)}
+      />
+      <span class="add_var_span"
+        >{editingVariable ? "Variabele vervangen" : "Variabele toevoegen"}</span
+      >
+    </label>
+
     {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
-      <span class="label">Zoekresultaten</span>
       <ul>
-        {#each Object.entries(workspaceVariables.variables).filter( ([id, data]) => data.field_name
-              .toLowerCase()
-              .includes(variableSearchQuery.toLowerCase()) ) as [id, data]}
+        <!-- Add option to create new variable if no exact match -->
+        {#if !Object.values(workspaceVariables.variables).some(({ field_name }) => field_name.toLowerCase() === variableSearchQuery.toLowerCase())}
           <li
+            tabindex="0"
+            class="variable-item new"
+            on:click={() => (showPlaceholderField = true)}
+          >
+            <u>{variableSearchQuery}</u> aanmaken
+          </li>
+        {/if}
+
+        <!-- Sorting and filtering variables based on relevance -->
+        {#each Object.entries(workspaceVariables.variables)
+          .filter(([, data]) => data.field_name
+              .toLowerCase()
+              .includes(variableSearchQuery.toLowerCase()))
+          .sort(([, a], [, b]) => {
+            const query = variableSearchQuery.toLowerCase();
+            const nameA = a.field_name.toLowerCase();
+            const nameB = b.field_name.toLowerCase();
+
+            // Exact match prioritization
+            if (nameA === query) return -1;
+            if (nameB === query) return 1;
+
+            // Prefix match prioritization
+            if (nameA.startsWith(query) && !nameB.startsWith(query)) return -1;
+            if (nameB.startsWith(query) && !nameA.startsWith(query)) return 1;
+
+            // Substring match prioritization
+            return nameA.indexOf(query) - nameB.indexOf(query);
+          }) as [id, data]}
+          <li
+            tabindex="0"
+            class="variable-item"
             on:click={() =>
               insertVariable({
-                id: id,
+                id,
                 variable: data.field_name,
                 placeholder: data.placeholder,
               })}
@@ -1757,17 +1869,25 @@
         {/each}
       </ul>
     {/if}
+
     {#if showPlaceholderField}
-      <input
-        type="text"
-        placeholder="Placeholder"
-        bind:value={newVariable.placeholder}
-        on:keypress={handleKeyPress}
-      />
+      <label class="input_wrapper">
+        <input
+          type="text"
+          placeholder="&nbsp;"
+          bind:this={placeholderField}
+          bind:value={newVariable.placeholder}
+          on:keypress={(event) =>
+            event.key === "Enter" && addVariableAction(true)}
+        />
+        <span class="add_var_span">Plaatshouder</span>
+      </label>
+      <button
+        type="button"
+        class="button"
+        on:click={() => addVariableAction(true)}>Aanmaken</button
+      >
     {/if}
-    <!-- <button class="button simple" on:click={addVariableAction}
-      >+ Toevoegen</button
-    > -->
   </div>
 {:else}
   <div class="template">
@@ -2368,16 +2488,16 @@
 
   .popup {
     background-color: white;
-    padding: 10px;
     border-radius: var(--border-radius-biggest, 12px);
     border: 1px solid var(--border);
     // box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 10px;
     z-index: 999;
     max-width: 320px;
     width: 70vw;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
     outline: 100vmax solid rgba(0, 0, 0, 0.1);
     // margin-left: -20px;
 
@@ -2419,20 +2539,70 @@
       font-weight: 500;
     }
 
+    input:not(:is([type="checkbox"], [type="radio"])) {
+      padding-inline: 15px;
+    }
+
+    .input_wrapper {
+      input:not(:is([type="checkbox"], [type="radio"])) {
+        padding: 21px 15px 5px;
+        + .add_var_span {
+          // top: 50%;
+          left: 15px;
+        }
+      }
+      &:has(input:focus) > span,
+      &:focus-within > span,
+      & input:not(:placeholder-shown) + .add_var_span {
+        top: 1.25em;
+        opacity: 0.9;
+        font-size: 1.2rem;
+      }
+    }
+
+    .button {
+      font-size: 1.4rem;
+      padding-block: 10px;
+    }
+
     ul {
       list-style-type: none;
       padding: 0;
-    }
+      margin: 0 -10px -10px;
+      li {
+        padding: 13px 11px;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        border-left: 2px solid transparent;
+        cursor: pointer;
+        font-size: 1.4rem;
+        color: var(--gray-700);
+        transition:
+          background-color 0.2s ease-out,
+          border-color 0.2s ease-out;
+        &:focus-visible,
+        &:focus,
+        &:hover {
+          background-color: var(--gray-100);
+          border-left-color: var(--primary);
+          outline: none;
+        }
 
-    li {
-      padding: 10px;
-      background: #f0f0f0;
-      margin-bottom: 5px;
-      cursor: pointer;
-    }
+        &:last-child {
+          border-bottom: 0;
+          border-bottom-left-radius: var(--border-radius-biggest, 12px);
+          border-bottom-right-radius: var(--border-radius-biggest, 12px);
+        }
+      }
 
-    li:hover {
-      background: #e0e0e0;
+      &:not(:has(li:focus-within)),
+      &:not(:has(li:focus-visible)),
+      &:not(:has(li:focus)) {
+        &:not(:has(li:hover)) li:first-child {
+          background-color: var(--gray-100);
+          border-left-color: var(--primary);
+        }
+      }
     }
 
     &::before {

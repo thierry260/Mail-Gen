@@ -40,12 +40,6 @@
   let subscriptionIsTrial = false;
   let currentUser;
 
-  // Function to handle tab click and update URL
-  const setActiveTab = (tab) => {
-    activeTab = tab;
-    goto(`/settings?tab=${tab}`); // Update the URL with the active tab
-  };
-
   // Handle URL query parameters on page load
   $: if ($page.url.searchParams.get("tab")) {
     const urlTab = $page.url.searchParams.get("tab");
@@ -62,6 +56,28 @@
       subscriptionIsTrial = currentUser.subscriptionIsTrial;
       console.log("Reactivestatement true");
     }
+  }
+
+  // Function to handle tab click and update URL
+  const setActiveTab = (tab) => {
+    activeTab = tab;
+    goto(`/settings?tab=${tab}`); // Update the URL with the active tab
+  };
+
+  function copyToClipboard() {
+    navigator.clipboard
+      .writeText($inviteLink)
+      .then(() => {
+        console.log("Invite link copied to clipboard!");
+
+        toast.success("Uitnodigingslink gekopieerd", {
+          position: "bottom-right",
+        });
+        // Optionally, you can show a message to the user here
+      })
+      .catch((err) => {
+        console.error("Could not copy text: ", err);
+      });
   }
 
   // Fetch all workspace variables when the component mounts
@@ -229,9 +245,8 @@
       const inviteId = btoa(`${workspaceId},${inviteEmail}`);
       const link = `${window.location.origin}/get-mailgen?id=${inviteId}`;
       inviteLink.set(link);
-      toast.success("Uitnodigingslink gegenereerd", {
-        position: "bottom-right",
-      });
+
+      copyToClipboard();
     } catch (error) {
       toast.error(error.message, {
         position: "bottom-right",
@@ -518,7 +533,12 @@
         <p style="color: green">{$inviteSuccess}</p>
       {/if}
       {#if $inviteLink}
-        <p class="invite_link">
+        <p
+          class="invite_link"
+          data-tooltip="Klik om te kopiëren"
+          data-flow="top"
+          on:click={copyToClipboard}
+        >
           Uitnodigingslink: <a href={$inviteLink} target="_blank"
             >{$inviteLink}</a
           >
