@@ -13,6 +13,7 @@
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { tick } from "svelte";
+  import { user } from "$lib/stores/user";
 
   let workspaceId = "";
   let workspaceInput = false;
@@ -23,6 +24,12 @@
   let lastName = "";
   let errorMessage = writable("");
   let isInvited = false;
+
+  let currentUser;
+  $: {
+    currentUser = $user;
+    console.log("currentUser", currentUser);
+  }
 
   $: if ($page.url.searchParams.has("email")) {
     email = $page.url.searchParams.get("email");
@@ -74,7 +81,12 @@
             return;
           }
 
-          await createAndRegisterUser(workspaceRef);
+          // If the user is logged in, skip account creation
+          if (currentUser) {
+            await addLoggedInUserToWorkspace(workspaceRef);
+          } else {
+            await createAndRegisterUser(workspaceRef);
+          }
         } else {
           errorMessage.set(
             "Workspace does not exist. Please check the invite link."
@@ -183,7 +195,63 @@
     }
   }
 
-  async function createAndRegisterUser(workspaceRef) {
+  async function addLoggedInUserToWorkspace() {
+    try {
+      const userDocRef = doc(db, "users", currentUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const currentWorkspaces = Array.isArray(userData.workspaces)
+          ? userData.workspaces
+          : [];
+
+        // Check if user already has access to the workspace
+        if (!currentWorkspaces.includes(workspaceId)) {
+          // Add workspaceId to the user's workspaces array
+          await setDoc(
+            userDocRef,
+            { workspaces: [...currentWorkspaces, workspaceId] },
+            { merge: true }
+          );
+
+          // Extract first and last name from displayName, if available
+          let firstName, lastName;
+          if (currentUser.displayName) {
+            [firstName, ...lastName] = currentUser.displayName.split(" ");
+            lastName = lastName.join(" ") || null;
+          }
+
+          // Create a user object for the workspace document, omitting undefined fields
+          const userObject = {
+            email: currentUser.email,
+            role: "user",
+            ...(firstName && { first_name: firstName }),
+            ...(lastName && { last_name: lastName }),
+          };
+
+          // Add user to the invited workspace’s `users` subcollection
+          const usersRef = collection(db, "workspaces", workspaceId, "users");
+          await setDoc(doc(usersRef, currentUser.uid), userObject);
+
+          localStorage.setItem("workspace", workspaceId);
+          localStorage.removeItem("recentlyViewed");
+          localStorage.removeItem("cachedWorkspaceData");
+          localStorage.removeItem("cachedWorkspaceDataExpiration");
+
+          goto("/");
+        } else {
+          errorMessage.set("You already have access to this workspace.");
+        }
+      } else {
+        errorMessage.set("User data not found.");
+      }
+    } catch (error) {
+      errorMessage.set(`Failed to add user to workspace: ${error.message}`);
+    }
+  }
+
+  async function createAndRegisterUser() {
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
@@ -250,28 +318,31 @@
       <span>Bedrijfsnaam</span>
     </label>
   {/if}
-  <div class="input_columns" data-columns="2">
-    <label class="input_wrapper">
-      <input
-        placeholder="&nbsp;"
-        type="text"
-        id="firstName"
-        bind:value={firstName}
-        required
-      />
-      <span>Voornaam</span>
-    </label>
-    <label class="input_wrapper">
-      <input
-        placeholder="&nbsp;"
-        type="text"
-        id="lastName"
-        bind:value={lastName}
-        required
-      />
-      <span>Achternaam</span>
-    </label>
-  </div>
+
+  {#if !currentUser}
+    <div class="input_columns" data-columns="2">
+      <label class="input_wrapper">
+        <input
+          placeholder="&nbsp;"
+          type="text"
+          id="firstName"
+          bind:value={firstName}
+          required
+        />
+        <span>Voornaam</span>
+      </label>
+      <label class="input_wrapper">
+        <input
+          placeholder="&nbsp;"
+          type="text"
+          id="lastName"
+          bind:value={lastName}
+          required
+        />
+        <span>Achternaam</span>
+      </label>
+    </div>
+  {/if}
   <label class="input_wrapper">
     {#if isInvited}
       <input
@@ -293,22 +364,26 @@
     {/if}
     <span>E-mailadres</span>
   </label>
-  <label class="input_wrapper">
-    <input
-      placeholder="&nbsp;"
-      type="password"
-      id="password"
-      bind:value={password}
-      required
-    />
-    <span>Wachtwoord</span>
-  </label>
+  {#if !currentUser}
+    <label class="input_wrapper">
+      <input
+        placeholder="&nbsp;"
+        type="password"
+        id="password"
+        bind:value={password}
+        required
+      />
+      <span>Wachtwoord</span>
+    </label>
+  {/if}
   <button class="button" type="submit">
     {isInvited ? `Join ${workspaceName}` : "Workspace aanmaken"}
   </button>
-  <p class="form_note">
-    <small>Heb je al een workspace? </small><a href="/login">Inloggen</a>
-  </p>
+  {#if !currentUser && !isInvited}
+    <p class="form_note">
+      <small>Heb je al een workspace? </small><a href="/login">Inloggen</a>
+    </p>
+  {/if}
   {#if $errorMessage}
     <p style="color: red">{$errorMessage}</p>
   {/if}
@@ -363,5 +438,9 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    input[readonly][readonly] {
+      background-color: var(--gray-200);
+      cursor: not-allowed;
+    }
   }
 </style>

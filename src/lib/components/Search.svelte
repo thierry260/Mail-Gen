@@ -173,7 +173,8 @@
     if (
       event.key === "/" &&
       event.target.tagName !== "INPUT" &&
-      event.target.tagName !== "TEXTAREA"
+      event.target.tagName !== "TEXTAREA" &&
+      !event.target.classList.contains("tiptap")
     ) {
       event.preventDefault(); // Prevent default action (like typing `/` in the input)
       if (searchInputRef) {
