@@ -8,6 +8,7 @@
     FolderSimple,
     File,
     CaretRight,
+    ArrowSquareOut,
   } from "phosphor-svelte";
   import { templatesStore } from "$lib/stores/templates";
 
@@ -181,7 +182,7 @@
   {#if level == 0}
     <span class="label">Categorieën</span>
   {:else}
-    <span class="label">Subcategorieën</span>
+    <span class="label">{selectedCategory.name} - Subcategorieën</span>
   {/if}
   <div class="items categories">
     <div
@@ -254,7 +255,7 @@
   </div>
 
   {#if level > 0}
-    <span class="label">Templates</span>
+    <span class="label">{selectedCategory.name} - Templates</span>
     <div class="items templates">
       <div
         class="items_inner"
@@ -279,6 +280,15 @@
               </span>
               <span class="name">{template.name}</span>
               <span class="actions">
+                <span
+                  class="icon preview"
+                  on:click={(e) => {
+                    e.stopPropagation();
+                    window.open(`/template/${template.id}`, "_blank");
+                  }}
+                >
+                  <ArrowSquareOut size={14} />
+                </span>
                 <span
                   class="icon rename"
                   data-tooltip="Naam wijzigen"
