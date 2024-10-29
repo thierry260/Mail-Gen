@@ -76,7 +76,7 @@
 
           if (usersCount >= parseInt(workspaceDoc.data().usersNo, 10)) {
             errorMessage.set(
-              "Maximum number of users reached for this workspace."
+              "Het maximale aantal gebruikers voor deze workspace is bereikt"
             );
             return;
           }
@@ -89,7 +89,7 @@
           }
         } else {
           errorMessage.set(
-            "Workspace does not exist. Please check the invite link."
+            "Workspace bestaat niet. Controleer de uitnodigingslink."
           );
         }
       } else {
@@ -241,13 +241,15 @@
 
           goto("/");
         } else {
-          errorMessage.set("You already have access to this workspace.");
+          errorMessage.set("Je hebt al toegang tot deze workspace");
         }
       } else {
-        errorMessage.set("User data not found.");
+        errorMessage.set("Gebruikersgegevens niet gevonden");
       }
     } catch (error) {
-      errorMessage.set(`Failed to add user to workspace: ${error.message}`);
+      errorMessage.set(
+        `Het is niet gelukt om een ​​gebruiker toe te voegen aan workspace: ${error.message}`
+      );
     }
   }
 

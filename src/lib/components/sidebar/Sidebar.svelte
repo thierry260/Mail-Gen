@@ -143,22 +143,23 @@
 
   const toggleAll = () => {
     areAllOpen = !areAllOpen;
-    templatesStore.update((categories) =>
-      categories.map((category) => ({
-        ...category,
+
+    const setOpenRecursive = (items) =>
+      items.map((item) => ({
+        ...item,
         open: areAllOpen,
-        sub: category.sub
-          ? category.sub.map((sub) => ({ ...sub, open: areAllOpen }))
-          : category.sub,
-        templates: category.templates
-          ? category.templates.map((template) => ({
+        sub: item.sub ? setOpenRecursive(item.sub) : item.sub,
+        templates: item.templates
+          ? item.templates.map((template) => ({
               ...template,
               open: areAllOpen,
             }))
-          : category.templates,
-      }))
-    );
+          : item.templates,
+      }));
+
+    templatesStore.update((categories) => setOpenRecursive(categories));
   };
+
   // Logout function
   const logout = async () => {
     const auth = getAuth();
@@ -170,6 +171,7 @@
           key !== "favoriteTemplates" &&
           key !== "recentlyViewed" &&
           key !== "stripeCustomerId" &&
+          key !== "showTemplateContent" &&
           key !== "testMode"
         ) {
           localStorage.removeItem(key);
@@ -239,16 +241,18 @@
     <span class="label">
       Templates
       <div class="flex actions">
-        <button class="toggle-all-icon" on:click={toggleAll}>
+        <button
+          class="toggle-all-icon"
+          on:click={toggleAll}
+          data-tooltip="Alles {areAllOpen ? 'inklappen' : 'uitklappen'}"
+          data-flow="top"
+        >
           {#if areAllOpen}
             <ArrowsInLineVertical size={15} />
           {:else}
             <ArrowsOutLineVertical size={15} />
           {/if}
         </button>
-        <!-- <a href="/manage-templates" class="toggle-all-icon">
-          <GearSix size={15} />
-        </a> -->
       </div>
     </span>
     <div class="templates_items">
@@ -375,7 +379,7 @@
         align-items: center;
         gap: 5px;
         cursor: default; /* Default cursor for the label */
-        padding: 10px;
+        padding: 10px 0 10px 10px;
         min-height: 44px;
         background-color: transparent;
         border-radius: 10px;
@@ -391,7 +395,7 @@
         .actions {
           align-items: center;
           gap: 5px;
-          flex-grow: 1;
+          // flex-grow: 1;
           justify-content: space-between;
         }
 
@@ -405,10 +409,18 @@
         }
 
         .toggle-all-icon {
-          padding: 0;
+          margin: -5px -1px;
+          padding: 5px;
+          border-radius: 50%;
           flex-shrink: 0;
           cursor: pointer; /* Pointer cursor for the icon */
           color: inherit;
+          &:hover {
+            background-color: var(--gray-200);
+          }
+          &[data-tooltip]::after {
+            z-index: 11;
+          }
         }
       }
       .templates_items {

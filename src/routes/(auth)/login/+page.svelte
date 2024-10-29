@@ -34,12 +34,12 @@
         step = 2;
       } else {
         toast.error("Onbekende workspace", {
-          position: "bottom-right",
+          // position: "bottom-right",
         });
       }
     } catch (error) {
       toast.error(error.message, {
-        position: "bottom-right",
+        // position: "bottom-right",
       });
     }
   }
@@ -87,12 +87,12 @@
         goto("/");
       } else {
         toast.error("Geen toegang tot workspace", {
-          position: "bottom-right",
+          // position: "bottom-right",
         });
       }
     } catch (error) {
       toast.error("Inloggevens incorrect", {
-        position: "bottom-right",
+        // position: "bottom-right",
       });
     }
   }
@@ -109,15 +109,15 @@
       try {
         const actionCodeSettings = {
           url: "https://app.mailgen.nl/login", // After password reset, the user will be give the ability to go back
-          handleCodeInApp: false,
+          handleCodeInApp: true,
         };
         await sendPasswordResetEmail(auth, userEmail, actionCodeSettings);
         toast.success("Reset link verstuurd", {
-          position: "bottom-right",
+          // position: "bottom-right",
         });
       } catch (error) {
         toast.error("Er is iets fout gegaan. Controleer het e-mailadres.", {
-          position: "bottom-right",
+          // position: "bottom-right",
         });
       }
     } else {
