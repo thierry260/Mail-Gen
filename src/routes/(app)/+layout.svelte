@@ -1,4 +1,5 @@
 <script>
+  import { getAuth, signOut } from "firebase/auth";
   import { templatesStore } from "$lib/stores/templates";
   import { serialize } from "cookie";
   import { user } from "$lib/stores/user";
