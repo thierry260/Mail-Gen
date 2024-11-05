@@ -11,6 +11,7 @@
     ArrowSquareOut,
   } from "phosphor-svelte";
   import { templatesStore } from "$lib/stores/templates";
+  import { tick } from "svelte";
 
   export let id = "";
   export let selectedCategory = "";
@@ -25,31 +26,53 @@
   export let onAddCategory;
   export let onAddTemplate;
 
-  // let unsubscribe;
+  let unsubscribe;
 
-  // unsubscribe = templatesStore.subscribe((value) => {
-  //   const itemFromStore = value.find((cat) => cat.id === id);
-  //   if (itemFromStore) {
-  //     if (categories != itemFromStore.sub) {
-  //       console.log("old categories: ", categories);
-  //       categories = itemFromStore.sub;
-  //       console.log("new categories: ", categories);
-  //       console.log(
-  //         `${itemFromStore.id} - ${itemFromStore.name} categories updated`
-  //       );
-  //     }
-  //     if (templates != itemFromStore.templates) {
-  //       templates = itemFromStore.templates;
-  //       console.log(
-  //         `${itemFromStore.id} - ${itemFromStore.name} templates updated`
-  //       );
-  //     }
-  //   }
-  // });
+  unsubscribe = templatesStore.subscribe(async (value) => {
+    // Recursive function to find the item by id in nested arrays
+    function findItemById(arr, id) {
+      for (const item of arr) {
+        if (item.id === id) {
+          return item; // Return item if id matches
+        }
+        if (item.sub && item.sub.length) {
+          // Recursively search in the subcategories if they exist
+          const found = findItemById(item.sub, id);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      return null; // Return null if item is not found at any level
+    }
 
-  // onDestroy(() => {
-  //   unsubscribe();
-  // });
+    // Use recursive function to find the item
+    const itemFromStore = findItemById(value, id);
+
+    if (itemFromStore) {
+      await tick();
+      if (categories !== itemFromStore.sub) {
+        categories = itemFromStore.sub;
+        console.log(
+          `${itemFromStore.id} - ${itemFromStore.name} categories updated`
+        );
+      } else {
+        categories = categories;
+      }
+      if (templates !== itemFromStore.templates) {
+        templates = itemFromStore.templates;
+        console.log(
+          `${itemFromStore.id} - ${itemFromStore.name} templates updated`
+        );
+      } else {
+        templates = templates;
+      }
+    }
+  });
+
+  onDestroy(() => {
+    unsubscribe();
+  });
 
   let categoriesContent, templatesContent;
   let newCategoryName = "";
@@ -62,7 +85,10 @@
   const initializeSortables = () => {
     if (categoriesContent) {
       categoriesSortable = new Sortable(categoriesContent, {
-        group: "categories",
+        group: {
+          name: "categories",
+          put: ["categories"], // Allows dropping between instances of "categories" only
+        },
         animation: 150,
         handle: ".drag",
         onEnd: (event) => {
@@ -70,10 +96,10 @@
           let revert = false;
           const fromCategoryId = event.from.dataset.id || null;
           const fromIndex = event.oldIndex;
-          const toCategoryId =
-            event.to.dataset.id === event.from.dataset.id
-              ? null
-              : event.to.dataset.id;
+          const toCategoryId = !event.to.dataset.id
+            ? null
+            : event.to.dataset.id;
+
           const toIndex = event.newIndex;
           const movedItemId = event.item.dataset.id;
 
@@ -84,8 +110,19 @@
             );
             revert = true;
           }
+          // if (!fromCategoryId && toCategoryId) {
+          //   console.log(
+          //     `Move reverted: Moved item ${movedItemId} cannot be in the same category.`
+          //   );
+          //   revert = true;
+          // }
 
-          console.log("hoofdcategorie to index Column: ", toIndex);
+          console.log("onmovedata", {
+            fromCategoryId,
+            toCategoryId,
+            fromIndex,
+            toIndex,
+          });
 
           // Trigger onMove only if fromCategoryId is not equal to toCategoryId or fromIndex differs from toIndex
           if (fromCategoryId !== toCategoryId || fromIndex !== toIndex) {
@@ -114,7 +151,10 @@
 
     if (templatesContent) {
       templatesSortable = new Sortable(templatesContent, {
-        group: "templates",
+        group: {
+          name: "templates",
+          put: ["templates"], // Allows dropping between instances of "categories" only
+        },
         animation: 150,
         handle: ".drag",
         onEnd: (event) => {
@@ -178,7 +218,7 @@
   };
 </script>
 
-<div class="column">
+<div class="column" data-column-id={id}>
   {#if level == 0}
     <span class="label">Categorieën</span>
   {:else}
@@ -205,15 +245,17 @@
             <span class="icon drag"><DotsSixVertical size={16} /></span>
             <div
               class="folder_outer"
-              data-tooltip={category.sub.length === 0 &&
+              data-tooltip={category.sub &&
+              category.sub.length === 0 &&
               category.templates.length === 0
                 ? "Leeg"
-                : `${category.sub.length > 0 ? `${category.sub.length} ${category.sub.length === 1 ? "categorie" : "categorieën"}` : ""}${category.sub.length > 0 && category.templates.length > 0 ? " • " : ""}${category.templates.length > 0 ? `${category.templates.length} ${category.templates.length === 1 ? "template" : "templates"}` : ""}`}
+                : `${category.sub && category.sub.length > 0 ? `${category.sub.length} ${category.sub.length === 1 ? "categorie" : "categorieën"}` : ""}${category.sub.length > 0 && category.templates.length > 0 ? " • " : ""}${category.templates.length > 0 ? `${category.templates.length} ${category.templates.length === 1 ? "template" : "templates"}` : ""}`}
               data-flow="top"
             >
               <span
                 class="icon type folder"
-                data-count={category.sub.length + category.templates.length}
+                data-count={(category.sub?.length ?? 0) +
+                  (category.templates?.length ?? 0)}
                 ><FolderSimple size={20} /></span
               >
             </div>

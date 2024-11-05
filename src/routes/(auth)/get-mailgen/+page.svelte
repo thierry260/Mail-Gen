@@ -184,6 +184,9 @@
               type: "doc",
             },
           });
+
+          // Send event to Facebook Conversions API after successful registration
+          await sendFacebookConversionEvent();
         } else {
           workspaceName = workspaceDoc.data().name;
         }
@@ -193,6 +196,86 @@
     } catch (error) {
       errorMessage.set(error.message);
     }
+  }
+
+  async function sendFacebookConversionEvent() {
+    // Facebook API details
+    const pixelId = "579307274634676";
+    const accessToken =
+      "EAAMupE49C7wBOZBNDTowDaMfQU6K0ICMeOQKDB5HFOWSPDqStqvpXQrXz1IugnhL8Vfs18DCFutE2QdNwHzURvOTqxBx8lsCEESpZCByUuJBitN5ZCsZAP1880iXkoVwt9WyaTVkex8zB20uzFzZCXDXbbtqhZCWzOFYcWiudTPTlUqZAudp5XVUL8lKYaRwLHjHQZDZD";
+    const apiVersion = "v21.0";
+    const url = `https://graph.facebook.com/${apiVersion}/${pixelId}/events?access_token=${accessToken}`;
+
+    try {
+      // Validate and hash the email (mandatory)
+      const sanitizedEmail = email?.toLowerCase().trim();
+      if (!sanitizedEmail) {
+        console.warn(
+          "Email is required to send the Facebook conversion event."
+        );
+        return;
+      }
+      const hashedEmail = await sha256Hash(sanitizedEmail);
+
+      // Optional fields: first name and last name
+      const hashedFirstName = firstName
+        ? await sha256Hash(firstName.toLowerCase().trim())
+        : undefined;
+      const hashedLastName = lastName
+        ? await sha256Hash(lastName.toLowerCase().trim())
+        : undefined;
+
+      // Prepare user data with email and optional names if available
+      const clientUserAgent = navigator?.userAgent || "unknown";
+      const userData = {
+        em: hashedEmail,
+        client_user_agent: clientUserAgent,
+        ...(hashedFirstName && { fn: hashedFirstName }),
+        ...(hashedLastName && { ln: hashedLastName }),
+      };
+
+      // Prepare event payload
+      const eventPayload = {
+        data: [
+          {
+            action_source: "website",
+            event_name: "Free trial started",
+            event_time: Math.floor(Date.now() / 1000),
+            user_data: userData,
+          },
+        ],
+        test_event_code: "TEST42964", // Optional test code
+      };
+
+      // Send event to Facebook
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(eventPayload),
+      });
+
+      // Handle response
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error("Error sending Facebook event:", errorMessage);
+      } else {
+        const responseBody = await response.json();
+        console.log("Facebook event sent successfully:", responseBody);
+      }
+    } catch (error) {
+      console.error("Error in Facebook conversion event function:", error);
+    }
+  }
+
+  async function sha256Hash(input) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
 
   async function addLoggedInUserToWorkspace() {

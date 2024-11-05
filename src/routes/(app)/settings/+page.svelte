@@ -283,6 +283,7 @@
           workspaceId: workspaceId,
           userId: userId,
           customerId: customerId,
+          userEmail: currentUser.email,
         }),
       });
 
