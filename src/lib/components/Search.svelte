@@ -82,7 +82,7 @@
       if (item.templates) {
         item.templates.forEach((template) => {
           const contentString = JSON.stringify(
-            template.content || ""
+            template.content || "",
           ).toLowerCase();
 
           // Check if template name or content contains the search query
@@ -106,6 +106,7 @@
     return results.slice(0, 6); // Return the top 6 results for simplicity
   };
 
+  /*************  ✨ Codeium Command 🌟  *************/
   // Helper function to search in the content array
   const searchInContent = (contentArray, query) => {
     let matches = [];
@@ -115,6 +116,14 @@
         if (Array.isArray(item)) {
           // If item is an array, search recursively
           searchRecursively(item);
+        } else if (typeof item === "object" && item) {
+          // Search in both title and content
+          if (
+            item.title?.toLowerCase().includes(query) ||
+            item.content?.toLowerCase().includes(query)
+          ) {
+            matches.push(item);
+          }
         } else if (
           typeof item === "string" &&
           item.toLowerCase().includes(query)
@@ -127,6 +136,7 @@
     searchRecursively(contentArray);
     return matches; // Return found matches
   };
+  /******  6870f745-6e96-4d32-ac9c-37bc28b9521c  *******/
 
   // Function to navigate based on suggestion type
   const navigateTo = (type, id, name) => {
@@ -139,7 +149,7 @@
     const resultClicked = { type, id, name }; // Save name as well
     if (
       !lastClickedResults.some(
-        (result) => result.type === type && result.id === id
+        (result) => result.type === type && result.id === id,
       )
     ) {
       lastClickedResults.unshift(resultClicked); // Add to the start of the array
@@ -148,7 +158,7 @@
       }
       localStorage.setItem(
         "lastClickedResults",
-        JSON.stringify(lastClickedResults)
+        JSON.stringify(lastClickedResults),
       ); // Save to localStorage
     }
 
@@ -240,7 +250,7 @@
         focusedResultIndex < searchResults.length
       ) {
         const resultElement = document.querySelector(
-          `.search_result_${focusedResultIndex}`
+          `.search_result_${focusedResultIndex}`,
         );
         if (resultElement) {
           resultElement.focus();
