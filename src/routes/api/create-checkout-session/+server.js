@@ -17,6 +17,9 @@ export async function POST({ request }) {
       [`users.${userId}`]: { stripeCustomerId: customerId },
     });
 
+    // Calculate the trial end date (14 days from now)
+    const trialEnd = Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60; // 14 days in seconds
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card", "ideal"],
@@ -24,10 +27,15 @@ export async function POST({ request }) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `http://app.mailgen.nl/settings?tab=subscription&payment=success&cid=${customerId}`,
       cancel_url: `http://app.mailgen.nl/settings?tab=subscription&payment=cancel`,
+      subscription_data: {
+        trial_end: Math.floor(Date.now() / 1000) + 14 * 24 * 60 * 60 + 60, // 14 days in seconds
+      },
     });
 
     if (!session || !session.id) {
-      throw new Error("Failed to create Stripe session or session ID is missing");
+      throw new Error(
+        "Failed to create Stripe session or session ID is missing"
+      );
     }
 
     return new Response(JSON.stringify({ sessionId: session.id, customerId }), {

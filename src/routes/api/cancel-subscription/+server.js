@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY);
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
   try {
-    const { workspaceId, userId, customerId } = await request.json();
+    const { workspaceId, userId, customerId, userEmail } = await request.json();
 
     // Log the received data for debugging
     console.log("CANCEL DATA: ", workspaceId, userId, customerId);
@@ -37,6 +37,13 @@ export async function POST({ request }) {
       [`users.${userId}.stripeCustomerId`]: null, // Remove or mark as canceled
     });
 
+    if (userEmail) {
+      // Send Facebook Conversion Event for cancellation
+      await sendFacebookConversionEvent(userEmail);
+    } else {
+      console.log("invalid userEmail: ", userEmail);
+    }
+
     // Return a success message
     return new Response(
       JSON.stringify({
@@ -51,4 +58,54 @@ export async function POST({ request }) {
       status: 500,
     });
   }
+}
+
+// Facebook Conversion Event function for subscription cancellation
+async function sendFacebookConversionEvent(email) {
+  const pixelId = "579307274634676";
+  const accessToken =
+    "EAAMupE49C7wBOZBNDTowDaMfQU6K0ICMeOQKDB5HFOWSPDqStqvpXQrXz1IugnhL8Vfs18DCFutE2QdNwHzURvOTqxBx8lsCEESpZCByUuJBitN5ZCsZAP1880iXkoVwt9WyaTVkex8zB20uzFzZCXDXbbtqhZCWzOFYcWiudTPTlUqZAudp5XVUL8lKYaRwLHjHQZDZD";
+  const apiVersion = "v21.0";
+  const url = `https://graph.facebook.com/${apiVersion}/${pixelId}/events?access_token=${accessToken}`;
+
+  try {
+    const sanitizedEmail = email.toLowerCase().trim();
+    const hashedEmail = await sha256Hash(sanitizedEmail);
+
+    const eventPayload = {
+      data: [
+        {
+          action_source: "website",
+          event_name: "Subscription canceled",
+          event_time: Math.floor(Date.now() / 1000),
+          user_data: { em: hashedEmail },
+        },
+      ],
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(eventPayload),
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      console.error("Error sending Facebook event:", errorMessage);
+    } else {
+      console.log("Facebook 'Subscription Canceled' event sent successfully.");
+    }
+  } catch (error) {
+    console.error("Error in Facebook conversion event function:", error);
+  }
+}
+
+// Helper to hash email with SHA-256
+async function sha256Hash(input) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }

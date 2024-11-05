@@ -248,6 +248,8 @@
       itemToMove = { ...found.item }; // Clone the item to move
       fromParent = found.parent || false;
 
+      console.log(fromParent);
+
       if (type === "categories") {
         // Remove item from the correct place
         if (fromParent === false) {
@@ -261,7 +263,9 @@
             console.warn("fromIndex out of bounds:", fromIndex);
           }
         } else if (fromIndex >= 0 && fromIndex < fromParent.sub.length) {
+          // console.log("before remove sub", fromParent.sub, fromIndex);
           fromParent.sub.splice(fromIndex, 1); // Remove from sub-category
+          // console.log("after remove sub", fromParent.sub);
         } else {
           console.warn("fromIndex out of bounds:", fromIndex);
         }
@@ -309,6 +313,28 @@
             `hoofdcategorie moved to - ${itemToMove.name} added to index ${toIndex}`
           );
           currentTemplates.splice(toIndex, 0, itemToMove); // Insert at the corrected index
+        } else if (fromParent && type === "categories") {
+          console.log({
+            type,
+            fromCategoryId,
+            toCategoryId,
+            toIndex,
+            movedItemId,
+          });
+          // If moving a subcategory to the main level
+          if (toIndex >= 0 && toIndex <= currentTemplates.length) {
+            console.log(
+              `Moving subcategory ${itemToMove.name} to top level at index ${toIndex}`
+            );
+            currentTemplates.splice(toIndex, 0, itemToMove); // Insert at the main level
+          } else {
+            console.warn("toIndex out of bounds for top-level:", toIndex);
+          }
+          // Remove the item from its original parent
+          const fromIndexNumber = fromParent.sub.indexOf(itemToMove);
+          if (fromIndexNumber >= 0) {
+            fromParent.sub.splice(fromIndexNumber, 1); // Remove from original parent
+          }
         } else if (type === "categories") {
           fromParent.sub.splice(toIndex, 0, itemToMove); // Add to the same parent at new position
         } else if (type === "templates") {
@@ -317,23 +343,21 @@
       }
     }
 
+    templatesStore.set([...currentTemplates]);
+
     if (revert) {
       console.log("revert");
-      templatesStore.set(previousTemplates);
 
       setTimeout(() => {
+        templatesStore.set([...previousTemplates]);
         refreshDOM();
+        clearTimeout(undoTimeout);
+        toast_.dismiss(currentToastId); // Dismiss the previous toast
       }, 20);
 
       toast.error("Een categorie kan niet zijn eigen subcategorie zijn", {
         position: "bottom-right",
       });
-
-      // Clear the timeout to avoid saving changes after undo
-      clearTimeout(undoTimeout);
-    } else {
-      // Update the store with the new state
-      templatesStore.set([...currentTemplates]);
     }
   };
 
@@ -411,6 +435,23 @@
         `Weet je zeker dat je ${typeFormatted} "${item.name}" wilt verwijderen?`
       )
     ) {
+      console.log("remove - item: ", item);
+      console.log("remove - selectedCategories: ", selectedCategories);
+      // Remove item from selectedCategories if it exists
+      const selectedIndex = selectedCategories.findIndex(
+        (selected) => selected.id === item.id
+      );
+      if (selectedIndex !== -1) {
+        selectedCategories.splice(selectedIndex, 1); // Remove the item
+        console.log(`Removed ${item.name} from selectedCategories`);
+
+        console.log({ selectedCategories });
+
+        document
+          .querySelector(`.column[data-column-id="${item.id}"]`)
+          ?.remove();
+      }
+
       if (type === "template") {
         // Logic to remove the template recursively
         removeTemplate(item.id);
@@ -419,7 +460,6 @@
         removeCategoryAndSubcategories(item.id);
       }
       console.log(`Item ${item.name} removed`);
-      console.log($templatesStore);
       refreshDOM();
     }
   };
@@ -542,42 +582,25 @@
   };
 
   const refreshDOM = async () => {
-    // return;
-
-    console.log("Item added to subcategories");
-
-    categories = [];
-
-    await tick(); // Wait for DOM updates
-
-    categories = [...$templatesStore];
-
-    setTimeout(() => {
-      console.log({ selectedCategories });
-      selectedCategories.forEach((selectedCategory, index) => {
-        console.log(`.category.category-${selectedCategory.id}`);
-        setTimeout(
-          () => {
-            const categoryElement = document.querySelector(
-              `.category.category-${selectedCategory.id}`
-            );
-            if (categoryElement) {
-              const clickEvent = new MouseEvent("click", {
-                bubbles: true,
-                cancelable: true,
-                view: window,
-              });
-              categoryElement.dispatchEvent(clickEvent);
-            } else {
-              console.error(
-                `Category element .category.category-${selectedCategory.id} not found.`
-              );
-            }
-          },
-          100 + index * 100
+    await tick();
+    console.log({ selectedCategories });
+    selectedCategories.forEach(async (selectedCategory, index) => {
+      await tick();
+      const categoryElement = document.querySelector(
+        `.category.category-${selectedCategory.id}`
+      );
+      if (categoryElement) {
+        categoryElement.classList.add("active");
+        console.log(
+          `Category element .category.category-${selectedCategory.id} found.`
         );
-      });
-    }, 100);
+      } else {
+        console.error(
+          `Category element .category.category-${selectedCategory.id} not found.`
+        );
+        return false; // Filter out this category
+      }
+    });
   };
 </script>
 

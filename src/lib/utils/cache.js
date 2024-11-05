@@ -190,23 +190,27 @@ export async function getCategoriesAndCachedTemplates() {
 
           // Now update the `updatedCategories` structure to include the fetched data
           updatedCategories.forEach((category) => {
-            category.templates = category.templates.map((template) => {
-              if (template.id === templateId) {
-                return { ...template, content: templateData };
-              }
-              return template;
-            });
+            if (Array.isArray(category.templates)) {
+              category.templates = category.templates.map((template) => {
+                if (template.id === templateId) {
+                  return { ...template, content: templateData };
+                }
+                return template;
+              });
+            }
 
             if (category.sub) {
               category.sub.forEach((subcategory) => {
-                subcategory.templates = subcategory.templates.map(
-                  (template) => {
-                    if (template.id === templateId) {
-                      return { ...template, content: templateData };
+                if (Array.isArray(subcategory.templates)) {
+                  subcategory.templates = subcategory.templates.map(
+                    (template) => {
+                      if (template.id === templateId) {
+                        return { ...template, content: templateData };
+                      }
+                      return template;
                     }
-                    return template;
-                  }
-                );
+                  );
+                }
               });
             }
           });
