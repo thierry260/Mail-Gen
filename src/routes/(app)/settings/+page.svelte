@@ -619,6 +619,12 @@
     grid-template-columns: 1fr 1fr;
     gap: 80px;
     margin-bottom: 40px;
+    @media (max-width: $md) {
+      grid-template-columns: 100%;
+      > div:first-child {
+        display: none;
+      }
+    }
   }
   .subscription_list {
     list-style: none;
@@ -639,12 +645,13 @@
         width: 24px;
         height: 24px;
         background-color: var(--primary);
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='https://www.w3.org/2000/svg' width='16' height='16' fill='%23000000' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'%3E%3C/path%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%23333333' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'%3E%3C/path%3E%3C/svg%3E");
         background-position: center;
         background-repeat: no-repeat;
         background-size: 12px;
         border-radius: 50%;
         margin-right: 0.75rem;
+        flex-shrink: 0;
       }
     }
   }

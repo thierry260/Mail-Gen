@@ -160,10 +160,13 @@
 
           if (isMobile && layoutSelector) {
             if (layoutSelector.matches(".layout > .mobile_home")) {
+              document.querySelector(".layout")?.classList.add("no_transition");
               switchMobileNav("home");
             } else if (layoutSelector.matches(".layout > main")) {
+              document.querySelector(".layout")?.classList.add("no_transition");
               switchMobileNav("browse");
             } else if (layoutSelector.matches(".layout > aside")) {
+              document.querySelector(".layout")?.classList.add("no_transition");
               switchMobileNav("search");
             }
           } else if (
@@ -206,11 +209,6 @@
           steps: steps,
         })
         .start();
-
-      if (introJs().isActive()) {
-        console.log("tour active");
-        document.querySelector(".layout")?.classList.add("no_transition");
-      }
     }, 550);
   };
 </script>

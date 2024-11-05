@@ -86,8 +86,9 @@
     }
   }
 
+  // Reactive block that checks viewport width and focuses/selects if width is above 767px
   $: {
-    if (inputRefs[0]) {
+    if (inputRefs[0] && window.innerWidth > 767) {
       setTimeout(() => {
         inputRefs[0].focus();
         inputRefs[0].select();

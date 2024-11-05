@@ -190,12 +190,15 @@
 
           if (isMobile && layoutSelector) {
             if (layoutSelector.matches(".layout > .mobile_home")) {
+              document.querySelector(".layout")?.classList.add("no_transition");
               switchMobileNav("home");
               console.log("switch to home");
             } else if (layoutSelector.matches(".layout > main")) {
+              document.querySelector(".layout")?.classList.add("no_transition");
               switchMobileNav("browse");
               console.log("switch to browse");
             } else if (layoutSelector.matches(".layout > aside")) {
+              document.querySelector(".layout")?.classList.add("no_transition");
               switchMobileNav("search");
               console.log("switch to search");
             }
@@ -235,11 +238,6 @@
           steps: steps,
         })
         .start();
-
-      if (introJs().isActive()) {
-        console.log("tour active");
-        document.querySelector(".layout")?.classList.add("no_transition");
-      }
     }, 550);
   };
 </script>
