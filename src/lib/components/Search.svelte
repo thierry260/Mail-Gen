@@ -106,7 +106,6 @@
     return results.slice(0, 6); // Return the top 6 results for simplicity
   };
 
-  /*************  ✨ Codeium Command 🌟  *************/
   // Helper function to search in the content array
   const searchInContent = (contentArray, query) => {
     let matches = [];
@@ -116,14 +115,6 @@
         if (Array.isArray(item)) {
           // If item is an array, search recursively
           searchRecursively(item);
-        } else if (typeof item === "object" && item) {
-          // Search in both title and content
-          if (
-            item.title?.toLowerCase().includes(query) ||
-            item.content?.toLowerCase().includes(query)
-          ) {
-            matches.push(item);
-          }
         } else if (
           typeof item === "string" &&
           item.toLowerCase().includes(query)
@@ -136,7 +127,6 @@
     searchRecursively(contentArray);
     return matches; // Return found matches
   };
-  /******  6870f745-6e96-4d32-ac9c-37bc28b9521c  *******/
 
   // Function to navigate based on suggestion type
   const navigateTo = (type, id, name) => {
