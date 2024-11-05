@@ -16,6 +16,8 @@
     GearSix,
     EnvelopeSimple,
     Folders,
+    Gear,
+    SignOut,
   } from "phosphor-svelte";
   import ToggleSwitch from "$lib/components/ToggleSwitch.svelte";
   import { showContent } from "$lib/stores/showContent.js";
@@ -83,7 +85,36 @@
     lastSelectedNav = selectedNav;
     localStorage.setItem("lastNav", selectedNav);
     localStorage.setItem("lastNavTimestamp", new Date().getTime().toString());
+
+    if (selectedNav == "browse" && $page.route.id.includes("/settings")) {
+      console.log("settings");
+      goto("/");
+    }
   }
+
+  // Logout function
+  const logout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+
+      Object.keys(localStorage).forEach((key) => {
+        if (
+          key !== "favoriteTemplates" &&
+          key !== "recentlyViewed" &&
+          key !== "stripeCustomerId" &&
+          key !== "showTemplateContent" &&
+          key !== "testMode"
+        ) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      goto("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 </script>
 
 <div class="layout" data-url={url}>
@@ -156,11 +187,34 @@
     </label>
   </nav>
   <div class="mobile_home">
-    <h1>
-      Welkom terug{currentUser && currentUser.DisplayName
-        ? ` ${currentUser.DisplayName}!`
-        : "!"}
-    </h1>
+    <div class="mobile-home-top hide_mobile">
+      <div class="user">
+        <figure class="avatar">
+          <img width="35px" height="35px" src="/img/placeholder.jpg" />
+        </figure>
+        <div class="info hide_on_compact">
+          <strong
+            >{currentUser && currentUser.displayName
+              ? currentUser.displayName
+              : currentUser && currentUser.email
+                ? currentUser.email
+                : ""}
+          </strong>
+          <span>{localStorage.getItem("workspace")}</span>
+        </div>
+      </div>
+      <a
+        class="icon_button hide_on_compact"
+        href="/settings"
+        on:click={(e) => switchMobileNav("browse")}
+      >
+        <Gear size={16} />
+      </a>
+      <div class="icon_button hide_on_compact" on:click={logout}>
+        <SignOut size={16} />
+      </div>
+    </div>
+
     <div class="favorite_templates">
       <h2>Favoriete templates</h2>
       {#if favoriteTemplates.length === 0}
@@ -199,19 +253,6 @@
           {/each}
         </div>
       {/if}
-    </div>
-
-    <div class="settings">
-      <h2>Voorkeuren</h2>
-      <a
-        href="/settings"
-        class="mobile_menu_item"
-        on:click={(e) => switchMobileNav("browse")}
-      >
-        <GearSix size={16} />
-        <h3>Instellingen</h3>
-        <span class="icon_outer"><CaretRight size={14} /></span>
-      </a>
     </div>
   </div>
 </div>
@@ -653,6 +694,106 @@
   :global(.toaster .message) {
     font-size: 1.4rem;
     margin: 4px 4px 4px 8px;
+  }
+
+  .mobile-home-top {
+    flex-shrink: 0;
+    padding: 10px 15px;
+    background-image: none;
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    font-size: 1.6rem;
+    transition:
+      border-color 0.2s ease-out,
+      padding 0.25s ease-out;
+    overflow: hidden;
+    gap: 10px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border: none;
+    background-color: rgba(0, 0, 0, 0.075);
+
+    border: 1px solid var(--border);
+    background: #fff;
+
+    padding: 12px 15px;
+
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 100%;
+
+      figure {
+        display: inline-flex;
+        img {
+          border-radius: 50%;
+        }
+      }
+      .info {
+        font-size: 1.3rem;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        * {
+          line-height: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          align-items: flex-start;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+        strong {
+          font-weight: 300;
+          font-family: $heading;
+          font-size: 1.4rem;
+        }
+        span {
+          opacity: 0.65;
+        }
+      }
+    }
+    .icon_button {
+      border-radius: 50%;
+      background-color: rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 8px;
+      color: inherit;
+      cursor: pointer;
+      transition: background-color 0.2s ease-out;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.12);
+      }
+      &.active {
+        background: linear-gradient(
+          -45deg,
+          hsl(from var(--primary) h s calc(l - 10)),
+          hsl(from var(--primary) h s calc(l + 8))
+        );
+        color: hsl(from var(--primary) h s calc(l - 70));
+        // outline: 3px solid var(--primary);
+        // outline-offset: -3px;
+        pointer-events: none;
+      }
+    }
   }
 
   @keyframes addTopPadding {
