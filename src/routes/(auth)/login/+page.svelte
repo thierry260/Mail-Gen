@@ -57,13 +57,15 @@
       const userRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userRef);
 
+      const workspaceId = workspace.trim().toLowerCase().replace(/\s/g, "");
+
       // Check if the user exists and belongs to the specified workspace
-      if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
+      if (userDoc.exists() && userDoc.data().workspaces.includes(workspaceId)) {
         // Set the workspace in localStorage
-        localStorage.setItem("workspace", workspace);
+        localStorage.setItem("workspace", workspaceId);
 
         // Check the workspace document for the user's subscription info
-        const workspaceRef = doc(db, "workspaces", workspace);
+        const workspaceRef = doc(db, "workspaces", workspaceId);
         const workspaceDoc = await getDoc(workspaceRef);
 
         if (workspaceDoc.exists()) {

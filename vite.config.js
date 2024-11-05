@@ -23,21 +23,9 @@ export default defineConfig({
         theme_color: "#c9f66f",
         icons: [
           {
-            purpose: "maskable",
-            sizes: "144x144",
-            src: "/img/icon144_maskable.png",
-            type: "image/png",
-          },
-          {
             purpose: "any",
             sizes: "144x144",
             src: "/img/icon144_rounded.png",
-            type: "image/png",
-          },
-          {
-            purpose: "maskable",
-            sizes: "512x512",
-            src: "/img/icon512_maskable.png",
             type: "image/png",
           },
           {
