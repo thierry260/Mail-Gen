@@ -342,10 +342,16 @@
     }, 100); // Adding a delay to ensure all elements are ready before processing URL parameters.
   });
 
-  const subscribe = async () => {
+  const subscribe = async (plan = "monthly") => {
     try {
       const workspaceId = localStorage.getItem("workspace");
       const userId = auth.currentUser.uid;
+      const productId =
+        plan == "monthly"
+          ? "price_1QHlldCfSGPTfKftyX82JEmj"
+          : "price_1QHlloCfSGPTfKftX8TKnd1r";
+
+      const trialDaysLeft = subscriptionIsTrial ? subscriptionDaysLeft : 0;
 
       const response = await fetch(
         `${window.location.origin}/api/create-checkout-session`,
@@ -355,10 +361,11 @@
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            priceId: "price_1Q2td6CfSGPTfKftLJ5CLqAe",
+            priceId: productId,
             email: auth.currentUser.email,
             workspaceId: workspaceId,
             userId: userId,
+            trialDaysLeft: trialDaysLeft,
           }),
         }
       );
@@ -383,6 +390,13 @@
       errorMessage = err.message;
     }
   };
+  function calculateTrialEndDate(daysLeft) {
+    const currentDate = new Date();
+    currentDate.setDate(currentDate.getDate() + daysLeft + 1);
+
+    const options = { day: "numeric", month: "long" };
+    return currentDate.toLocaleDateString("nl-NL", options);
+  }
 </script>
 
 <Header type={"settings"} />
@@ -566,40 +580,77 @@
     {/if}
 
     {#if subscriptionIsTrial || !hasActiveSubscription}
-      <div class="card">
-        <h2>Abonneer je nu</h2>
-        <div class="subscription_info">
-          <div>
-            <p>
-              Bespaar tijd en optimaliseer je klantcontact met onze
-              gebruiksvriendelijke tool voor het maken en hergebruiken van
-              professionele e-mailtemplates.
-            </p>
-            <br />
-            <p>
-              Personaliseer eenvoudig je berichten met variabelen en houd je
-              communicatie altijd consistent. MailGen helpt je om snel en
-              foutloos te werken, zodat jij je kunt concentreren op wat echt
-              belangrijk is.
-            </p>
-          </div>
-          <ul class="subscription_list">
-            <li>Bespaar kostbare tijd</li>
-            <li>Structureer je klantcontact</li>
-            <li>Houd je communicatie consistent</li>
-            <li>Verbeter je productiviteit</li>
-            <li>Verminder handmatige fouten</li>
-          </ul>
+      {#if subscriptionIsTrial}
+        <div class="plan_top">
+          <h2>Abonneer je nu</h2>
+          <p>
+            De eerste afschrijving vind plaats op de dag dat je proefperiode
+            afloopt, namelijk <u
+              >{calculateTrialEndDate(subscriptionDaysLeft)}</u
+            >
+          </p>
         </div>
-        <div class="subscription_action">
-          <button class="button" on:click={subscribe}
-            >Abonnement aanschaffen</button
-          >
-          <small
-            ><i>€20,- per maand</i><i>Maandelijks opzegbaar</i><i
-              >Geen minimale looptijd</i
-            ></small
-          >
+      {:else}
+        <div class="plan_top">
+          <h2>Abonneer je nu</h2>
+        </div>
+      {/if}
+      <div class="cards">
+        <div class="card plan montly">
+          <div class="subscription_top flex brand align-center gap-15">
+            <figure class="logo_outer">
+              <img
+                class="logo"
+                src="/img/MailGen-icon.svg"
+                alt="MailGen logo"
+              />
+            </figure>
+            <div>
+              <h6>Maandelijks</h6>
+              <small>€15,- per maand</small>
+            </div>
+          </div>
+          <p>
+            Volledige toegang tot alle functies inclusief samenwerken in
+            teamverband.
+          </p>
+          <ul class="subscription_list">
+            <li>Onbeperkt sjablonen</li>
+            <li>Onbeperkt gebruikers</li>
+            <li>Elke maand een factuur</li>
+          </ul>
+          <div class="subscription_action">
+            <button class="button" on:click={() => subscribe("monthly")}
+              >Kies maandelijks</button
+            >
+          </div>
+        </div>
+        <div class="card plan yearly">
+          <div class="subscription_top flex brand align-center gap-15">
+            <figure class="logo_outer">
+              <img
+                class="logo"
+                src="/img/MailGen-icon.svg"
+                alt="MailGen logo"
+              />
+            </figure>
+            <div>
+              <h6>Jaarlijks</h6>
+              <small>€150,- per jaar</small>
+            </div>
+          </div>
+          <p>Beste deal voor maximaal gebruiksgemak en extra besparingen.</p>
+          <ul class="subscription_list">
+            <li>Onbeperkt sjablonen</li>
+            <li>Onbeperkt gebruikers</li>
+            <li>Elk jaar een factuur</li>
+            <li>€30,- korting</li>
+          </ul>
+          <div class="subscription_action">
+            <button class="button" on:click={() => subscribe("yearly")}
+              >Kies jaarlijks</button
+            >
+          </div>
         </div>
       </div>
     {/if}
@@ -614,11 +665,45 @@
 {/if}
 
 <style lang="scss">
+  .plan_top {
+    h2 {
+      margin-bottom: 0.15em;
+    }
+  }
+  .subscription_top {
+    small {
+      color: var(--gray-400);
+      font-size: 1.3rem;
+    }
+  }
+  .logo_outer {
+    border-radius: var(--border-radius-big, 10px);
+    background-color: var(--primary);
+    background: linear-gradient(
+      -45deg,
+      hsl(from var(--primary) h s calc(l - 10)),
+      hsl(from var(--primary) h s calc(l + 8))
+    );
+    background: var(--primary);
+    width: max-content;
+    padding: 12px;
+    // box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
+    .logo {
+      max-width: 32px;
+      aspect-ratio: 1;
+      object-fit: contain;
+      width: 100%;
+      display: block;
+      filter: brightness(0.1);
+      opacity: 0.85;
+    }
+  }
   .subscription_info {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    margin-bottom: 40px;
+    grid-template-columns: 100%;
+    gap: 20px;
+    margin-block: 20px 20px;
     @media (max-width: $md) {
       grid-template-columns: 100%;
       > div:first-child {
@@ -645,6 +730,7 @@
         width: 24px;
         height: 24px;
         background-color: var(--primary);
+        background-color: hsl(80deg 88% 70% / 65%);
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='%23333333' viewBox='0 0 256 256'%3E%3Cpath d='M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z'%3E%3C/path%3E%3C/svg%3E");
         background-position: center;
         background-repeat: no-repeat;
@@ -659,6 +745,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: auto;
     small {
       font-size: 1.3rem;
       display: flex;
@@ -733,11 +820,25 @@
     > .button {
       align-items: flex-start;
     }
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      @media (max-width: $md) {
+        grid-template-columns: 100%;
+      }
+    }
     .card {
       padding: 20px;
       background-color: #fff;
       border-radius: var(--border-radius-big, 10px);
       border: 1px solid var(--border);
+
+      &.plan {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
 
       button.button:not(.basic) {
         margin-top: 15px;
