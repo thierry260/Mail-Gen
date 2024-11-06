@@ -466,7 +466,7 @@
   </button>
   {#if !currentUser && !isInvited}
     <p class="form_note">
-      <small>Heb je al een workspace?? </small><a href="/login">Inloggen</a>
+      <small>Heb je al een workspace? </small><a href="/login">Inloggen</a>
     </p>
   {/if}
   {#if $errorMessage}
