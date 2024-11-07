@@ -13,7 +13,9 @@ export async function POST({ request }) {
     // Check for required fields
     if (!workspaceId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({
+          error: `Missing required fields, ws: ${workspaceId}`,
+        }),
         { status: 400 }
       );
     }
