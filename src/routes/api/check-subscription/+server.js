@@ -11,7 +11,7 @@ export async function POST({ request }) {
       await request.json();
 
     // Check for required fields
-    if (!workspaceId || !customerId) {
+    if (!workspaceId) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400 }
@@ -61,6 +61,14 @@ export async function POST({ request }) {
           days_left: 0,
           is_trial: false,
         }),
+        { status: 200 }
+      );
+    }
+
+    if (!customerId) {
+      // No active subscriptions found
+      return new Response(
+        JSON.stringify({ active: false, days_left: 0, is_trial: false }),
         { status: 200 }
       );
     }
