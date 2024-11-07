@@ -48,7 +48,7 @@ export async function POST({ request }) {
 
         return new Response(
           JSON.stringify({
-            active: false, // No active subscription yet
+            active: true, // No active subscription yet
             days_left: remainingTrialDays,
             is_trial: true,
           }),
@@ -114,9 +114,9 @@ export async function POST({ request }) {
         } else {
           return new Response(
             JSON.stringify({
-              active: true,
+              active: false,
               days_left: trialEnd,
-              is_trial: true,
+              is_trial: false,
             }),
             { status: 200 }
           );
