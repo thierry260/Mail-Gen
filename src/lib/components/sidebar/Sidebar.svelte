@@ -170,7 +170,6 @@
         if (
           key !== "favoriteTemplates" &&
           key !== "recentlyViewed" &&
-          key !== "stripeCustomerId" &&
           key !== "showTemplateContent" &&
           key !== "testMode"
         ) {
@@ -194,7 +193,7 @@
 
     try {
       const newCategoryName = prompt(
-        "Geef een naam in voor de nieuwe categorie:"
+        "Geef een naam in voor de nieuwe categorie:",
       );
 
       if (newCategoryName && newCategoryName.trim() !== "") {
