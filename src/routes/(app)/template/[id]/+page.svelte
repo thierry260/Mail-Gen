@@ -338,7 +338,7 @@
         ([id, data]) =>
           data.field_name
             .toLowerCase()
-            .includes($variablesListSearch.toLowerCase())
+            .includes($variablesListSearch.toLowerCase()),
       );
 
       setTimeout(() => {
@@ -543,7 +543,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       const index = favoriteTemplates.findIndex(
-        (item) => item.id === templateData.id
+        (item) => item.id === templateData.id,
       );
 
       if (isFavorite && index === -1) {
@@ -554,7 +554,7 @@
 
       localStorage.setItem(
         "favoriteTemplates",
-        JSON.stringify(favoriteTemplates)
+        JSON.stringify(favoriteTemplates),
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -567,7 +567,7 @@
         JSON.parse(localStorage.getItem("favoriteTemplates")) || [];
 
       isFavorite = favoriteTemplates.some(
-        (item) => item.id === templateData.id
+        (item) => item.id === templateData.id,
       );
     } else {
       console.warn("localStorage is not available in this environment.");
@@ -709,7 +709,7 @@
           if (codeElement) {
             const id = codeElement.dataset.id;
             const inputElement = document.querySelector(
-              `.variables input[id="${id}"]`
+              `.variables input[id="${id}"]`,
             );
             if (inputElement) {
               inputElement.focus();
@@ -737,7 +737,7 @@
     if (changesMade) {
       if (
         !confirm(
-          "Weet je zeker dat je deze pagina wilt verlaten? Je hebt onopgeslagen wijzigingen die verloren zullen gaan."
+          "Weet je zeker dat je deze pagina wilt verlaten? Je hebt onopgeslagen wijzigingen die verloren zullen gaan.",
         )
       ) {
         cancel();
@@ -853,14 +853,14 @@
             {
               title: "Opmaak",
               element: document.querySelector(
-                ".editor_outer .editor_buttons .formatting"
+                ".editor_outer .editor_buttons .formatting",
               ),
               intro: "Met deze knoppen kun je de opmaak van de selectie.",
             },
             {
               title: "Aanpassingen beheren",
               element: document.querySelector(
-                ".editor_outer .editor_buttons .actions"
+                ".editor_outer .editor_buttons .actions",
               ),
               intro:
                 "Met deze knoppen kun je eenvoudig aanpassingen terugdraaien of opnieuw instellen.",
@@ -874,7 +874,7 @@
             {
               title: "Opmaak",
               element: document.querySelector(
-                ".editor_outer button.add_variable"
+                ".editor_outer button.add_variable",
               ),
               intro: `Via deze knop kun je variabelen toevoegen. Je kunt erop klikken of de toetsenbord shortcut ${isMac ? "Cmd" : "Ctrl"}+Shift+[ gebruiken.`,
             },
@@ -896,7 +896,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id
+              (template) => template.id === id,
             );
             if (templateIndex !== -1) {
               item.templates[templateIndex].name = newName;
@@ -924,7 +924,7 @@
         for (const item of items) {
           if (item.templates) {
             const templateIndex = item.templates.findIndex(
-              (template) => template.id === id
+              (template) => template.id === id,
             );
             if (templateIndex !== -1) {
               item.templates.splice(templateIndex, 1); // Remove the template
@@ -1207,7 +1207,7 @@
         {
           position: "bottom-right",
           duration: 8000, // Display the success/error message for 5 seconds
-        }
+        },
       );
 
       // If any fields are empty, show error toast and stop the function
@@ -1354,7 +1354,7 @@
     }
 
     const confirmDelete = window.confirm(
-      "Weet je zeker dat je deze template wilt verwijderen?"
+      "Weet je zeker dat je deze template wilt verwijderen?",
     );
     if (confirmDelete) {
       deleteTemplate(templateData.id)
@@ -1387,17 +1387,17 @@
     }
 
     templateData.content = editor.getJSON();
-    console.log(templateData.content);
     try {
       const docRef = doc(
         db,
         `workspaces/${localStorage.getItem("workspace")}/templates`,
-        id
+        id,
       );
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         // Document exists, so update it
+        console.log("Document exists, updating...");
         await updateDoc(docRef, {
           content: templateData.content,
           name: templateData.name,
@@ -1405,6 +1405,7 @@
         });
       } else {
         // Document does not exist, so create it
+        console.log("Document does not exist, creating...");
         await setDoc(docRef, {
           content: templateData.content,
           name: templateData.name,
@@ -1435,7 +1436,7 @@
     const workspaceRef = doc(
       db,
       "workspaces",
-      localStorage.getItem("workspace")
+      localStorage.getItem("workspace"),
     );
     const workspaceSnap = await getDoc(workspaceRef);
 
@@ -1533,7 +1534,7 @@
         ([id, data]) =>
           data.field_name
             .toLowerCase()
-            .includes(variableSearchQuery.toLowerCase())
+            .includes(variableSearchQuery.toLowerCase()),
       );
     }
 
