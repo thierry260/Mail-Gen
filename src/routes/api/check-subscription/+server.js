@@ -31,6 +31,19 @@ export async function POST({ request }) {
 
     const workSpaceData = workSpace.data();
     const isTrial = workSpaceData.is_trial && workSpaceData.is_trial === true;
+    const isFreeWorkspace =
+      workSpaceData.free_workspace && workSpaceData.free_workspace === true;
+
+    if (isFreeWorkspace) {
+      return new Response(
+        JSON.stringify({
+          active: true,
+          days_left: 9999,
+          is_trial: false,
+        }),
+        { status: 200 }
+      );
+    }
 
     // Handle trial case
     if (isTrial && !customerId && !redirectedFromStripe) {
