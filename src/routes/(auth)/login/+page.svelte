@@ -22,6 +22,7 @@
   let errorMessage = writable("");
   let workspaceErrorMessage = writable("");
   let resetMessage = writable(""); // For password reset feedback
+  let magicLinkMode = false; // Toggle between email/password and magic link login
 
   async function checkWorkspace() {
     try {
@@ -121,82 +122,92 @@
     }
   }
 
-  // async function sendMagicLink() {
-  //   try {
-  //     const actionCodeSettings = {
-  //       // URL you want to redirect back to. The domain (and URL) must be in the authorized domains in Firebase.
-  //       url: window.location.origin + `?workspace=${workspace}`,
-  //       handleCodeInApp: true,
-  //     };
+  async function sendMagicLink() {
+    try {
+      if (!email) {
+        // If email is not found in local storage, prompt the user to provide it
+        email = window.prompt("Voer je e-mailadres in");
+      }
 
-  //     await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-  //     // Save the email locally to complete login after redirect
-  //     window.localStorage.setItem("emailForSignIn", email);
-  //     toast.success("Login link sent to your email", {
-  //       position: "bottom-right",
-  //     });
-  //   } catch (error) {
-  //     toast.error("Error sending login link", {
-  //       position: "bottom-right",
-  //     });
-  //   }
-  // }
+      const actionCodeSettings = {
+        // URL you want to redirect back to. The domain (and URL) must be in the authorized domains in Firebase.
+        url: window.location.origin + `?workspace=${workspace}`,
+        handleCodeInApp: true,
+      };
 
-  // async function checkMagicLink() {
-  //   if (isSignInWithEmailLink(auth, window.location.href)) {
-  //     let email = window.localStorage.getItem("emailForSignIn");
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      // Save the email locally to complete login after redirect
+      window.localStorage.setItem("emailForSignIn", email);
+      toast.success("Login link verstuurd naar je e-mailadres", {
+        position: "bottom-right",
+      });
+    } catch (error) {
+      toast.error("Probleem met het versturen van de login link", {
+        position: "bottom-right",
+      });
+    }
+  }
 
-  //     if (!email) {
-  //       // If email is not found in local storage, prompt the user to provide it
-  //       email = window.prompt("Please provide your email for confirmation");
-  //     }
+  if (
+    isSignInWithEmailLink(auth, window.location.href) ||
+    window.location.href.includes("oobCode")
+  ) {
+    checkMagicLink();
+  }
 
-  //     try {
-  //       const userCredential = await signInWithEmailLink(
-  //         auth,
-  //         email,
-  //         window.location.href,
-  //       );
-  //       const user = userCredential.user;
+  async function checkMagicLink() {
+    let email = window.localStorage.getItem("emailForSignIn");
 
-  //       // Check if the user belongs to the workspace
-  //       const userRef = doc(db, "users", user.uid);
-  //       const userDoc = await getDoc(userRef);
+    if (!email) {
+      // If email is not found in local storage, prompt the user to provide it
+      email = window.prompt("Voer je e-mailadres in");
+    }
 
-  //       if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
-  //         localStorage.setItem("workspace", workspace);
+    try {
+      const userCredential = await signInWithEmailLink(
+        auth,
+        email,
+        window.location.href
+      );
+      const user = userCredential.user;
 
-  //         // Check for user's subscription info in the workspace
-  //         const workspaceRef = doc(db, "workspaces", workspace);
-  //         const workspaceDoc = await getDoc(workspaceRef);
+      // Check if the user belongs to the workspace
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
 
-  //         if (workspaceDoc.exists()) {
-  //           const workspaceData = workspaceDoc.data();
-  //           if (workspaceData.users && workspaceData.users[user.uid]) {
-  //             const userWorkspaceData = workspaceData.users[user.uid];
-  //             if (userWorkspaceData.stripeCustomerId) {
-  //               localStorage.setItem(
-  //                 "stripeCustomerId",
-  //                 userWorkspaceData.stripeCustomerId,
-  //               );
-  //             }
-  //           }
-  //         }
+      if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
+        localStorage.setItem("workspace", workspace);
 
-  //         // Redirect the user to the dashboard or homepage
-  //         goto("/");
-  //       } else {
-  //         toast.error("No access to workspace", {
-  //           position: "bottom-right",
-  //         });
-  //       }
-  //     } catch (error) {
-  //       toast.error("Error logging in with magic link", {
-  //         position: "bottom-right",
-  //       });
-  //     }
-  //   }
-  // }
+        // Check for user's subscription info in the workspace
+        const workspaceRef = doc(db, "workspaces", workspace);
+        const workspaceDoc = await getDoc(workspaceRef);
+
+        if (workspaceDoc.exists()) {
+          const workspaceData = workspaceDoc.data();
+          if (workspaceData.users && workspaceData.users[user.uid]) {
+            const userWorkspaceData = workspaceData.users[user.uid];
+            if (userWorkspaceData.stripeCustomerId) {
+              localStorage.setItem(
+                "stripeCustomerId",
+                userWorkspaceData.stripeCustomerId
+              );
+            }
+          }
+        }
+
+        // Redirect the user to the dashboard or homepage
+        goto("/");
+      } else {
+        toast.error("No access to workspace", {
+          position: "bottom-right",
+        });
+      }
+    } catch (error) {
+      toast.error("Error logging in with magic link", {
+        position: "bottom-right",
+      });
+    }
+  }
 </script>
 
 {#if step === 1}
@@ -240,38 +251,67 @@
       </figure>
       <h2>Je bent er bijna</h2>
     </div>
-    <div class="form_intro">
-      <p>Vul je gegevens in om in te loggen.</p>
+    <div class="tabs">
+      <button
+        type="button"
+        class:active={!magicLinkMode}
+        on:click={() => (magicLinkMode = false)}
+      >
+        <span class="desktop">Inloggen met wachtwoord</span>
+        <span class="mobile">Met wachtwoord</span>
+      </button>
+      <button
+        type="button"
+        class:active={magicLinkMode}
+        on:click={() => (magicLinkMode = true)}
+      >
+        <span class="desktop">Inloggen via link</span>
+        <span class="mobile">Via link</span>
+      </button>
     </div>
-    <label class="input_wrapper">
-      <input
-        type="email"
-        id="email"
-        bind:value={email}
-        required
-        placeholder="&nbsp;"
-      />
-      <span>E-mailadres</span>
-    </label>
-    <label class="input_wrapper">
-      <input
-        type="password"
-        id="password"
-        bind:value={password}
-        required
-        placeholder="&nbsp;"
-      />
-      <span>Wachtwoord</span>
-    </label>
-    <button class="button" type="submit">Login</button>
-    <!-- <button class="button" type="button" on:click={sendMagicLink}>
-      Send Magic Link
-    </button> -->
-
-    <!-- Forgot password link -->
-    <button type="button" class="link-button" on:click={resetPassword}>
-      Wachtwoord vergeten?
-    </button>
+    {#if !magicLinkMode}
+      <p>Vul je gegevens in om in te loggen.</p>
+      <label class="input_wrapper">
+        <input
+          type="email"
+          id="email"
+          bind:value={email}
+          required
+          placeholder="&nbsp;"
+        />
+        <span>E-mailadres</span>
+      </label>
+      <label class="input_wrapper">
+        <input
+          type="password"
+          id="password"
+          bind:value={password}
+          required
+          placeholder="&nbsp;"
+        />
+        <span>Wachtwoord</span>
+      </label>
+      <button class="button" type="submit">Login</button>
+      <!-- Forgot password link -->
+      <button type="button" class="link-button" on:click={resetPassword}>
+        Wachtwoord vergeten?
+      </button>
+    {:else}
+      <p>Vul je e-mailadres in om een loginlink te ontvangen.</p>
+      <label class="input_wrapper">
+        <input
+          type="email"
+          id="email"
+          bind:value={email}
+          required
+          placeholder="&nbsp;"
+        />
+        <span>E-mailadres</span>
+      </label>
+      <button class="button" type="button" on:click={sendMagicLink}>
+        Ontvang link
+      </button>
+    {/if}
 
     <!-- Password reset feedback message -->
     {#if $resetMessage}
@@ -294,6 +334,45 @@
 {/if}
 
 <style lang="scss">
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--gray-250);
+
+    span {
+      &.desktop {
+        @media screen and (max-width: $md) {
+          display: none;
+        }
+      }
+      &.mobile {
+        display: none;
+        @media screen and (max-width: $md) {
+          display: block;
+        }
+      }
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background-color: transparent;
+      transition: border 0.2s ease-out;
+      cursor: pointer;
+      font-size: 1.4rem;
+      flex-grow: 1;
+      font-weight: 400;
+      line-height: 1.7em;
+      color: var(--gray-700);
+      border-bottom: 2px solid transparent;
+    }
+
+    button.active {
+      border-color: var(--primary);
+    }
+  }
+
   .heading {
     display: flex;
     align-items: center;
