@@ -638,4 +638,11 @@ h6 {
   color: var(--gray-400);
 }
 
+@media screen and (max-width: 767px) {
+  .toaster .wrapper {
+      justify-content: center !important;
+      bottom: 60px !important;
+  }
+}
+
 /*# sourceMappingURL=global.css.map */

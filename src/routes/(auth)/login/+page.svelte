@@ -10,6 +10,7 @@
   import { writable } from "svelte/store";
   import { goto } from "$app/navigation";
   import { doc, getDoc } from "firebase/firestore";
+  import { onMount } from "svelte";
 
   import { CaretLeft } from "phosphor-svelte";
   import toast from "svelte-french-toast";
@@ -148,12 +149,14 @@
     }
   }
 
-  if (
-    isSignInWithEmailLink(auth, window.location.href) ||
-    window.location.href.includes("oobCode")
-  ) {
-    checkMagicLink();
-  }
+  onMount(() => {
+    if (
+      isSignInWithEmailLink(auth, window.location.href) ||
+      window.location.href.includes("oobCode")
+    ) {
+      checkMagicLink();
+    }
+  });
 
   async function checkMagicLink() {
     let email = window.localStorage.getItem("emailForSignIn");
