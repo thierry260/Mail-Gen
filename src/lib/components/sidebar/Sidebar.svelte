@@ -193,7 +193,7 @@
 
     try {
       const newCategoryName = prompt(
-        "Geef een naam in voor de nieuwe categorie:",
+        "Geef een naam in voor de nieuwe categorie:"
       );
 
       if (newCategoryName && newCategoryName.trim() !== "") {
@@ -220,8 +220,8 @@
 </script>
 
 <div class="sidebar {isCompact ? 'compact' : 'wide'}">
-  <div class="brand_outer">
-    <a href="/" class="flex brand align-center gap-15 hide_mobile">
+  <div class="brand_outer hide_mobile">
+    <a href="/" class="flex brand align-center gap-15">
       <figure class="logo_outer" on:click={(e) => switchMobileNav("browse")}>
         <img class="logo" src="/img/MailGen-icon.svg" alt="MailGen logo" />
       </figure>

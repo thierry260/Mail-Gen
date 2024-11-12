@@ -312,7 +312,7 @@
   }
 
   nav.mobile_nav {
-    z-index: 99;
+    z-index: 999999;
     background-color: #fff;
     align-items: center;
     justify-content: space-around;
