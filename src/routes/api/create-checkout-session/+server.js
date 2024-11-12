@@ -15,7 +15,7 @@ export async function POST({ request }) {
     const customerId = customer.id;
 
     await updateDoc(doc(db, `workspaces/${workspaceId}`), {
-      [`users.${userId}`]: { stripeCustomerId: customerId },
+      stripeCustomerId: customerId,
     });
 
     const sessionData = {

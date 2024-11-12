@@ -32,9 +32,9 @@ export async function POST({ request }) {
     const subscriptionId = subscriptions.data[0].id;
     await stripe.subscriptions.cancel(subscriptionId);
 
-    // Mark the user as having no active subscription in Firestore
+    // Remove the stripeCustomerId field
     await updateDoc(doc(db, `workspaces/${workspaceId}`), {
-      [`users.${userId}.stripeCustomerId`]: null, // Remove or mark as canceled
+      stripeCustomerId: null,
     });
 
     if (userEmail) {

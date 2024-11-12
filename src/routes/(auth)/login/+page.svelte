@@ -71,17 +71,11 @@
         if (workspaceDoc.exists()) {
           const workspaceData = workspaceDoc.data();
 
-          // Check if the user is in the workspace's users map
-          if (workspaceData.users && workspaceData.users[user.uid]) {
-            const userWorkspaceData = workspaceData.users[user.uid];
-
-            // Set the stripeCustomerId in localStorage if it exists
-            if (userWorkspaceData.stripeCustomerId) {
-              localStorage.setItem(
-                "stripeCustomerId",
-                userWorkspaceData.stripeCustomerId
-              );
-            }
+          if (workspaceData.stripeCustomerId) {
+            localStorage.setItem(
+              "stripeCustomerId",
+              workspaceData.stripeCustomerId
+            );
           }
         }
 
