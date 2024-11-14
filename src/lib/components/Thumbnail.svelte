@@ -89,28 +89,33 @@
 
   // console.log("content value: ", content);
 
-  if (content && content.content) {
-    try {
-      templateContentHTML = generateHTML(content.content, [
-        StarterKit,
-        Variable,
-        Underline,
-      ]);
-    } catch (error) {
-      console.log("templateContentHTML - content.content:", content.content);
-      // console.error("content content.content: Error generating HTML:", error);
-    }
-  } else if (content) {
-    try {
-      templateContentHTML = generateHTML(content, [
-        StarterKit,
-        Variable,
-        Underline,
-      ]);
-      // console.log(templateContentHTML);
-    } catch (error) {
-      // console.log("templateContentHTML - content:", content);
-      // console.error("content: Error generating HTML:", error);
+  $: {
+    if (content && content.content) {
+      console.log({ content });
+      try {
+        templateContentHTML = generateHTML(content.content, [
+          StarterKit,
+          Variable,
+          Underline,
+        ]);
+      } catch (error) {
+        console.log("templateContentHTML - content.content:", content.content);
+        // console.error("content content.content: Error generating HTML:", error);
+      }
+    } else if (content) {
+      console.log({ content });
+
+      try {
+        templateContentHTML = generateHTML(content, [
+          StarterKit,
+          Variable,
+          Underline,
+        ]);
+        // console.log(templateContentHTML);
+      } catch (error) {
+        // console.log("templateContentHTML - content:", content);
+        // console.error("content: Error generating HTML:", error);
+      }
     }
   }
 

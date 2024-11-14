@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import mailgunTransport from "nodemailer-mailgun-transport";
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {

@@ -74,6 +74,11 @@
         closeDropdown();
       }}
       class:open={item.open}
+      on:contextmenu={(event) => {
+        event.preventDefault(); // Prevent the default context menu from appearing
+        event.stopPropagation(); // Stop the event from propagating
+        triggerDropdown(`options_${item.id}`);
+      }}
     >
       <div
         class="dropdown_outer"
@@ -88,13 +93,12 @@
         ><button
           on:click={(event) => {
             event.stopPropagation();
-            dropdownState = !dropdownState;
+            triggerDropdown(`options_${item.id}`);
           }}
         >
           <DotsThreeVertical size={18} data-action="options" />
           <Dropdown
             bind:item
-            open={dropdownState}
             items={[
               {
                 label: "Naam bewerken",
@@ -168,13 +172,18 @@
                 closeDropdown();
               }}
               class:open={template.open}
+              on:contextmenu={(event) => {
+                event.preventDefault(); // Prevent the default context menu from appearing
+                event.stopPropagation(); // Stop the event from propagating
+                triggerDropdown(`template_${template.id}`);
+              }}
             >
               <span class="name">{template.name}</span>
               <span class="actions"
                 ><button
                   on:click={(event) => {
                     event.stopPropagation();
-                    dropdownState = !dropdownState;
+                    triggerDropdown(`template_${template.id}`);
                   }}
                 >
                   <DotsThreeVertical size={18} data-action="options" />
@@ -246,7 +255,8 @@
       .actions {
         display: flex;
         align-content: center;
-        gap: 5px;
+        // gap: 5px;
+        margin: -5px -3px;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.2s ease-out;
@@ -256,7 +266,7 @@
           background-color: transparent;
           border: none;
           min-width: none;
-          padding: 0;
+          padding: 5px 3px;
           color: inherit;
           font-family: inherit;
           pointer-events: auto;

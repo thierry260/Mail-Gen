@@ -151,6 +151,7 @@
 
   // Listen for custom events to toggle the dropdown
   function handleToggle(event) {
+    console.log({ event, id });
     if (event.detail === id) {
       toggleDropdown();
     }
@@ -213,7 +214,7 @@
 <style>
   .dropdown_list {
     position: absolute;
-    top: 100%;
+    top: calc(100% - 10px);
     transform: translateY(0);
     right: -5px;
     background: #fff;
@@ -231,7 +232,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    z-index: 10;
+    z-index: 9999;
     color: var(--text);
   }
 
@@ -240,10 +241,10 @@
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 0 7px 8px 7px;
+    border-width: 0 5px 6px 5px;
     border-color: transparent transparent #fff transparent;
     position: absolute;
-    right: 11px;
+    right: 8px;
     top: 0px;
     transform: translateY(-100%);
     z-index: 1;
@@ -254,10 +255,10 @@
     width: 0;
     height: 0;
     border-style: solid;
-    border-width: 0 8px 10px 8px;
+    border-width: 0 6px 7px 6px;
     border-color: transparent transparent #e6e6e6 transparent;
     position: absolute;
-    right: 10px;
+    right: 7px;
     top: 0px;
     transform: translateY(-100%);
   }
@@ -292,7 +293,7 @@
   }
 
   .dropdown_list li.remove:hover {
-    background-color: lighten(var(--error, #f00), 32%);
+    background-color: hsl(from var(--error, #f00) h s calc(l + 45));
   }
 
   .dropdown_list li.separator {

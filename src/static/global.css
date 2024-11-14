@@ -319,6 +319,7 @@ code {
   color: var(--secondary);
   font-weight: 500;
   font-size: 1.4rem;
+  cursor: pointer;
 
   background-color: hsl(from var(--primary) h s calc(l + 25));
   border-color: hsl(from var(--primary) h s calc(l - 0));
