@@ -6,6 +6,7 @@
     sendSignInLinkToEmail,
     isSignInWithEmailLink,
     signInWithEmailLink,
+    getRedirectResult,
   } from "firebase/auth";
   import { writable } from "svelte/store";
   import { goto } from "$app/navigation";
@@ -132,7 +133,10 @@
 
       const actionCodeSettings = {
         // URL you want to redirect back to. The domain (and URL) must be in the authorized domains in Firebase.
-        url: window.location.origin + `?workspace=${workspace}`,
+        url:
+          window.location.href +
+          "?workspace=" +
+          workspace.trim().toLowerCase().replace(/\s/g, ""),
         handleCodeInApp: true,
       };
 
@@ -143,20 +147,16 @@
         position: "bottom-right",
       });
     } catch (error) {
+      console.log(error.message);
       toast.error("Probleem met het versturen van de login link", {
         position: "bottom-right",
       });
     }
   }
 
-  onMount(() => {
-    if (
-      isSignInWithEmailLink(auth, window.location.href) ||
-      window.location.href.includes("oobCode")
-    ) {
-      checkMagicLink();
-    }
-  });
+  if (isSignInWithEmailLink(auth, window.location.href)) {
+    checkMagicLink();
+  }
 
   async function checkMagicLink() {
     let email = window.localStorage.getItem("emailForSignIn");
@@ -166,6 +166,8 @@
       email = window.prompt("Voer je e-mailadres in");
     }
 
+    console.log("email", email);
+
     try {
       const userCredential = await signInWithEmailLink(
         auth,
@@ -173,16 +175,24 @@
         window.location.href
       );
       const user = userCredential.user;
+      console.log("user", user);
 
       // Check if the user belongs to the workspace
       const userRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userRef);
 
-      if (userDoc.exists() && userDoc.data().workspaces.includes(workspace)) {
-        localStorage.setItem("workspace", workspace);
+      console.log("userDoc.data()", userDoc.data());
+      const workspaceFromUrl =
+        new URLSearchParams(window.location.search).get("workspace") || "";
+
+      if (
+        userDoc.exists() &&
+        userDoc.data().workspaces.includes(workspaceFromUrl)
+      ) {
+        localStorage.setItem("workspace", workspaceFromUrl);
 
         // Check for user's subscription info in the workspace
-        const workspaceRef = doc(db, "workspaces", workspace);
+        const workspaceRef = doc(db, "workspaces", workspaceFromUrl);
         const workspaceDoc = await getDoc(workspaceRef);
 
         if (workspaceDoc.exists()) {
@@ -206,6 +216,7 @@
         });
       }
     } catch (error) {
+      console.log(error.message);
       toast.error("Error logging in with magic link", {
         position: "bottom-right",
       });
