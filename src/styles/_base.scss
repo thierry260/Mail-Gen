@@ -654,12 +654,9 @@ body .mb-0.mb-0 {
   }
 }
 
-:global(.toaster) {
-  @media screen and (max-width: $md) {
-    .wrapper {
-      justify-content: center !important;
-      bottom: unset !important;
-      top: 0 !important;
-    }
+@media screen and (max-width: 767px) {
+  .layout:not(.auth) + .toaster .wrapper {
+    justify-content: center !important;
+    bottom: 60px !important;
   }
 }

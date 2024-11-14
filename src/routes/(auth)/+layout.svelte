@@ -2,7 +2,7 @@
   import { Toaster } from "svelte-french-toast";
 </script>
 
-<div class="layout">
+<div class="layout auth">
   <aside>
     <img class="logo" src="/img/MailGen-visual.svg" alt="MailGen logo" />
   </aside>
