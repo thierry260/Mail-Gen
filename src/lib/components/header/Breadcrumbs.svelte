@@ -244,6 +244,7 @@
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+        padding-bottom: 1px;
       }
     }
   }

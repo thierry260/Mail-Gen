@@ -272,6 +272,11 @@
           pointer-events: auto;
           cursor: pointer;
         }
+
+        @media (max-width: $lg) {
+          opacity: 1;
+          pointer-events: auto;
+        }
       }
       &:hover {
         .actions {
