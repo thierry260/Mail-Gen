@@ -368,6 +368,10 @@
         border-color: transparent;
         margin: 0;
         padding: 6px;
+
+        @media (max-width: $xs) {
+          padding: 4px;
+        }
         &:hover {
           background-color: #fff;
         }

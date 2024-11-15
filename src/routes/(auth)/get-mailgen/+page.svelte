@@ -76,7 +76,7 @@
 
           if (usersCount >= parseInt(workspaceDoc.data().usersNo, 10)) {
             errorMessage.set(
-              "Het maximale aantal gebruikers voor deze workspace is bereikt",
+              "Het maximale aantal gebruikers voor deze workspace is bereikt"
             );
             return;
           }
@@ -89,7 +89,7 @@
           }
         } else {
           errorMessage.set(
-            "Workspace bestaat niet. Controleer de uitnodigingslink.",
+            "Workspace bestaat niet. Controleer de uitnodigingslink."
           );
         }
       } else {
@@ -130,7 +130,7 @@
           const templateRef = doc(
             workspaceRef,
             "templates",
-            "j63CPPKaTlOnPxxooJvu",
+            "j63CPPKaTlOnPxxooJvu"
           );
           await setDoc(templateRef, {
             name: "Welkom bij MailGen",
@@ -212,7 +212,7 @@
       const sanitizedEmail = email?.toLowerCase().trim();
       if (!sanitizedEmail) {
         console.warn(
-          "Email is required to send the Facebook conversion event.",
+          "Email is required to send the Facebook conversion event."
         );
         return;
       }
@@ -296,7 +296,7 @@
           await setDoc(
             userDocRef,
             { workspaces: [...currentWorkspaces, workspaceId] },
-            { merge: true },
+            { merge: true }
           );
 
           // Extract first and last name from displayName, if available
@@ -332,7 +332,7 @@
       }
     } catch (error) {
       errorMessage.set(
-        `Het is niet gelukt om een ​​gebruiker toe te voegen aan workspace: ${error.message}`,
+        `Het is niet gelukt om een ​​gebruiker toe te voegen aan workspace: ${error.message}`
       );
     }
   }
@@ -342,7 +342,7 @@
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
       const userUID = user.uid;
 
@@ -355,7 +355,7 @@
 
       await setDoc(
         doc(db, "workspaces", workspaceId, "users", userUID),
-        userData,
+        userData
       );
 
       const userCommonData = {

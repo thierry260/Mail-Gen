@@ -439,7 +439,7 @@
           },
         }),
         Placeholder.configure({
-          placeholder: `Begin met schrijven. Gebruik '${isMac ? "Cmd" : "Ctrl"}+Shift+[' om een variabele toe te voegen.`,
+          placeholder: `Begin met schrijven. Gebruik '{' om een variabele toe te voegen.`,
         }),
         BulletList,
         OrderedList,
@@ -601,8 +601,17 @@
       const isInputFocused =
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement;
+      const hasSelection =
+        event.target instanceof HTMLInputElement
+          ? event.target.selectionStart !== event.target.selectionEnd
+          : event.target instanceof HTMLTextAreaElement
+            ? event.target.selectionStart !== event.target.selectionEnd
+            : false;
 
       if (!isInputFocused && !isEditMode) {
+        event.preventDefault();
+        copyToClipboard(false);
+      } else if (isInputFocused && !hasSelection) {
         event.preventDefault();
         copyToClipboard(false);
       }
@@ -1474,7 +1483,10 @@
 
   const addNewVariable = async () => {
     showPlaceholderField = true;
-    if (newVariable.field_name && newVariable.placeholder) {
+    if (newVariable.field_name) {
+      if (!newVariable.placeholder)
+        newVariable.placeholder = newVariable.field_name;
+
       const id =
         "var_" +
         Date.now().toString(36) +
@@ -1498,6 +1510,10 @@
       selectedVariable = id;
 
       return { id, ...variable }; // Return the object containing the new variable's attributes
+    } else {
+      toast.error("Geen variabele naam ingevuld", {
+        position: "bottom-right",
+      });
     }
     return null; // Ensure that a null value is returned if no variable is added
   };
@@ -1583,6 +1599,9 @@
       const newVariableData = await addNewVariable(); // Wait for the Promise to resolve
       if (newVariableData) {
         insertVariable(newVariableData);
+        toast.success("Variabele aangemaakt", {
+          position: "bottom-right",
+        });
       }
     }
   };
@@ -1756,7 +1775,7 @@
             </div>
             <ul id="variables_list_ul">
               {#if filteredVariables.length}
-                {#each filteredVariables as [id, data]}
+                {#each Array.from(filteredVariables).sort( (a, b) => a[1].field_name.localeCompare(b[1].field_name) ) as [id, data]}
                   <li
                     class="variable draggable"
                     data-id={id}
@@ -1824,17 +1843,6 @@
 
     {#if variableSearchQuery && workspaceVariables.variables && !showPlaceholderField}
       <ul>
-        <!-- Add option to create new variable if no exact match -->
-        {#if !Object.values(workspaceVariables.variables).some(({ field_name }) => field_name.toLowerCase() === variableSearchQuery.toLowerCase())}
-          <li
-            tabindex="0"
-            class="variable-item new"
-            on:click={() => (showPlaceholderField = true)}
-          >
-            <u>{variableSearchQuery}</u> aanmaken
-          </li>
-        {/if}
-
         <!-- Sorting and filtering variables based on relevance -->
         {#each Object.entries(workspaceVariables.variables)
           .filter(([, data]) => data.field_name
@@ -1869,6 +1877,17 @@
             {data.field_name}
           </li>
         {/each}
+
+        <!-- Add option to create new variable if no exact match -->
+        {#if !Object.values(workspaceVariables.variables).some(({ field_name }) => field_name.toLowerCase() === variableSearchQuery.toLowerCase())}
+          <li
+            tabindex="0"
+            class="variable-item new"
+            on:click={() => (showPlaceholderField = true)}
+          >
+            <u>{variableSearchQuery}</u> aanmaken
+          </li>
+        {/if}
       </ul>
     {/if}
 

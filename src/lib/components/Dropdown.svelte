@@ -9,6 +9,7 @@
   import { templatesStore } from "$lib/stores/templates";
   import { user } from "$lib/stores/user";
   import toast from "svelte-french-toast";
+  import { switchMobileNav } from "$lib/utils/utils.js";
 
   let hasActiveSubscription = false;
   let currentUser;
@@ -121,6 +122,7 @@
       }
     } else if (action === "templ_edit") {
       goto(`/template/${contentId}#edit`);
+      switchMobileNav("browse");
     } else if (action === "templ_delete") {
       const confirmDelete = window.confirm(
         "Weet je zeker dat je deze template wilt verwijderen?"
@@ -151,7 +153,6 @@
 
   // Listen for custom events to toggle the dropdown
   function handleToggle(event) {
-    console.log({ event, id });
     if (event.detail === id) {
       toggleDropdown();
     }
